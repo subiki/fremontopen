@@ -8,12 +8,25 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Snowflake, ShieldAlert, LogOut } from 'lucide-react';
+import { Trash2, Snowflake, ShieldAlert, LogOut, RefreshCw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+
+interface SyncStatus {
+  status: string;
+  last_synced_at: string | null;
+  tournaments_synced: number | null;
+  matches_synced: number | null;
+  players_rebuilt: number | null;
+}
+
+interface SyncResult extends SyncStatus {
+  errors?: string[];
+}
 
 export default function Admin() {
   const [token, setToken] = React.useState<string | null>(localStorage.getItem('admin_token'));
   const [email, setEmail] = React.useState('admin@cuestats.local');
   const [password, setPassword] = React.useState('');
+  const [syncResult, setSyncResult] = React.useState<SyncResult | null>(null);
   const queryClient = useQueryClient();
 
   const login = useMutation({
@@ -57,13 +70,20 @@ export default function Admin() {
     enabled: !!me,
   });
 
-  const { data: auditLogs } = useQuery({
+  const { data: auditLogs, refetch: refetchAudit } = useQuery({
     queryKey: ['admin-audit'],
     queryFn: () =>
       fetchApi<any[]>('/admin/audit-log', {
         headers: { Authorization: `Bearer ${token}` },
       }),
     enabled: !!me,
+  });
+
+  const { data: syncStatus, refetch: refetchSyncStatus } = useQuery({
+    queryKey: ['sync-status'],
+    queryFn: () => fetchApi<SyncStatus>('/sync/status'),
+    enabled: !!me,
+    refetchInterval: 30000,
   });
 
   const deleteTournament = useMutation({
@@ -87,6 +107,22 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-players'] });
       queryClient.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+
+  const triggerSync = useMutation({
+    mutationFn: ({ force }: { force: boolean }) =>
+      fetchApi<SyncResult>('/admin/sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ force }),
+      }),
+    onSuccess: (data) => {
+      setSyncResult(data);
+      refetchSyncStatus();
+      refetchAudit();
+      queryClient.invalidateQueries({ queryKey: ['admin-tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-players'] });
     },
   });
 
@@ -149,12 +185,132 @@ export default function Admin() {
         </Button>
       </header>
 
-      <Tabs defaultValue="tournaments" className="space-y-6">
+      <Tabs defaultValue="sync" className="space-y-6">
         <TabsList className="bg-card border border-border">
+          <TabsTrigger value="sync">Challonge Sync</TabsTrigger>
           <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
           <TabsTrigger value="players">Players</TabsTrigger>
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="sync">
+          <div className="space-y-4">
+            <Card className="bg-card">
+              <CardHeader>
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                  Challonge Sync Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-background rounded-lg p-4 text-center">
+                    <p className="text-xs font-mono uppercase text-muted-foreground mb-1">Status</p>
+                    <div className="flex items-center justify-center gap-1">
+                      {syncStatus?.status === 'ok' ? (
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                      ) : syncStatus?.status === 'partial' ? (
+                        <AlertCircle className="w-4 h-4 text-amber-500" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="font-bold capitalize text-sm">
+                        {syncStatus?.status ?? 'never'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-background rounded-lg p-4 text-center">
+                    <p className="text-xs font-mono uppercase text-muted-foreground mb-1">Tournaments</p>
+                    <p className="text-2xl font-bold text-primary">{syncStatus?.tournaments_synced ?? '—'}</p>
+                  </div>
+                  <div className="bg-background rounded-lg p-4 text-center">
+                    <p className="text-xs font-mono uppercase text-muted-foreground mb-1">Matches</p>
+                    <p className="text-2xl font-bold text-primary">{syncStatus?.matches_synced ?? '—'}</p>
+                  </div>
+                  <div className="bg-background rounded-lg p-4 text-center">
+                    <p className="text-xs font-mono uppercase text-muted-foreground mb-1">Players</p>
+                    <p className="text-2xl font-bold text-primary">{syncStatus?.players_rebuilt ?? '—'}</p>
+                  </div>
+                </div>
+
+                {syncStatus?.last_synced_at && (
+                  <p className="text-xs text-muted-foreground font-mono text-center">
+                    Last synced: {new Date(syncStatus.last_synced_at).toLocaleString()}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1"
+                    onClick={() => triggerSync.mutate({ force: false })}
+                    disabled={triggerSync.isPending}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${triggerSync.isPending ? 'animate-spin' : ''}`} />
+                    {triggerSync.isPending ? 'Syncing…' : 'Sync from Challonge'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => triggerSync.mutate({ force: true })}
+                    disabled={triggerSync.isPending}
+                    title="Force re-sync all tournaments even if unchanged"
+                  >
+                    Force Sync
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {syncResult && (
+              <Card className={`border ${syncResult.errors && syncResult.errors.length > 0 ? 'border-amber-500/50' : 'border-primary/30'} bg-card`}>
+                <CardHeader>
+                  <CardTitle className="text-sm font-mono flex items-center gap-2">
+                    {syncResult.errors && syncResult.errors.length > 0 ? (
+                      <AlertCircle className="w-4 h-4 text-amber-500" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                    )}
+                    Sync Complete
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tournaments</p>
+                      <p className="font-bold text-primary">{syncResult.tournaments_synced}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Matches</p>
+                      <p className="font-bold text-primary">{syncResult.matches_synced}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Players</p>
+                      <p className="font-bold text-primary">{syncResult.players_rebuilt}</p>
+                    </div>
+                  </div>
+                  {syncResult.errors && syncResult.errors.length > 0 && (
+                    <div className="mt-3 space-y-1">
+                      <p className="text-xs font-mono text-amber-500 uppercase">Errors:</p>
+                      {syncResult.errors.map((e, i) => (
+                        <p key={i} className="text-xs text-muted-foreground font-mono bg-background rounded px-2 py-1">{e}</p>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {triggerSync.isError && (
+              <Card className="border border-destructive/50 bg-card">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 text-destructive text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{triggerSync.error instanceof Error ? triggerSync.error.message : 'Sync failed'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
 
         <TabsContent value="tournaments">
           <Card className="bg-card">

@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { requireAdmin } from "./middleware/auth";
+import { syncFromChallonge, getSyncStatus } from "../services/sync";
 
 const router = Router();
 
@@ -132,13 +133,47 @@ router.get("/admin/audit-log", requireAdmin, async (req, res) => {
 });
 
 router.get("/sync/status", async (req, res) => {
-  res.json({
-    status: "mock",
-    last_synced_at: null,
-    tournaments_synced: null,
-    matches_synced: null,
-    players_rebuilt: null,
-  });
+  try {
+    const status = await getSyncStatus();
+    res.json(status);
+  } catch (err) {
+    req.log.error({ err }, "Failed to get sync status");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/admin/sync", requireAdmin, async (req, res) => {
+  try {
+    const { force, tournament_id } = req.body as {
+      force?: boolean;
+      tournament_id?: number | null;
+    };
+
+    req.log.info({ force, tournament_id }, "Challonge sync triggered");
+
+    const result = await syncFromChallonge({
+      force: force ?? false,
+      tournamentId: tournament_id ?? null,
+    });
+
+    await db.insert(auditLogTable).values({
+      action: "challonge_sync",
+      payload: {
+        admin: req.admin!.email,
+        tournaments_synced: result.tournaments_synced,
+        matches_synced: result.matches_synced,
+        players_rebuilt: result.players_rebuilt,
+        errors: result.errors,
+      },
+    });
+
+    res.json(result);
+  } catch (err) {
+    req.log.error({ err }, "Challonge sync failed");
+    res.status(500).json({
+      error: err instanceof Error ? err.message : "Sync failed",
+    });
+  }
 });
 
 export default router;
