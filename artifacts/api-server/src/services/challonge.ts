@@ -1,13 +1,27 @@
 const BASE = "https://api.challonge.com/v1";
 
+export const MONTHLY_CALL_LIMIT = 500;
+
 function apiKey(): string {
   const key = process.env["CHALLONGE_API_KEY"];
   if (!key) throw new Error("CHALLONGE_API_KEY is not set");
   return key;
 }
 
+let _callsThisSync = 0;
+
+export function resetSyncCallCounter() {
+  _callsThisSync = 0;
+}
+
+export function getSyncCallCount() {
+  return _callsThisSync;
+}
+
 async function challongeGet<T>(path: string): Promise<T> {
-  const url = `${BASE}${path}?api_key=${apiKey()}`;
+  _callsThisSync++;
+  const sep = path.includes("?") ? "&" : "?";
+  const url = `${BASE}${path}${sep}api_key=${apiKey()}`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -47,56 +61,34 @@ export interface ChallongeMatch {
   updated_at: string;
 }
 
-interface TournamentWrapper {
+interface TournamentDetailWrapper {
   tournament: ChallongeTournament & {
     participants?: Array<{ participant: ChallongeParticipant }>;
     matches?: Array<{ match: ChallongeMatch }>;
   };
 }
 
-interface ParticipantWrapper {
-  participant: ChallongeParticipant;
-}
-
-interface MatchWrapper {
-  match: ChallongeMatch;
-}
-
 export async function fetchTournaments(): Promise<ChallongeTournament[]> {
-  const raw = await challongeGet<Array<{ tournament: ChallongeTournament }>>("/tournaments.json");
+  const raw = await challongeGet<Array<{ tournament: ChallongeTournament }>>(
+    "/tournaments.json"
+  );
   return raw.map((r) => r.tournament);
 }
 
-export async function fetchTournamentDetail(
-  id: number
-): Promise<{
+export async function fetchTournamentDetail(id: number): Promise<{
   tournament: ChallongeTournament;
   participants: ChallongeParticipant[];
   matches: ChallongeMatch[];
 }> {
-  const raw = await challongeGet<TournamentWrapper>(
+  const raw = await challongeGet<TournamentDetailWrapper>(
     `/tournaments/${id}.json?include_participants=1&include_matches=1`
   );
   const t = raw.tournament;
-  const participants = (t.participants ?? []).map((p: { participant: ChallongeParticipant }) => p.participant);
-  const matches = (t.matches ?? []).map((m: { match: ChallongeMatch }) => m.match);
+  const participants = (t.participants ?? []).map(
+    (p: { participant: ChallongeParticipant }) => p.participant
+  );
+  const matches = (t.matches ?? []).map(
+    (m: { match: ChallongeMatch }) => m.match
+  );
   return { tournament: t, participants, matches };
-}
-
-export async function fetchParticipants(
-  tournamentId: number
-): Promise<ChallongeParticipant[]> {
-  const raw = await challongeGet<ParticipantWrapper[]>(
-    `/tournaments/${tournamentId}/participants.json`
-  );
-  return raw.map((r) => r.participant);
-}
-
-export async function fetchMatches(
-  tournamentId: number
-): Promise<ChallongeMatch[]> {
-  const raw = await challongeGet<MatchWrapper[]>(
-    `/tournaments/${tournamentId}/matches.json`
-  );
-  return raw.map((r) => r.match);
 }

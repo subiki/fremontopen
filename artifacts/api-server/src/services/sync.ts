@@ -5,14 +5,44 @@ import {
   playersTable,
   syncMetaTable,
 } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   fetchTournaments,
   fetchTournamentDetail,
-  type ChallongeParticipant,
-  type ChallongeMatch,
+  resetSyncCallCounter,
+  getSyncCallCount,
+  MONTHLY_CALL_LIMIT,
 } from "./challonge";
 import { logger } from "../lib/logger";
+
+const BUDGET_META_KEY = () => {
+  const now = new Date();
+  return `api_budget_${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+
+async function getMonthlyUsage(): Promise<number> {
+  const [row] = await db
+    .select()
+    .from(syncMetaTable)
+    .where(eq(syncMetaTable.key, BUDGET_META_KEY()));
+  if (!row) return 0;
+  const v = row.value as { calls_used?: number };
+  return v.calls_used ?? 0;
+}
+
+async function incrementMonthlyUsage(callsMade: number): Promise<number> {
+  const key = BUDGET_META_KEY();
+  const current = await getMonthlyUsage();
+  const newTotal = current + callsMade;
+  await db
+    .insert(syncMetaTable)
+    .values({ key, value: { calls_used: newTotal } })
+    .onConflictDoUpdate({
+      target: syncMetaTable.key,
+      set: { value: { calls_used: newTotal }, updatedAt: new Date() },
+    });
+  return newTotal;
+}
 
 export interface SyncResult {
   status: string;
@@ -20,6 +50,8 @@ export interface SyncResult {
   tournaments_synced: number;
   matches_synced: number;
   players_rebuilt: number;
+  api_calls_used: number;
+  api_calls_remaining: number;
   errors: string[];
 }
 
@@ -31,51 +63,94 @@ export async function syncFromChallonge(opts: {
   let tournamentsSynced = 0;
   let matchesSynced = 0;
 
-  const tournaments = opts.tournamentId
-    ? await fetchTournaments().then((ts) =>
-        ts.filter((t) => t.id === opts.tournamentId)
-      )
-    : await fetchTournaments();
+  resetSyncCallCounter();
+
+  const currentUsage = await getMonthlyUsage();
+  const remaining = MONTHLY_CALL_LIMIT - currentUsage;
+
+  // Each sync needs at minimum: 1 list call (unless single-tournament) + 1 detail call per changed tournament.
+  // Conservatively require at least 2 calls of headroom before starting.
+  if (remaining < 2) {
+    throw new Error(
+      `Monthly Challonge API budget exhausted (${currentUsage}/${MONTHLY_CALL_LIMIT} calls used). Budget resets on the 1st of next month.`
+    );
+  }
+
+  // For a single-tournament sync we skip the list call and go straight to detail.
+  let tournaments: Array<{ id: number; name: string; game_name: string | null; state: string; started_at: string | null; updated_at: string }> = [];
+
+  if (opts.tournamentId) {
+    // Optimised path: 0 list call, 1 detail call per tournament
+    // We still need to check if it changed, so fetch detail directly.
+    // Skip any list call entirely.
+    tournaments = [{ id: opts.tournamentId, name: "", game_name: null, state: "", started_at: null, updated_at: "" }];
+  } else {
+    // 1 API call for the list
+    if (remaining < 2) {
+      throw new Error(`Not enough API budget to list tournaments (${remaining} calls left).`);
+    }
+    const fetched = await fetchTournaments();
+    tournaments = fetched;
+  }
 
   for (const t of tournaments) {
+    // Check if we have budget for a detail call
+    const callsUsedSoFar = getSyncCallCount();
+    const remainingNow = remaining - callsUsedSoFar;
+    if (remainingNow < 1) {
+      errors.push(`Budget limit reached mid-sync — stopped before tournament ${t.id}`);
+      break;
+    }
+
     try {
-      const existing = await db
-        .select({ updatedAt: tournamentsTable.updatedAtChallonge })
-        .from(tournamentsTable)
-        .where(eq(tournamentsTable.id, t.id));
+      let shouldSync = opts.force ?? false;
 
-      const alreadyCurrent =
-        !opts.force &&
-        existing.length > 0 &&
-        existing[0]!.updatedAt === t.updated_at;
+      if (!opts.tournamentId) {
+        // For list-based sync, compare updated_at to skip unchanged
+        const existing = await db
+          .select({ updatedAt: tournamentsTable.updatedAtChallonge })
+          .from(tournamentsTable)
+          .where(eq(tournamentsTable.id, t.id));
 
-      if (alreadyCurrent) {
-        logger.info({ tournamentId: t.id }, "Tournament unchanged, skipping");
-        continue;
+        const alreadyCurrent =
+          !opts.force &&
+          existing.length > 0 &&
+          existing[0]!.updatedAt === t.updated_at;
+
+        if (alreadyCurrent) {
+          logger.info({ tournamentId: t.id }, "Tournament unchanged, skipping");
+          continue;
+        }
+        shouldSync = true;
+      } else {
+        shouldSync = true;
       }
+
+      if (!shouldSync) continue;
+
+      // 1 API call: detail with participants + matches bundled
+      const { tournament: detail, participants, matches } = await fetchTournamentDetail(t.id);
 
       await db
         .insert(tournamentsTable)
         .values({
-          id: t.id,
-          name: t.name,
-          game: t.game_name ?? null,
-          state: t.state,
-          startedAt: t.started_at ?? null,
-          updatedAtChallonge: t.updated_at,
+          id: detail.id,
+          name: detail.name,
+          game: detail.game_name ?? null,
+          state: detail.state,
+          startedAt: detail.started_at ?? null,
+          updatedAtChallonge: detail.updated_at,
         })
         .onConflictDoUpdate({
           target: tournamentsTable.id,
           set: {
-            name: t.name,
-            game: t.game_name ?? null,
-            state: t.state,
-            startedAt: t.started_at ?? null,
-            updatedAtChallonge: t.updated_at,
+            name: detail.name,
+            game: detail.game_name ?? null,
+            state: detail.state,
+            startedAt: detail.started_at ?? null,
+            updatedAtChallonge: detail.updated_at,
           },
         });
-
-      const { participants, matches } = await fetchTournamentDetail(t.id);
 
       const participantMap = new Map<number, string>();
       for (const p of participants) {
@@ -83,15 +158,19 @@ export async function syncFromChallonge(opts: {
       }
 
       for (const m of matches) {
-        const winnerName = m.winner_id ? (participantMap.get(m.winner_id) ?? null) : null;
-        const loserName = m.loser_id ? (participantMap.get(m.loser_id) ?? null) : null;
+        const winnerName = m.winner_id
+          ? (participantMap.get(m.winner_id) ?? null)
+          : null;
+        const loserName = m.loser_id
+          ? (participantMap.get(m.loser_id) ?? null)
+          : null;
 
         await db
           .insert(matchesTable)
           .values({
-            id: `${t.id}-${m.id}`,
-            tournamentId: t.id,
-            tournamentName: t.name,
+            id: `${detail.id}-${m.id}`,
+            tournamentId: detail.id,
+            tournamentName: detail.name,
             round: m.round,
             state: m.state,
             scores: m.scores_csv || null,
@@ -119,7 +198,7 @@ export async function syncFromChallonge(opts: {
 
       tournamentsSynced++;
       logger.info(
-        { tournamentId: t.id, matches: matches.length },
+        { tournamentId: detail.id, matches: matches.length },
         "Tournament synced"
       );
     } catch (err) {
@@ -131,6 +210,10 @@ export async function syncFromChallonge(opts: {
 
   const playersRebuilt = await rebuildPlayerStats();
 
+  const callsMade = getSyncCallCount();
+  const newMonthlyTotal = await incrementMonthlyUsage(callsMade);
+  const callsRemaining = Math.max(0, MONTHLY_CALL_LIMIT - newMonthlyTotal);
+
   const now = new Date().toISOString();
   await db
     .insert(syncMetaTable)
@@ -141,6 +224,8 @@ export async function syncFromChallonge(opts: {
         tournaments_synced: tournamentsSynced,
         matches_synced: matchesSynced,
         players_rebuilt: playersRebuilt,
+        api_calls_used: callsMade,
+        api_calls_remaining: callsRemaining,
         errors,
       },
     })
@@ -152,11 +237,18 @@ export async function syncFromChallonge(opts: {
           tournaments_synced: tournamentsSynced,
           matches_synced: matchesSynced,
           players_rebuilt: playersRebuilt,
+          api_calls_used: callsMade,
+          api_calls_remaining: callsRemaining,
           errors,
         },
         updatedAt: new Date(),
       },
     });
+
+  logger.info(
+    { callsMade, newMonthlyTotal, callsRemaining },
+    "Sync complete"
+  );
 
   return {
     status: errors.length === 0 ? "ok" : "partial",
@@ -164,6 +256,8 @@ export async function syncFromChallonge(opts: {
     tournaments_synced: tournamentsSynced,
     matches_synced: matchesSynced,
     players_rebuilt: playersRebuilt,
+    api_calls_used: callsMade,
+    api_calls_remaining: callsRemaining,
     errors,
   };
 }
@@ -179,13 +273,21 @@ async function rebuildPlayerStats(): Promise<number> {
   for (const m of allMatches) {
     if (m.winnerName) {
       const key = m.winnerName.toLowerCase();
-      const entry = stats.get(key) ?? { name: m.winnerName, wins: 0, losses: 0 };
+      const entry = stats.get(key) ?? {
+        name: m.winnerName,
+        wins: 0,
+        losses: 0,
+      };
       entry.wins++;
       stats.set(key, entry);
     }
     if (m.loserName) {
       const key = m.loserName.toLowerCase();
-      const entry = stats.get(key) ?? { name: m.loserName, wins: 0, losses: 0 };
+      const entry = stats.get(key) ?? {
+        name: m.loserName,
+        wins: 0,
+        losses: 0,
+      };
       entry.losses++;
       stats.set(key, entry);
     }
@@ -237,23 +339,30 @@ export async function getSyncStatus(): Promise<{
   tournaments_synced: number | null;
   matches_synced: number | null;
   players_rebuilt: number | null;
+  api_calls_month_used: number;
+  api_calls_month_remaining: number;
 }> {
-  const [row] = await db
+  const [lastSync] = await db
     .select()
     .from(syncMetaTable)
     .where(eq(syncMetaTable.key, "last_sync"));
 
-  if (!row) {
+  const monthlyUsed = await getMonthlyUsage();
+  const monthlyRemaining = Math.max(0, MONTHLY_CALL_LIMIT - monthlyUsed);
+
+  if (!lastSync) {
     return {
       status: "never",
       last_synced_at: null,
       tournaments_synced: null,
       matches_synced: null,
       players_rebuilt: null,
+      api_calls_month_used: monthlyUsed,
+      api_calls_month_remaining: monthlyRemaining,
     };
   }
 
-  const v = row.value as {
+  const v = lastSync.value as {
     synced_at?: string;
     tournaments_synced?: number;
     matches_synced?: number;
@@ -267,5 +376,7 @@ export async function getSyncStatus(): Promise<{
     tournaments_synced: v.tournaments_synced ?? null,
     matches_synced: v.matches_synced ?? null,
     players_rebuilt: v.players_rebuilt ?? null,
+    api_calls_month_used: monthlyUsed,
+    api_calls_month_remaining: monthlyRemaining,
   };
 }
