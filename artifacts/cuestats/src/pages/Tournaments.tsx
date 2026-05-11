@@ -55,7 +55,7 @@ export default function Tournaments() {
                   <TableCell className="font-mono text-sm">{tournament.game || '9-Ball'}</TableCell>
                   <TableCell>{getStatusBadge(tournament.state)}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    {tournament.startedAt ? format(new Date(tournament.startedAt), 'MMM d, yyyy') : 'N/A'}
+                    {tournament.started_at ? format(new Date(tournament.started_at), 'MMM d, yyyy') : 'N/A'}
                   </TableCell>
                 </TableRow>
               ))}
