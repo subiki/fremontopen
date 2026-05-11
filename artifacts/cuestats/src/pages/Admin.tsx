@@ -16,6 +16,8 @@ interface SyncStatus {
   tournaments_synced: number | null;
   matches_synced: number | null;
   players_rebuilt: number | null;
+  api_calls_month_used: number;
+  api_calls_month_remaining: number;
 }
 
 interface SyncResult extends SyncStatus {
@@ -195,6 +197,44 @@ export default function Admin() {
 
         <TabsContent value="sync">
           <div className="space-y-4">
+            {/* Monthly API Budget Card */}
+            <Card className="bg-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-mono uppercase text-muted-foreground flex items-center gap-2">
+                  Monthly API Budget
+                  <span className="ml-auto font-bold text-foreground">
+                    {syncStatus?.api_calls_month_used ?? 0} / 500 calls
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {(() => {
+                  const used = syncStatus?.api_calls_month_used ?? 0;
+                  const pct = Math.min(100, (used / 500) * 100);
+                  const color = pct >= 90 ? 'bg-destructive' : pct >= 70 ? 'bg-amber-500' : 'bg-primary';
+                  return (
+                    <>
+                      <div className="w-full h-2 bg-background rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                        <span>{syncStatus?.api_calls_month_remaining ?? 500} remaining this month</span>
+                        <span>{pct.toFixed(1)}% used</span>
+                      </div>
+                      {pct >= 90 && (
+                        <p className="text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Budget nearly exhausted — syncs will be blocked at 0 remaining.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
+                <p className="text-xs text-muted-foreground pt-1">
+                  Each sync uses <span className="font-mono text-foreground">1 call</span> to list tournaments + <span className="font-mono text-foreground">1 call per changed tournament</span> for full detail. Unchanged tournaments are skipped automatically.
+                </p>
+              </CardContent>
+            </Card>
+
             <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="text-lg font-heading flex items-center gap-2">
@@ -243,7 +283,7 @@ export default function Admin() {
                   <Button
                     className="flex-1"
                     onClick={() => triggerSync.mutate({ force: false })}
-                    disabled={triggerSync.isPending}
+                    disabled={triggerSync.isPending || (syncStatus?.api_calls_month_remaining ?? 500) < 2}
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${triggerSync.isPending ? 'animate-spin' : ''}`} />
                     {triggerSync.isPending ? 'Syncing…' : 'Sync from Challonge'}
@@ -251,7 +291,7 @@ export default function Admin() {
                   <Button
                     variant="outline"
                     onClick={() => triggerSync.mutate({ force: true })}
-                    disabled={triggerSync.isPending}
+                    disabled={triggerSync.isPending || (syncStatus?.api_calls_month_remaining ?? 500) < 2}
                     title="Force re-sync all tournaments even if unchanged"
                   >
                     Force Sync
