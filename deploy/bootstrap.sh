@@ -77,23 +77,52 @@ echo "==> Python venv ready."
 # ── 3. Write backend/.env template ───────────────────────────────────────────
 if [ ! -f backend/.env ]; then
   cat > backend/.env <<EOF
-# MongoDB Atlas connection string — replace this entire line
-MONGO_URL="mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/cuestats?retryWrites=true&w=majority"
+# ┌─────────────────────────────────────────────────────────────────┐
+# │  CueStats backend secrets — fill in every CHANGEME value below  │
+# │  Keep this file private. It is never committed or deployed.      │
+# └─────────────────────────────────────────────────────────────────┘
+
+# ── MongoDB Atlas ──────────────────────────────────────────────────
+# How to get this:
+#   1. Go to https://cloud.mongodb.com  →  sign up free (no card needed)
+#   2. Create a free M0 cluster  →  any region
+#   3. Database Access  →  Add new database user
+#      Username: cuestats       Password: choose something strong
+#   4. Network Access  →  Add IP Address  →  Allow access from anywhere  (0.0.0.0/0)
+#   5. Clusters  →  Connect  →  Drivers  →  copy the string that looks like:
+#      mongodb+srv://cuestats:<password>@cluster0.abcde.mongodb.net/
+#   6. Paste it below, replace <password> with your actual password,
+#      and add ?retryWrites=true&w=majority at the end
+#
+# Example (yours will have a different cluster ID):
+#   mongodb+srv://cuestats:MyPass123@cluster0.ab1cd.mongodb.net/cuestats?retryWrites=true&w=majority
+MONGO_URL="mongodb+srv://CHANGEME_USER:CHANGEME_PASSWORD@cluster0.CHANGEME.mongodb.net/cuestats?retryWrites=true&w=majority"
 DB_NAME="cuestats"
 
+# ── Your domain (leave as-is for fremontopen.com) ──────────────────
 CORS_ORIGINS="https://${DOMAIN}"
 FRONTEND_URL="https://${DOMAIN}"
 
-CHALLONGE_API_KEY="REPLACE_ME"
-ANTHROPIC_API_KEY="REPLACE_ME"
+# ── Challonge API key ──────────────────────────────────────────────
+# Get it at: https://challonge.com/settings/developer
+# (free, just needs a Challonge account)
+CHALLONGE_API_KEY="CHANGEME_challonge_api_key"
 
-# Generate with: openssl rand -hex 32
+# ── Anthropic API key (powers the AI chat) ────────────────────────
+# Get it at: https://console.anthropic.com  →  API Keys  →  Create key
+# (requires a paid account; skip for now — chat page will just error)
+ANTHROPIC_API_KEY="CHANGEME_anthropic_api_key"
+
+# ── Admin login credentials ────────────────────────────────────────
+# These are seeded into the database on first startup.
+# Use any email and a strong password you'll remember.
+ADMIN_EMAIL="CHANGEME_your@email.com"
+ADMIN_PASSWORD="CHANGEME_strong_password"
+
+# ── JWT secret (already generated — do not change) ────────────────
 JWT_SECRET="$(openssl rand -hex 32)"
 
-ADMIN_EMAIL="admin@${DOMAIN}"
-ADMIN_PASSWORD="REPLACE_ME"
-
-# OAuth — leave blank to disable that login method
+# ── OAuth providers (all optional — leave blank to disable) ───────
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 DISCORD_CLIENT_ID=""
@@ -101,14 +130,22 @@ DISCORD_CLIENT_SECRET=""
 FACEBOOK_APP_ID=""
 FACEBOOK_APP_SECRET=""
 EOF
-  echo "==> Wrote backend/.env — EDIT THIS FILE NOW before continuing."
   echo ""
-  echo "    nano $DEPLOY_PATH/backend/.env"
+  echo "════════════════════════════════════════════════════════════"
+  echo " ACTION REQUIRED: fill in backend/.env before continuing"
+  echo "════════════════════════════════════════════════════════════"
   echo ""
-  echo "    Fill in at minimum: MONGO_URL, CHALLONGE_API_KEY,"
-  echo "    ANTHROPIC_API_KEY, ADMIN_PASSWORD"
+  echo " Open the file:"
+  echo "   nano $DEPLOY_PATH/backend/.env"
   echo ""
-  read -rp "    Press Enter when .env is filled in, or Ctrl-C to exit..."
+  echo " You MUST replace every CHANGEME_ value:"
+  echo "   MONGO_URL          — Atlas connection string (see instructions above)"
+  echo "   CHALLONGE_API_KEY  — from challonge.com/settings/developer"
+  echo "   ANTHROPIC_API_KEY  — from console.anthropic.com (skip = chat won't work)"
+  echo "   ADMIN_EMAIL        — your email address"
+  echo "   ADMIN_PASSWORD     — any strong password"
+  echo ""
+  read -rp " Press Enter once .env is saved, or Ctrl-C to stop here..."
 fi
 
 # ── 4. Build React frontend → copy to DreamHost web root ─────────────────────
