@@ -175,6 +175,13 @@ To also **close** any open issues whose backlog items have moved to ✅ Done (or
 bash scripts/create_github_issues.sh --close-done
 ```
 
-The script is fully idempotent: re-running it will never duplicate issues, and `--close-done` will only close issues that carry one of the project's `epic:*` labels and whose title no longer appears in an active backlog table.
+To **preview** what would be created or closed without touching GitHub, add `--dry-run`:
+
+```bash
+bash scripts/create_github_issues.sh --dry-run
+bash scripts/create_github_issues.sh --dry-run --close-done
+```
+
+The script is fully idempotent: re-running it will never duplicate issues, and `--close-done` will only close issues that carry one of the project's `epic:*` labels and whose title no longer appears in an active backlog table. In `--dry-run` mode the script fetches existing issues first so it reports only the items that are genuinely missing — not ones that already have a GitHub Issue.
 
 See [`scripts/create_github_issues.sh`](scripts/create_github_issues.sh) for full details and prerequisites.
