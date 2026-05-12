@@ -15,13 +15,15 @@ import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import select, insert, update, func
+
+import database as T
 
 log = logging.getLogger("cuestats.users")
 
 JWT_ALGORITHM = "HS256"
-USER_TOKEN_TTL_HOURS = 24 * 30  # 30 days for users
+USER_TOKEN_TTL_HOURS = 24 * 30  # 30 days
 
-# Provider configuration — read at startup
 DISCORD = {
     "client_id": os.environ.get("DISCORD_CLIENT_ID", ""),
     "client_secret": os.environ.get("DISCORD_CLIENT_SECRET", ""),
@@ -61,7 +63,6 @@ def _frontend_url() -> str:
 
 
 def _redirect_uri() -> str:
-    # The frontend route that handles the OAuth callback
     return f"{_frontend_url()}/auth/callback"
 
 
@@ -85,7 +86,6 @@ def _extract_user_token(request: Request) -> Optional[str]:
 
 
 def require_user(request: Request) -> str:
-    """Returns the user_id from a valid user session token. Raises 401 otherwise."""
     token = _extract_user_token(request)
     if not token:
         raise HTTPException(status_code=401, detail="Not signed in")
@@ -101,8 +101,6 @@ def require_user(request: Request) -> str:
 
 
 def optional_user(request: Request) -> Optional[str]:
-    """Like require_user but returns None instead of raising. Used for endpoints
-    that work for both logged-in and anonymous visitors."""
     try:
         return require_user(request)
     except HTTPException:
@@ -119,36 +117,62 @@ class FollowRequest(BaseModel):
 
 
 # ---------- Helpers ----------
-async def _upsert_user(db, provider: str, provider_user_id: str, display_name: str, email: Optional[str], avatar_url: Optional[str]) -> Dict[str, Any]:
-    """Upsert by (provider, provider_user_id). Returns the user doc."""
+async def _get_followed(conn, user_id: str) -> List[str]:
+    rows = (await conn.execute(
+        select(T.user_follows.c.player_name)
+        .where(T.user_follows.c.user_id == user_id)
+    )).fetchall()
+    return [r.player_name for r in rows]
+
+
+async def _upsert_user(engine, provider: str, provider_user_id: str,
+                       display_name: str, email: Optional[str],
+                       avatar_url: Optional[str]) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
-    doc = await db.users.find_one_and_update(
-        {"provider": provider, "provider_user_id": str(provider_user_id)},
-        {
-            "$set": {
-                "display_name": display_name,
-                "email": email,
-                "avatar_url": avatar_url,
-                "last_login_at": now,
-            },
-            "$setOnInsert": {
-                "id": str(uuid.uuid4()),
-                "provider": provider,
-                "provider_user_id": str(provider_user_id),
-                "created_at": now,
-                "claimed_player": None,
-                "followed_players": [],
-            },
-        },
-        upsert=True,
-        return_document=True,
-        projection={"_id": 0},
-    )
-    return doc
+    async with engine.begin() as conn:
+        row = (await conn.execute(
+            select(T.users).where(
+                T.users.c.provider == provider,
+                T.users.c.provider_user_id == str(provider_user_id),
+            )
+        )).fetchone()
+
+        if row:
+            user_id = row.id
+            await conn.execute(
+                update(T.users).where(T.users.c.id == user_id).values(
+                    display_name=display_name,
+                    email=email,
+                    avatar_url=avatar_url,
+                    last_login_at=now,
+                )
+            )
+        else:
+            user_id = str(uuid.uuid4())
+            await conn.execute(insert(T.users).values(
+                id=user_id,
+                provider=provider,
+                provider_user_id=str(provider_user_id),
+                display_name=display_name,
+                email=email,
+                avatar_url=avatar_url,
+                claimed_player=None,
+                claimed_at=None,
+                created_at=now,
+                last_login_at=now,
+            ))
+
+        user_row = (await conn.execute(
+            select(T.users).where(T.users.c.id == user_id)
+        )).fetchone()
+        followed = await _get_followed(conn, user_id)
+
+    user = dict(user_row._mapping)
+    user["followed_players"] = followed
+    return user
 
 
 def _public_self(user: Dict[str, Any]) -> Dict[str, Any]:
-    """Return the SELF view of a user (full info, only for the user themselves)."""
     return {
         "id": user["id"],
         "provider": user["provider"],
@@ -160,12 +184,11 @@ def _public_self(user: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # ---------- Router factory ----------
-def make_user_router(db):
+def make_user_router(engine):
     router = APIRouter(prefix="/api")
 
     @router.get("/auth/{provider}/start")
     async def start_oauth(provider: str):
-        """Returns the provider's authorization URL for the frontend to redirect to."""
         cfg = PROVIDERS.get(provider)
         if not cfg or not cfg["client_id"]:
             raise HTTPException(status_code=400, detail=f"Provider '{provider}' not configured")
@@ -188,14 +211,11 @@ def make_user_router(db):
 
     @router.post("/auth/{provider}/callback")
     async def oauth_callback(provider: str, code: str = Query(...)):
-        """Exchange the authorization code for a session token. Frontend calls this
-        with `?code=...` after the provider redirects back to /auth/callback."""
         cfg = PROVIDERS.get(provider)
         if not cfg or not cfg["client_id"]:
             raise HTTPException(status_code=400, detail=f"Provider '{provider}' not configured")
 
         async with httpx.AsyncClient(timeout=15) as client:
-            # Exchange code for access token
             try:
                 if provider == "facebook":
                     tr = await client.get(cfg["token_url"], params={
@@ -222,7 +242,6 @@ def make_user_router(db):
             if not access_token:
                 raise HTTPException(status_code=400, detail="No access_token in provider response")
 
-            # Fetch user profile
             try:
                 if provider == "facebook":
                     ur = await client.get(cfg["user_url"], params={
@@ -240,7 +259,6 @@ def make_user_router(db):
 
             profile = ur.json()
 
-        # Normalize across providers
         if provider == "discord":
             pid = profile.get("id")
             email = profile.get("email")
@@ -263,60 +281,94 @@ def make_user_router(db):
         if not pid:
             raise HTTPException(status_code=400, detail="Provider did not return a user id")
 
-        user = await _upsert_user(db, provider, pid, display_name, email, avatar_url)
+        user = await _upsert_user(engine, provider, pid, display_name, email, avatar_url)
         token = create_user_token(user["id"], provider)
         return {"token": token, "user": _public_self(user)}
 
     @router.get("/me")
     async def get_me(user_id: str = Depends(require_user)):
-        user = await db.users.find_one({"id": user_id}, {"_id": 0})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        async with engine.connect() as conn:
+            row = (await conn.execute(
+                select(T.users).where(T.users.c.id == user_id)
+            )).fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="User not found")
+            followed = await _get_followed(conn, user_id)
+        user = dict(row._mapping)
+        user["followed_players"] = followed
         return _public_self(user)
 
     @router.post("/me/claim")
     async def claim_player(payload: ClaimRequest, user_id: str = Depends(require_user)):
         name = payload.player_name.strip()
-        # Verify player exists in our data
-        player = await db.players.find_one({"name": name}, {"_id": 0})
-        if not player:
-            raise HTTPException(status_code=404, detail="Player not found")
+        async with engine.begin() as conn:
+            p_row = (await conn.execute(
+                select(T.players).where(T.players.c.name == name)
+            )).fetchone()
+            if not p_row:
+                raise HTTPException(status_code=404, detail="Player not found")
 
-        # Prevent claiming an already-claimed player (other than by self)
-        existing = await db.users.find_one(
-            {"claimed_player": name, "id": {"$ne": user_id}}, {"_id": 0, "id": 1}
-        )
-        if existing:
-            raise HTTPException(status_code=409, detail="That player has already been claimed")
+            existing = (await conn.execute(
+                select(T.users.c.id).where(
+                    T.users.c.claimed_player == name,
+                    T.users.c.id != user_id,
+                )
+            )).fetchone()
+            if existing:
+                raise HTTPException(status_code=409, detail="That player has already been claimed")
 
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {"claimed_player": name, "claimed_at": datetime.now(timezone.utc).isoformat()}},
-        )
+            now = datetime.now(timezone.utc).isoformat()
+            await conn.execute(
+                update(T.users).where(T.users.c.id == user_id)
+                .values(claimed_player=name, claimed_at=now)
+            )
         return {"claimed_player": name}
 
     @router.delete("/me/claim")
     async def unclaim_player(user_id: str = Depends(require_user)):
-        await db.users.update_one({"id": user_id}, {"$set": {"claimed_player": None, "claimed_at": None}})
+        async with engine.begin() as conn:
+            await conn.execute(
+                update(T.users).where(T.users.c.id == user_id)
+                .values(claimed_player=None, claimed_at=None)
+            )
         return {"claimed_player": None}
 
     @router.post("/me/follow")
     async def follow_player(payload: FollowRequest, user_id: str = Depends(require_user)):
         name = payload.player_name.strip()
-        await db.users.update_one({"id": user_id}, {"$addToSet": {"followed_players": name}})
-        user = await db.users.find_one({"id": user_id}, {"_id": 0, "followed_players": 1})
-        return {"followed_players": user.get("followed_players", [])}
+        async with engine.begin() as conn:
+            exists = (await conn.execute(
+                select(T.user_follows).where(
+                    T.user_follows.c.user_id == user_id,
+                    T.user_follows.c.player_name == name,
+                )
+            )).fetchone()
+            if not exists:
+                await conn.execute(
+                    insert(T.user_follows).values(user_id=user_id, player_name=name)
+                )
+            followed = await _get_followed(conn, user_id)
+        return {"followed_players": followed}
 
     @router.delete("/me/follow/{name}")
     async def unfollow_player(name: str, user_id: str = Depends(require_user)):
-        await db.users.update_one({"id": user_id}, {"$pull": {"followed_players": name}})
-        user = await db.users.find_one({"id": user_id}, {"_id": 0, "followed_players": 1})
-        return {"followed_players": user.get("followed_players", [])}
+        async with engine.begin() as conn:
+            await conn.execute(
+                T.user_follows.delete().where(
+                    T.user_follows.c.user_id == user_id,
+                    T.user_follows.c.player_name == name,
+                )
+            )
+            followed = await _get_followed(conn, user_id)
+        return {"followed_players": followed}
 
     @router.get("/players/{name}/claim-info")
     async def player_claim_info(name: str):
-        """PRIVACY: returns only {claimed: bool} — never reveals which account claimed it."""
-        c = await db.users.count_documents({"claimed_player": name})
-        return {"claimed": c > 0}
+        async with engine.connect() as conn:
+            count = (await conn.execute(
+                select(func.count()).select_from(T.users)
+                .where(T.users.c.claimed_player == name)
+            )).scalar()
+        return {"claimed": count > 0}
 
     return router

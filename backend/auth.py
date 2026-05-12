@@ -13,6 +13,9 @@ import bcrypt
 import jwt
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import select, insert, update
+
+import database as T
 
 log = logging.getLogger("cuestats.auth")
 
@@ -60,7 +63,7 @@ def decode_token(token: str) -> dict:
     return jwt.decode(token, _jwt_secret(), algorithms=[JWT_ALGORITHM])
 
 
-async def seed_admin(db) -> None:
+async def seed_admin(engine) -> None:
     """Idempotent admin seed. Rotating ADMIN_PASSWORD updates the stored hash."""
     email = os.environ.get("ADMIN_EMAIL")
     password = os.environ.get("ADMIN_PASSWORD")
@@ -68,20 +71,26 @@ async def seed_admin(db) -> None:
         log.warning("ADMIN_EMAIL/ADMIN_PASSWORD not set — admin login disabled")
         return
     email = email.strip().lower()
-    existing = await db.admins.find_one({"email": email})
-    if existing is None:
-        await db.admins.insert_one({
-            "email": email,
-            "password_hash": hash_password(password),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-        log.info(f"Seeded admin {email}")
-    elif not verify_password(password, existing["password_hash"]):
-        await db.admins.update_one(
-            {"email": email},
-            {"$set": {"password_hash": hash_password(password)}},
-        )
-        log.info(f"Updated admin password for {email}")
+    now = datetime.now(timezone.utc).isoformat()
+
+    async with engine.begin() as conn:
+        row = (await conn.execute(
+            select(T.admins).where(T.admins.c.email == email)
+        )).fetchone()
+
+        if row is None:
+            await conn.execute(insert(T.admins).values(
+                email=email,
+                password_hash=hash_password(password),
+                created_at=now,
+            ))
+            log.info(f"Seeded admin {email}")
+        elif not verify_password(password, row.password_hash):
+            await conn.execute(
+                update(T.admins).where(T.admins.c.email == email)
+                .values(password_hash=hash_password(password))
+            )
+            log.info(f"Updated admin password for {email}")
 
 
 def _extract_token(request: Request) -> Optional[str]:
@@ -91,51 +100,70 @@ def _extract_token(request: Request) -> Optional[str]:
     return None
 
 
-async def _check_lockout(db, identifier: str) -> None:
-    rec = await db.login_attempts.find_one({"_id": identifier})
-    if not rec:
+async def _check_lockout(engine, identifier: str) -> None:
+    async with engine.connect() as conn:
+        row = (await conn.execute(
+            select(T.login_attempts).where(T.login_attempts.c.identifier == identifier)
+        )).fetchone()
+    if not row:
         return
-    if rec.get("count", 0) >= LOCKOUT_AFTER:
-        last = rec.get("last")
-        if last:
-            last_dt = datetime.fromisoformat(last)
+    if row.count >= LOCKOUT_AFTER:
+        if row.last_at:
+            last_dt = datetime.fromisoformat(row.last_at)
             unlocked_at = last_dt + timedelta(minutes=LOCKOUT_MINUTES)
             if datetime.now(timezone.utc) < unlocked_at:
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     detail="Too many failed attempts. Try again in 15 minutes.",
                 )
-            await db.login_attempts.delete_one({"_id": identifier})
+        async with engine.begin() as conn:
+            await conn.execute(
+                T.login_attempts.delete().where(T.login_attempts.c.identifier == identifier)
+            )
 
 
-async def _record_failed_attempt(db, identifier: str) -> None:
-    await db.login_attempts.update_one(
-        {"_id": identifier},
-        {
-            "$inc": {"count": 1},
-            "$set": {"last": datetime.now(timezone.utc).isoformat()},
-        },
-        upsert=True,
-    )
+async def _record_failed_attempt(engine, identifier: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    async with engine.begin() as conn:
+        row = (await conn.execute(
+            select(T.login_attempts).where(T.login_attempts.c.identifier == identifier)
+        )).fetchone()
+        if row:
+            await conn.execute(
+                update(T.login_attempts)
+                .where(T.login_attempts.c.identifier == identifier)
+                .values(count=row.count + 1, last_at=now)
+            )
+        else:
+            await conn.execute(
+                insert(T.login_attempts).values(identifier=identifier, count=1, last_at=now)
+            )
 
 
-async def _clear_attempts(db, identifier: str) -> None:
-    await db.login_attempts.delete_one({"_id": identifier})
+async def _clear_attempts(engine, identifier: str) -> None:
+    async with engine.begin() as conn:
+        await conn.execute(
+            T.login_attempts.delete().where(T.login_attempts.c.identifier == identifier)
+        )
 
 
-async def login(db, request: Request, payload: LoginRequest) -> dict:
+async def login(engine, request: Request, payload: LoginRequest) -> dict:
     email = payload.email.strip().lower()
     ip = (request.client.host if request.client else "anon")
     identifier = f"{ip}:{email}"
 
-    await _check_lockout(db, identifier)
+    await _check_lockout(engine, identifier)
 
-    admin = await db.admins.find_one({"email": email})
-    if not admin or not verify_password(payload.password, admin["password_hash"]):
-        await _record_failed_attempt(db, identifier)
+    async with engine.connect() as conn:
+        admin = (await conn.execute(
+            select(T.admins).where(T.admins.c.email == email)
+        )).fetchone()
+
+    if not admin or not verify_password(payload.password, admin.password_hash):
+        await _record_failed_attempt(engine, identifier)
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    await _clear_attempts(db, identifier)
+    await _clear_attempts(engine, identifier)
     token = create_token(email)
     return {"token": token, "email": email, "role": "admin"}
 
