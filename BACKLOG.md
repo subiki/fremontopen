@@ -168,4 +168,13 @@ This file is the source of truth. To populate it as **GitHub Issues** on https:/
 ```bash
 bash scripts/create_github_issues.sh
 ```
-See [`scripts/create_github_issues.sh`](scripts/create_github_issues.sh) for details and requirements.
+
+To also **close** any open issues whose backlog items have moved to ✅ Done (or were removed from the active tables), add `--close-done`:
+
+```bash
+bash scripts/create_github_issues.sh --close-done
+```
+
+The script is fully idempotent: re-running it will never duplicate issues, and `--close-done` will only close issues that carry one of the project's `epic:*` labels and whose title no longer appears in an active backlog table.
+
+See [`scripts/create_github_issues.sh`](scripts/create_github_issues.sh) for full details and prerequisites.
