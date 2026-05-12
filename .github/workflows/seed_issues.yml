@@ -1,0 +1,41 @@
+name: Seed GitHub Issues from BACKLOG.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run — print what would happen without making any API calls"
+        type: boolean
+        default: false
+      close_done:
+        description: "Close open issues whose titles are no longer in the active backlog"
+        type: boolean
+        default: false
+
+concurrency:
+  group: seed-issues
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Seed issues from BACKLOG.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=()
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            ARGS+=(--dry-run)
+          fi
+          if [[ "${{ inputs.close_done }}" == "true" ]]; then
+            ARGS+=(--close-done)
+          fi
+          bash scripts/create_github_issues.sh "${ARGS[@]}"
