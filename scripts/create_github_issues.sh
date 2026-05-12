@@ -21,8 +21,10 @@
 # What it does:
 #   1. Creates one GitHub label per epic slug  (e.g. "epic:tournaments")
 #   2. Creates P0 / P1 / P2 / P3 priority labels if they don't already exist
-#   3. For each non-Done backlog row, creates a GitHub Issue unless an issue
-#      with the same title already exists (idempotent re-runs)
+#   3. Fetches all existing issue titles (open + closed) upfront, then for each
+#      non-Done backlog row: creates a GitHub Issue if no matching issue exists,
+#      or skips it.  --dry-run reports exactly which items are missing (new)
+#      vs already tracked, without making any API write calls.
 #   4. [--close-done] Closes any open issue that carries one of our epic labels
 #      but whose title is no longer present in the active backlog tables
 #   5. Prints a summary: N labels created, M issues created, K skipped, J closed
@@ -119,23 +121,6 @@ create_label() {
   else
     echo "  Label already up-to-date: $name"
   fi
-}
-
-# ---------------------------------------------------------------------------
-# Helper: issue_exists <title>
-# Returns 0 if an open or closed issue with that exact title exists
-# ---------------------------------------------------------------------------
-issue_exists() {
-  local title="$1"
-  local count
-  count="$(gh issue list \
-    --repo "$REPO" \
-    --state all \
-    --search "\"$title\" in:title" \
-    --json title \
-    --jq "[.[] | select(.title == \"$title\")] | length" \
-    2>/dev/null)"
-  [[ "${count:-0}" -gt 0 ]]
 }
 
 # ---------------------------------------------------------------------------
@@ -260,9 +245,41 @@ done
 echo ""
 
 # ---------------------------------------------------------------------------
-# Step 3 — Parse BACKLOG.md and create issues
+# Step 3 — Pre-fetch all existing issue titles (open + closed)
 # ---------------------------------------------------------------------------
-echo "=== Step 3: Issues ==="
+# Fetch ALL repo issues upfront (no label filter) so the parse loop can do
+# O(1) local lookups instead of one API call per backlog item, and so
+# --dry-run reports only truly new issues regardless of label state.
+# This replicates the original issue_exists() search-across-all-issues scope.
+# ---------------------------------------------------------------------------
+echo "=== Step 3: Detect missing issues ==="
+
+declare -A existing_issue_titles=()
+
+if $DRY_RUN; then
+  echo "  [DRY RUN] Fetching all repo issues to find gaps..."
+else
+  echo "  Fetching all repo issues (open + closed)..."
+fi
+
+# Note: --limit 2000 covers any realistic project size. If your repo grows
+# beyond that, raise the limit here or switch to paginated gh api calls.
+while IFS= read -r ttl; do
+  [[ -n "$ttl" ]] && existing_issue_titles["$ttl"]=1
+done < <(
+  gh issue list \
+    --repo "$REPO" \
+    --state all \
+    --limit 2000 \
+    --json title \
+    --jq '.[].title' \
+    2>/dev/null || true
+)
+
+echo "  Found ${#existing_issue_titles[@]} existing issues (open + closed)"
+echo ""
+
+echo "=== Step 3b: Create missing issues ==="
 
 # State machine variables
 current_epic_num=0
@@ -369,12 +386,17 @@ ${effort_label}"
 
     labels="epic:${current_epic_slug},${priority},enhancement"
 
-    # Check for duplicates
-    if ! $DRY_RUN && issue_exists "$title"; then
-      echo "  Skipped (exists): $title"
+    # Check against pre-fetched set (works in both normal and --dry-run mode).
+    # After creating, mark the title as seen so repeated titles within one run
+    # (e.g. a duplicate row accidentally added to BACKLOG.md) are not created twice.
+    if [[ -n "${existing_issue_titles[$title]+_}" ]]; then
+      if ! $DRY_RUN; then
+        echo "  Skipped (exists): $title"
+      fi
       ISSUES_SKIPPED=$((ISSUES_SKIPPED + 1))
     else
       create_issue "$title" "$labels" "$body"
+      existing_issue_titles["$title"]=1
     fi
   fi
 
@@ -445,7 +467,11 @@ echo ""
 echo "=== Summary ==="
 echo "  Labels created/updated : $LABELS_CREATED"
 echo "  Issues created         : $ISSUES_CREATED"
-echo "  Issues skipped         : $ISSUES_SKIPPED"
+echo "  Issues skipped (exist) : $ISSUES_SKIPPED"
 if $CLOSE_DONE; then
   echo "  Issues closed          : $ISSUES_CLOSED"
+fi
+if $DRY_RUN && [[ $ISSUES_CREATED -eq 0 ]]; then
+  echo ""
+  echo "  All backlog items already have a GitHub Issue — nothing to create."
 fi
