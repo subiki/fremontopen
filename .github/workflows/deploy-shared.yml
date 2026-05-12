@@ -1,0 +1,86 @@
+name: Deploy to DreamHost Shared
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-shared
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---- Frontend build on the runner (cheap CPU, fast network) ----
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+        run: |
+          echo "REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL" > .env.production
+          yarn build
+
+      # ---- SSH ----
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      # ---- Sync built frontend → Passenger public/ ----
+      - name: Rsync frontend → server
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            frontend/build/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/passenger_root/public/"
+
+      # ---- Sync backend source (preserve .env + venv) ----
+      - name: Rsync backend → server
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            --exclude '__pycache__' \
+            --exclude '.env' \
+            --exclude 'venv' \
+            backend/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/backend/"
+
+      # ---- Sync deploy scripts (so remote can call shared/remote_deploy.sh) ----
+      - name: Rsync deploy scripts → server
+        run: |
+          rsync -az \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            deploy/shared/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/deploy/shared/"
+
+      # ---- Reload Passenger ----
+      - name: Remote install + restart
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "DEPLOY_PATH=${{ secrets.DEPLOY_PATH }} bash ${{ secrets.DEPLOY_PATH }}/deploy/shared/remote_deploy.sh"
+
+      - name: Smoke test API
+        run: |
+          curl -fsS --retry 5 --retry-delay 3 \
+            "${{ secrets.REACT_APP_BACKEND_URL }}/api/health" \
+            | tee /dev/stderr

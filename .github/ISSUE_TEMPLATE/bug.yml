@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a problem with CueStats
+labels: ["bug"]
+body:
+  - type: input
+    id: env
+    attributes:
+      label: Where did it happen?
+      placeholder: "Production (fremontopen.com) / local dev / etc."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste anything useful (browser console errors, backend.err.log, screenshots)

@@ -1,0 +1,89 @@
+import { useEffect, useState } from "react";
+import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
+import { fetchSyncStatus } from "../lib/api";
+import { SearchBar } from "./SearchBar";
+
+const formatRelative = (iso) => {
+  if (!iso) return "no data yet";
+  const d = new Date(iso);
+  const diffMs = Date.now() - d.getTime();
+  const m = Math.floor(diffMs / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+export const Topbar = ({ title, subtitle, actions }) => {
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const s = await fetchSyncStatus();
+        if (alive) setStatus(s);
+      } catch {
+        /* ignore */
+      }
+    };
+    load();
+    const t = setInterval(load, 60000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, []);
+
+  const ok = status?.status === "ok";
+  const err = status?.status === "error";
+  const never = !status || status?.status === "never_synced";
+
+  return (
+    <header
+      className="sticky top-0 z-40 backdrop-blur-xl bg-[#0B0E14]/80 border-b border-[#273041]"
+      data-testid="app-topbar"
+    >
+      <div className="px-6 sm:px-8 py-5 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-[Outfit] text-2xl sm:text-3xl font-semibold tracking-tight text-[#F3F4F6] truncate">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="text-sm text-[#9CA3AF] mt-1 truncate">{subtitle}</p>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden lg:block">
+            <SearchBar />
+          </div>
+          {actions}
+          <div
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-md bg-[#141923] border border-[#273041] text-xs"
+            data-testid="sync-status"
+            title="The dataset is refreshed by a scheduled background job"
+          >
+            {err ? (
+              <WarningCircle size={14} className="text-[#EF4444]" weight="fill" />
+            ) : (
+              <CheckCircle
+                size={14}
+                weight="fill"
+                className={ok ? "text-[#10B981] pulse-dot" : "text-[#6B7280]"}
+              />
+            )}
+            <span className="text-[#9CA3AF] font-mono">
+              {err
+                ? "stale data"
+                : never
+                ? "no data yet"
+                : `data updated ${formatRelative(status?.last_synced_at)}`}
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
