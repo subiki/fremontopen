@@ -11,14 +11,14 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = ["/"]
 localPort = 23218
 
 [services.development]
-run = "pnpm --filter @workspace/cuestats run dev"
+run = "bash /home/runner/workspace/dev_frontend.sh"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/cuestats", "run", "build" ]
+build = ["pnpm", "--filter", "@workspace/cuestats", "run", "build"]
 publicDir = "artifacts/cuestats/dist/public"
 serve = "static"
 
