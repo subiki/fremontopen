@@ -10,18 +10,22 @@
 #   - The target repo must be the one that `gh repo view` resolves to
 #
 # Usage:
-#   bash scripts/create_github_issues.sh [--dry-run] [--help]
+#   bash scripts/create_github_issues.sh [--dry-run] [--close-done] [--help]
 #
 # Flags:
-#   --dry-run   Print what would be created/skipped without calling the API
-#   --help      Print this message and exit
+#   --dry-run     Print what would be created/skipped/closed without calling the API
+#   --close-done  Close any open GitHub Issue whose title is no longer in the active
+#                 backlog (i.e. the item was moved to ✅ Done or deleted from BACKLOG.md)
+#   --help        Print this message and exit
 #
 # What it does:
 #   1. Creates one GitHub label per epic slug  (e.g. "epic:tournaments")
 #   2. Creates P0 / P1 / P2 / P3 priority labels if they don't already exist
 #   3. For each non-Done backlog row, creates a GitHub Issue unless an issue
 #      with the same title already exists (idempotent re-runs)
-#   4. Prints a summary: N labels created, M issues created, K skipped
+#   4. [--close-done] Closes any open issue that carries one of our epic labels
+#      but whose title is no longer present in the active backlog tables
+#   5. Prints a summary: N labels created, M issues created, K skipped, J closed
 # =============================================================================
 
 set -euo pipefail
@@ -30,16 +34,18 @@ set -euo pipefail
 # Argument parsing
 # ---------------------------------------------------------------------------
 DRY_RUN=false
+CLOSE_DONE=false
 for arg in "$@"; do
   case "$arg" in
-    --dry-run) DRY_RUN=true ;;
+    --dry-run)    DRY_RUN=true ;;
+    --close-done) CLOSE_DONE=true ;;
     --help|-h)
       sed -n '/^# Usage:/,/^# =/p' "$0" | sed 's/^# \?//'
       exit 0
       ;;
     *)
       echo "Unknown argument: $arg" >&2
-      echo "Usage: bash scripts/create_github_issues.sh [--dry-run] [--help]" >&2
+      echo "Usage: bash scripts/create_github_issues.sh [--dry-run] [--close-done] [--help]" >&2
       exit 1
       ;;
   esac
@@ -86,6 +92,7 @@ echo ""
 LABELS_CREATED=0
 ISSUES_CREATED=0
 ISSUES_SKIPPED=0
+ISSUES_CLOSED=0
 
 # ---------------------------------------------------------------------------
 # Helper: create_label <name> <color_hex> <description>
@@ -263,6 +270,10 @@ current_epic_slug=""
 in_done_section=false
 in_table=false
 
+# Associative array used as a set: active_titles[title]=1
+# Populated during parsing so Step 4 can check membership.
+declare -A active_titles=()
+
 # Strip CRLF, then process line by line
 while IFS= read -r raw_line; do
   line="${raw_line%$'\r'}"
@@ -329,6 +340,9 @@ while IFS= read -r raw_line; do
     fi
     title="$title_raw"
 
+    # Record this title as active so --close-done can check membership later
+    active_titles["$title"]=1
+
     # Map effort code to human label
     case "$effort" in
       S) effort_label="S (≤ 1 day)" ;;
@@ -367,6 +381,64 @@ ${effort_label}"
 done < "$BACKLOG"
 
 # ---------------------------------------------------------------------------
+# Step 4 — Close issues for completed backlog items (--close-done)
+# ---------------------------------------------------------------------------
+# Strategy: fetch every OPEN issue that carries at least one "epic:*" label.
+# Any such issue whose title is NOT in the active_titles set is no longer in
+# the backlog tables — it was moved to ✅ Done or deleted — and should be
+# closed with an explanatory comment.
+# In --dry-run mode the fetch still happens so we can report exactly which
+# issues would be closed; only the actual close call is suppressed.
+# ---------------------------------------------------------------------------
+if $CLOSE_DONE; then
+  echo ""
+  echo "=== Step 4: Close completed issues (--close-done) ==="
+
+  # Fetch open issues for each epic label, accumulate unique number→title pairs.
+  declare -A seen_issues=()
+
+  for slug in "${EPIC_SLUGS[@]}"; do
+    while IFS= read -r entry; do
+      num="$(echo "$entry" | sed 's/|.*//')"
+      ttl="$(echo "$entry" | sed 's/^[^|]*|//')"
+      if [[ -n "$num" && -z "${seen_issues[$num]+_}" ]]; then
+        seen_issues["$num"]="$ttl"
+      fi
+    done < <(
+      gh issue list \
+        --repo "$REPO" \
+        --state open \
+        --label "epic:${slug}" \
+        --limit 500 \
+        --json number,title \
+        --jq '.[] | "\(.number)|\(.title)"' \
+        2>/dev/null || true
+    )
+  done
+
+  # Close (or report) any issue whose title is not in the active backlog.
+  for num in "${!seen_issues[@]}"; do
+    issue_title="${seen_issues[$num]}"
+    if [[ -z "${active_titles[$issue_title]+_}" ]]; then
+      if $DRY_RUN; then
+        echo "[DRY RUN] Would close #${num}: ${issue_title}"
+      else
+        gh issue close "$num" \
+          --repo "$REPO" \
+          --comment "Automatically closed by sync script: this backlog item has been marked ✅ Done in BACKLOG.md or was removed from the active backlog." \
+          2>/dev/null
+        echo "  Closed #${num}: ${issue_title}"
+      fi
+      ISSUES_CLOSED=$((ISSUES_CLOSED + 1))
+    fi
+  done
+
+  if [[ $ISSUES_CLOSED -eq 0 ]]; then
+    echo "  No open issues to close — all are still in the active backlog."
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo ""
@@ -374,3 +446,6 @@ echo "=== Summary ==="
 echo "  Labels created/updated : $LABELS_CREATED"
 echo "  Issues created         : $ISSUES_CREATED"
 echo "  Issues skipped         : $ISSUES_SKIPPED"
+if $CLOSE_DONE; then
+  echo "  Issues closed          : $ISSUES_CLOSED"
+fi
