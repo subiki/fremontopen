@@ -163,16 +163,18 @@ If I had to pick what to build next, in order:
 
 ## Tracking
 
-This file is the source of truth. To populate it as **GitHub Issues** on https://github.com/subiki/fremontopen, run after pushing:
+This file is the source of truth. GitHub Issues are kept in sync automatically — a scheduled GitHub Actions workflow (`.github/workflows/sync_backlog.yml`) runs **every Monday at 09:00 UTC**, creating any new issues and closing any open issues whose backlog items have moved to ✅ Done.
 
-```bash
-bash scripts/create_github_issues.sh
-```
-
-To also **close** any open issues whose backlog items have moved to ✅ Done (or were removed from the active tables), add `--close-done`:
+To trigger the sync manually, go to **Actions → Weekly Backlog Sync → Run workflow** in the GitHub UI, or run locally after pushing:
 
 ```bash
 bash scripts/create_github_issues.sh --close-done
+```
+
+To populate issues without closing anything:
+
+```bash
+bash scripts/create_github_issues.sh
 ```
 
 To **preview** what would be created or closed without touching GitHub, add `--dry-run`:
@@ -184,4 +186,4 @@ bash scripts/create_github_issues.sh --dry-run --close-done
 
 The script is fully idempotent: re-running it will never duplicate issues, and `--close-done` will only close issues that carry one of the project's `epic:*` labels and whose title no longer appears in an active backlog table. In `--dry-run` mode the script fetches existing issues first so it reports only the items that are genuinely missing — not ones that already have a GitHub Issue.
 
-See [`scripts/create_github_issues.sh`](scripts/create_github_issues.sh) for full details and prerequisites.
+The automated workflow requires a **`GH_TOKEN`** secret in the repo (Settings → Secrets → Actions) with `issues: write` scope. See [`scripts/create_github_issues.sh`](scripts/create_github_issues.sh) for full details and prerequisites.

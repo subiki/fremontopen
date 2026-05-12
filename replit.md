@@ -42,6 +42,7 @@ Replit is used as a **code editor only**. The application runs on a DreamHost VP
 - `deploy/nginx.conf` — nginx config reference (bootstrap.sh generates the real one)
 - `deploy/cuestats.service` — systemd unit reference (bootstrap.sh generates the real one)
 - `.github/workflows/deploy.yml` — CI/CD: build frontend → rsync → pip install → restart
+- `.github/workflows/sync_backlog.yml` — weekly BACKLOG.md → GitHub Issues sync (Mondays 09:00 UTC)
 
 ## GitHub Actions secrets required
 
@@ -54,6 +55,7 @@ Set these in your repo → Settings → Secrets → Actions:
 | `DEPLOY_USER` | SSH username on VPS |
 | `DEPLOY_PATH` | Absolute path on VPS, e.g. `/home/youruser/cuestats` |
 | `REACT_APP_BACKEND_URL` | `https://fremontopen.com` |
+| `GH_TOKEN` | GitHub PAT with `issues: write` scope — used by the weekly backlog sync |
 
 ## VPS environment variables (backend/.env — never committed)
 
