@@ -1,0 +1,23 @@
+name: Weekly Backlog Sync
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
+  workflow_dispatch:      # Allow manual trigger from the Actions tab
+
+jobs:
+  sync:
+    name: Sync BACKLOG.md → GitHub Issues
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # required by actions/checkout
+      issues: write   # required to create and close issues
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run backlog sync (create new + close completed)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash scripts/create_github_issues.sh --close-done
