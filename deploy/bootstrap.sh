@@ -6,8 +6,8 @@
 #   - Python venv (system python3 is pre-installed on DreamHost VPS)
 #   - loginctl enable-linger  (user-level systemd, supported on DreamHost VPS)
 #   - ~/.config/systemd/user/ (user service, no /etc/ writes needed)
-#   - DreamHost panel Proxy Server (replaces nginx config)
-#   - MongoDB Atlas free tier   (replaces local mongod install)
+#   - DreamHost panel MySQL database (free, included with your hosting plan)
+#   - DreamHost panel Proxy Server  (routes /api/* to FastAPI — replaces nginx)
 #
 # Run ONCE on the VPS before enabling GitHub Actions CD:
 #   bash deploy/bootstrap.sh
@@ -16,14 +16,16 @@
 #
 # ─── PREREQUISITES (do these first in the DreamHost panel) ──────────────────
 #
-# 1. MongoDB Atlas (free, no credit card):
-#    a. Create a free account at https://cloud.mongodb.com
-#    b. Build a free M0 cluster (512 MB, free forever)
-#    c. Database Access → Add a user → save the username & password
-#    d. Network Access → Allow access from anywhere (0.0.0.0/0) for simplicity,
-#       or add your VPS IP only for better security.
-#    e. Clusters → Connect → Drivers → copy the connection string
-#       (looks like: mongodb+srv://user:pass@cluster.mongodb.net/cuestats)
+# 1. DreamHost MySQL database:
+#    a. Log in to panel.dreamhost.com
+#    b. MySQL Databases (under "More" in the left sidebar)
+#    c. Create a new database — e.g. name it "cuestats"
+#    d. Create a new MySQL hostname — e.g. "mysql.fremontopen.com"
+#    e. Create a new MySQL user (strong password), grant it ALL privileges
+#       on the database you just created
+#    f. Your DATABASE_URL will be:
+#       mysql+aiomysql://USERNAME:PASSWORD@mysql.fremontopen.com/cuestats
+#    (Tables are created automatically on first startup — nothing else to do)
 #
 # 2. DreamHost panel Proxy Server:
 #    a. Log in to panel.dreamhost.com
@@ -82,22 +84,19 @@ if [ ! -f backend/.env ]; then
 # │  Keep this file private. It is never committed or deployed.      │
 # └─────────────────────────────────────────────────────────────────┘
 
-# ── MongoDB Atlas ──────────────────────────────────────────────────
-# How to get this:
-#   1. Go to https://cloud.mongodb.com  →  sign up free (no card needed)
-#   2. Create a free M0 cluster  →  any region
-#   3. Database Access  →  Add new database user
-#      Username: cuestats       Password: choose something strong
-#   4. Network Access  →  Add IP Address  →  Allow access from anywhere  (0.0.0.0/0)
-#   5. Clusters  →  Connect  →  Drivers  →  copy the string that looks like:
-#      mongodb+srv://cuestats:<password>@cluster0.abcde.mongodb.net/
-#   6. Paste it below, replace <password> with your actual password,
-#      and add ?retryWrites=true&w=majority at the end
+# ── MySQL database ─────────────────────────────────────────────────
+# Format: mysql+aiomysql://USER:PASSWORD@HOST/DBNAME
 #
-# Example (yours will have a different cluster ID):
-#   mongodb+srv://cuestats:MyPass123@cluster0.ab1cd.mongodb.net/cuestats?retryWrites=true&w=majority
-MONGO_URL="mongodb+srv://CHANGEME_USER:CHANGEME_PASSWORD@cluster0.CHANGEME.mongodb.net/cuestats?retryWrites=true&w=majority"
-DB_NAME="cuestats"
+# Get these values from the DreamHost panel:
+#   panel.dreamhost.com → MySQL Databases
+#   HOST = the MySQL hostname you created (e.g. mysql.fremontopen.com)
+#   USER = the MySQL username you created
+#   PASSWORD = the password you set for that user
+#   DBNAME = the database name you created (e.g. cuestats)
+#
+# Example:
+#   mysql+aiomysql://cuestats_user:MyPass123@mysql.fremontopen.com/cuestats
+DATABASE_URL="mysql+aiomysql://CHANGEME_user:CHANGEME_password@CHANGEME_mysql_host/CHANGEME_dbname"
 
 # ── Your domain (leave as-is for fremontopen.com) ──────────────────
 CORS_ORIGINS="https://${DOMAIN}"
@@ -119,10 +118,10 @@ ANTHROPIC_API_KEY="CHANGEME_anthropic_api_key"
 ADMIN_EMAIL="CHANGEME_your@email.com"
 ADMIN_PASSWORD="CHANGEME_strong_password"
 
-# ── JWT secret (already generated — do not change) ────────────────
+# ── JWT secret (already generated — do not change after first run) ──
 JWT_SECRET="$(openssl rand -hex 32)"
 
-# ── OAuth providers (all optional — leave blank to disable) ───────
+# ── OAuth providers (all optional — leave blank to disable) ────────
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 DISCORD_CLIENT_ID=""
@@ -139,7 +138,7 @@ EOF
   echo "   nano $DEPLOY_PATH/backend/.env"
   echo ""
   echo " You MUST replace every CHANGEME_ value:"
-  echo "   MONGO_URL          — Atlas connection string (see instructions above)"
+  echo "   DATABASE_URL       — MySQL connection string (see comments above)"
   echo "   CHALLONGE_API_KEY  — from challonge.com/settings/developer"
   echo "   ANTHROPIC_API_KEY  — from console.anthropic.com (skip = chat won't work)"
   echo "   ADMIN_EMAIL        — your email address"
