@@ -1,13 +1,15 @@
 """Admin-only routes: rename player, merge players, edit/delete match, trigger sync."""
-import asyncio
 import logging
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import select, insert, update
 
 from auth import require_admin
 from sync_job import run_sync, _rebuild_players
+import database as T
 
 log = logging.getLogger("cuestats.admin")
 
@@ -35,8 +37,8 @@ class SyncTriggerRequest(BaseModel):
     tournament_id: Optional[int] = None
 
 
-# ---------- Helpers (db is injected from server.py) ----------
-def make_admin_router(db):
+# ---------- Router factory ----------
+def make_admin_router(engine):
 
     @admin_router.get("/me")
     async def whoami(admin_email: str = Depends(require_admin)):
@@ -50,21 +52,24 @@ def make_admin_router(db):
         if new_name == name:
             return {"updated": 0, "message": "no-op (same name)"}
 
-        # update matches
-        winners = await db.matches.update_many(
-            {"winner_name": name}, {"$set": {"winner_name": new_name}}
-        )
-        losers = await db.matches.update_many(
-            {"loser_name": name}, {"$set": {"loser_name": new_name}}
-        )
-        # rebuild players aggregate
-        await _rebuild_players(db)
-        # audit
-        await _audit(db, "rename_player", {"from": name, "to": new_name})
+        async with engine.begin() as conn:
+            w_res = await conn.execute(
+                update(T.matches)
+                .where(T.matches.c.winner_name == name)
+                .values(winner_name=new_name)
+            )
+            l_res = await conn.execute(
+                update(T.matches)
+                .where(T.matches.c.loser_name == name)
+                .values(loser_name=new_name)
+            )
+            await _rebuild_players(conn)
+            await _audit(conn, "rename_player", {"from": name, "to": new_name})
+
         return {
             "from": name,
             "to": new_name,
-            "matches_updated": winners.modified_count + losers.modified_count,
+            "matches_updated": w_res.rowcount + l_res.rowcount,
         }
 
     @admin_router.post("/players/merge")
@@ -77,17 +82,24 @@ def make_admin_router(db):
             raise HTTPException(status_code=400, detail="alias_names must include at least one alias")
 
         total = 0
-        for alias in aliases:
-            w = await db.matches.update_many(
-                {"winner_name": alias}, {"$set": {"winner_name": canonical}}
-            )
-            l = await db.matches.update_many(
-                {"loser_name": alias}, {"$set": {"loser_name": canonical}}
-            )
-            total += w.modified_count + l.modified_count
+        async with engine.begin() as conn:
+            for alias in aliases:
+                w = await conn.execute(
+                    update(T.matches)
+                    .where(T.matches.c.winner_name == alias)
+                    .values(winner_name=canonical)
+                )
+                l = await conn.execute(
+                    update(T.matches)
+                    .where(T.matches.c.loser_name == alias)
+                    .values(loser_name=canonical)
+                )
+                total += w.rowcount + l.rowcount
+            await _rebuild_players(conn)
+            await _audit(conn, "merge_players", {
+                "canonical": canonical, "aliases": aliases, "matches_updated": total
+            })
 
-        await _rebuild_players(db)
-        await _audit(db, "merge_players", {"canonical": canonical, "aliases": aliases, "matches_updated": total})
         return {"canonical_name": canonical, "aliases": aliases, "matches_updated": total}
 
     @admin_router.patch("/matches/{match_id}")
@@ -95,29 +107,40 @@ def make_admin_router(db):
         updates = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
         if not updates:
             raise HTTPException(status_code=400, detail="No fields to update")
-        result = await db.matches.update_one({"id": match_id}, {"$set": updates})
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Match not found")
-        await _rebuild_players(db)
-        await _audit(db, "update_match", {"id": match_id, **updates})
-        m = await db.matches.find_one({"id": match_id}, {"_id": 0})
-        return m
+
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                update(T.matches).where(T.matches.c.id == match_id).values(**updates)
+            )
+            if result.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Match not found")
+            await _rebuild_players(conn)
+            await _audit(conn, "update_match", {"id": match_id, **updates})
+            row = (await conn.execute(
+                select(T.matches).where(T.matches.c.id == match_id)
+            )).fetchone()
+
+        return dict(row._mapping)
 
     @admin_router.delete("/matches/{match_id}")
     async def delete_match(match_id: str):
-        result = await db.matches.delete_one({"id": match_id})
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Match not found")
-        await _rebuild_players(db)
-        await _audit(db, "delete_match", {"id": match_id})
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                T.matches.delete().where(T.matches.c.id == match_id)
+            )
+            if result.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Match not found")
+            await _rebuild_players(conn)
+            await _audit(conn, "delete_match", {"id": match_id})
+
         return {"deleted": match_id}
 
     @admin_router.post("/sync")
     async def admin_sync(body: SyncTriggerRequest):
-        """Run sync inline (returns the summary). Beware of long-running times if force=True."""
         try:
             summary = await run_sync(force=body.force, only_tournament=body.tournament_id)
-            await _audit(db, "sync", summary)
+            async with engine.begin() as conn:
+                await _audit(conn, "sync", summary)
             return summary
         except Exception as e:
             log.exception("Admin sync failed")
@@ -125,16 +148,15 @@ def make_admin_router(db):
 
     @admin_router.get("/audit")
     async def list_audit(limit: int = 50):
-        items = await db.audit_log.find({}, {"_id": 0}).sort("at", -1).limit(limit).to_list(length=limit)
-        return items
+        async with engine.connect() as conn:
+            rows = (await conn.execute(
+                select(T.audit_log).order_by(T.audit_log.c.at.desc()).limit(limit)
+            )).fetchall()
+        return [dict(r._mapping) for r in rows]
 
     return admin_router
 
 
-async def _audit(db, action: str, payload: dict) -> None:
-    from datetime import datetime, timezone
-    await db.audit_log.insert_one({
-        "action": action,
-        "payload": payload,
-        "at": datetime.now(timezone.utc).isoformat(),
-    })
+async def _audit(conn, action: str, payload: dict) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    await conn.execute(insert(T.audit_log).values(action=action, payload=payload, at=now))

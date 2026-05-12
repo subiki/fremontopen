@@ -7,10 +7,11 @@ pydantic_core==2.46.4
 annotated-types==0.7.0
 python-multipart==0.0.27
 
-# Database — async MongoDB
-motor==3.3.1
-pymongo==4.5.0
-dnspython==2.8.0
+# Database — async SQLAlchemy
+# Dev uses SQLite (aiosqlite); prod DreamHost MySQL uses aiomysql
+sqlalchemy==2.0.41
+aiosqlite==0.21.0
+aiomysql==0.2.0
 
 # Config
 python-dotenv==1.2.2

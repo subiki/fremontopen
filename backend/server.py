@@ -6,30 +6,33 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from sqlalchemy import select, func
 from pydantic import BaseModel, Field
 
+from database import make_engine, init_db
+import database as T
 from ai_agent import ask_agent
-from auth import LoginRequest, login as auth_login, seed_admin, require_admin  # noqa: F401
+from auth import LoginRequest, login as auth_login, seed_admin, require_admin
 from admin_routes import make_admin_router
 from users import make_user_router
 from extras_routes import make_extras_router
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")
+load_dotenv(ROOT_DIR / ".env", override=True)
 
-mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
+engine = make_engine()
 
 app = FastAPI(title="CueStats API")
 api_router = APIRouter(prefix="/api")
 auth_router = APIRouter(prefix="/api/auth")
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger("cuestats")
 
 
@@ -40,30 +43,55 @@ class ChatRequest(BaseModel):
 
 
 # ---------- Helpers ----------
+def _row_to_dict(row) -> Dict[str, Any]:
+    return dict(row._mapping)
+
+
 async def _gather_stats() -> Dict[str, Any]:
-    tournaments = await db.tournaments.count_documents({})
-    matches = await db.matches.count_documents({"winner_name": {"$ne": None}})
-    players = await db.players.find({}, {"_id": 0}).sort("wins", -1).to_list(length=2000)
+    async with engine.connect() as conn:
+        t_count = (await conn.execute(
+            select(func.count()).select_from(T.tournaments)
+        )).scalar()
+
+        m_count = (await conn.execute(
+            select(func.count()).select_from(T.matches)
+            .where(T.matches.c.winner_name.isnot(None))
+        )).scalar()
+
+        rows = (await conn.execute(
+            select(T.players).order_by(T.players.c.wins.desc())
+        )).fetchall()
+
+    players = [_row_to_dict(r) for r in rows]
     for p in players:
         total = p.get("wins", 0) + p.get("losses", 0)
-        p["win_rate"] = round((p.get("wins", 0) / total) * 100, 1) if total else 0.0
+        p["win_rate"] = round((p["wins"] / total) * 100, 1) if total else 0.0
+
     return {
-        "total_tournaments": tournaments,
-        "total_matches": matches,
+        "total_tournaments": t_count,
+        "total_matches": m_count,
         "total_players": len(players),
         "players": players,
     }
 
 
 async def _all_matches() -> List[Dict[str, Any]]:
-    return await db.matches.find(
-        {"winner_name": {"$ne": None}, "loser_name": {"$ne": None}},
-        {"_id": 0},
-    ).to_list(length=20000)
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.matches).where(
+                T.matches.c.winner_name.isnot(None),
+                T.matches.c.loser_name.isnot(None),
+            )
+        )).fetchall()
+    return [_row_to_dict(r) for r in rows]
 
 
 async def _get_last_sync() -> Optional[Dict[str, Any]]:
-    return await db.sync_meta.find_one({"_id": "last"}, {"_id": 0})
+    async with engine.connect() as conn:
+        row = (await conn.execute(
+            select(T.sync_meta).where(T.sync_meta.c.key == "last")
+        )).fetchone()
+    return row.value if row else None
 
 
 # ---------- Public Routes ----------
@@ -97,48 +125,75 @@ async def get_stats():
     stats = await _gather_stats()
     meta = await _get_last_sync()
     stats["last_synced_at"] = (meta or {}).get("last_synced_at")
-    recent = await db.matches.find(
-        {"winner_name": {"$ne": None}}, {"_id": 0}
-    ).sort("completed_at", -1).limit(10).to_list(length=10)
-    stats["recent_matches"] = recent
+
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.matches)
+            .where(T.matches.c.winner_name.isnot(None))
+            .order_by(T.matches.c.completed_at.desc())
+            .limit(10)
+        )).fetchall()
+
+    stats["recent_matches"] = [_row_to_dict(r) for r in rows]
     return stats
 
 
 @api_router.get("/tournaments")
 async def list_tournaments():
-    items = await db.tournaments.find({}, {"_id": 0}).sort("started_at", -1).to_list(length=2000)
-    return items
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.tournaments).order_by(T.tournaments.c.started_at.desc())
+        )).fetchall()
+    return [_row_to_dict(r) for r in rows]
 
 
 @api_router.get("/tournaments/{tournament_id}")
 async def get_tournament(tournament_id: int):
-    t = await db.tournaments.find_one({"id": tournament_id}, {"_id": 0})
-    if not t:
-        raise HTTPException(status_code=404, detail="Tournament not found")
-    matches = await db.matches.find(
-        {"tournament_id": tournament_id}, {"_id": 0}
-    ).sort("round", 1).to_list(length=2000)
-    return {"tournament": t, "matches": matches}
+    async with engine.connect() as conn:
+        t_row = (await conn.execute(
+            select(T.tournaments).where(T.tournaments.c.id == tournament_id)
+        )).fetchone()
+        if not t_row:
+            raise HTTPException(status_code=404, detail="Tournament not found")
+
+        m_rows = (await conn.execute(
+            select(T.matches)
+            .where(T.matches.c.tournament_id == tournament_id)
+            .order_by(T.matches.c.round)
+        )).fetchall()
+
+    return {
+        "tournament": _row_to_dict(t_row),
+        "matches": [_row_to_dict(r) for r in m_rows],
+    }
 
 
 @api_router.get("/players")
 async def list_players(q: Optional[str] = None):
-    query: Dict[str, Any] = {}
-    if q:
-        query["name"] = {"$regex": q, "$options": "i"}
-    players = await db.players.find(query, {"_id": 0}).sort("wins", -1).to_list(length=5000)
-    return players
+    async with engine.connect() as conn:
+        stmt = select(T.players).order_by(T.players.c.wins.desc())
+        if q:
+            stmt = stmt.where(T.players.c.name.ilike(f"%{q}%"))
+        rows = (await conn.execute(stmt)).fetchall()
+    return [_row_to_dict(r) for r in rows]
 
 
 @api_router.get("/players/{name}")
 async def get_player(name: str):
-    player = await db.players.find_one({"name": name}, {"_id": 0})
-    if not player:
-        raise HTTPException(status_code=404, detail="Player not found")
-    matches = await db.matches.find(
-        {"$or": [{"winner_name": name}, {"loser_name": name}]},
-        {"_id": 0},
-    ).to_list(length=5000)
+    async with engine.connect() as conn:
+        p_row = (await conn.execute(
+            select(T.players).where(T.players.c.name == name)
+        )).fetchone()
+        if not p_row:
+            raise HTTPException(status_code=404, detail="Player not found")
+
+        m_rows = (await conn.execute(
+            select(T.matches).where(
+                (T.matches.c.winner_name == name) | (T.matches.c.loser_name == name)
+            )
+        )).fetchall()
+
+    matches = [_row_to_dict(r) for r in m_rows]
 
     h2h: Dict[str, Dict[str, int]] = {}
     for m in matches:
@@ -154,21 +209,28 @@ async def get_player(name: str):
     ]
     h2h_list.sort(key=lambda x: x["wins"] + x["losses"], reverse=True)
 
-    return {"player": player, "matches": matches, "head_to_head": h2h_list}
+    return {"player": _row_to_dict(p_row), "matches": matches, "head_to_head": h2h_list}
 
 
 @api_router.get("/leaderboard")
 async def leaderboard(limit: int = 25):
-    players = await db.players.find({}, {"_id": 0}).sort("wins", -1).to_list(length=limit)
-    return players
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.players).order_by(T.players.c.wins.desc()).limit(limit)
+        )).fetchall()
+    return [_row_to_dict(r) for r in rows]
 
 
 @api_router.get("/matches")
 async def list_matches(limit: int = 100):
-    matches = await db.matches.find(
-        {"winner_name": {"$ne": None}}, {"_id": 0}
-    ).sort("completed_at", -1).limit(limit).to_list(length=limit)
-    return matches
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.matches)
+            .where(T.matches.c.winner_name.isnot(None))
+            .order_by(T.matches.c.completed_at.desc())
+            .limit(limit)
+        )).fetchall()
+    return [_row_to_dict(r) for r in rows]
 
 
 @api_router.post("/chat")
@@ -178,14 +240,25 @@ async def chat(req: ChatRequest):
     if not question:
         raise HTTPException(status_code=400, detail="Empty message")
 
-    user_doc = {
+    now = datetime.now(timezone.utc).isoformat()
+    user_msg = {
         "id": str(uuid.uuid4()),
         "session_id": session_id,
         "role": "user",
         "content": question,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": now,
     }
-    await db.chat_messages.insert_one(user_doc.copy())
+
+    async with engine.begin() as conn:
+        await conn.execute(
+            T.chat_messages.insert().values(
+                id=user_msg["id"],
+                session_id=session_id,
+                role="user",
+                content=question,
+                msg_ts=now,
+            )
+        )
 
     stats = await _gather_stats()
     matches = await _all_matches()
@@ -196,38 +269,54 @@ async def chat(req: ChatRequest):
         logger.exception("AI agent error")
         raise HTTPException(status_code=500, detail=f"AI error: {e}")
 
-    assistant_doc = {
+    ans_now = datetime.now(timezone.utc).isoformat()
+    assistant_msg = {
         "id": str(uuid.uuid4()),
         "session_id": session_id,
         "role": "assistant",
         "content": answer,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": ans_now,
     }
-    await db.chat_messages.insert_one(assistant_doc.copy())
+
+    async with engine.begin() as conn:
+        await conn.execute(
+            T.chat_messages.insert().values(
+                id=assistant_msg["id"],
+                session_id=session_id,
+                role="assistant",
+                content=answer,
+                msg_ts=ans_now,
+            )
+        )
 
     return {
         "session_id": session_id,
         "answer": answer,
-        "user_message": {k: v for k, v in user_doc.items() if k != "_id"},
-        "assistant_message": {k: v for k, v in assistant_doc.items() if k != "_id"},
+        "user_message": user_msg,
+        "assistant_message": assistant_msg,
     }
 
 
 @api_router.get("/chat/history/{session_id}")
 async def chat_history(session_id: str):
-    msgs = await db.chat_messages.find(
-        {"session_id": session_id}, {"_id": 0}
-    ).sort("timestamp", 1).to_list(length=2000)
-    return msgs
+    async with engine.connect() as conn:
+        rows = (await conn.execute(
+            select(T.chat_messages)
+            .where(T.chat_messages.c.session_id == session_id)
+            .order_by(T.chat_messages.c.msg_ts)
+        )).fetchall()
+    result = []
+    for r in rows:
+        d = _row_to_dict(r)
+        d["timestamp"] = d.pop("msg_ts")
+        result.append(d)
+    return result
 
 
 # ---------- Auth Routes ----------
 @auth_router.post("/login")
 async def login_route(payload: LoginRequest, request: Request):
-    return await auth_login(db, request, payload)
-
-
-from fastapi import Depends
+    return await auth_login(engine, request, payload)
 
 
 @auth_router.get("/me")
@@ -238,9 +327,9 @@ async def auth_me(admin_email: str = Depends(require_admin)):
 # ---------- Wire up ----------
 app.include_router(api_router)
 app.include_router(auth_router)
-app.include_router(make_admin_router(db))
-app.include_router(make_user_router(db))
-app.include_router(make_extras_router(db))
+app.include_router(make_admin_router(engine))
+app.include_router(make_user_router(engine))
+app.include_router(make_extras_router(engine))
 
 app.add_middleware(
     CORSMiddleware,
@@ -253,9 +342,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def on_startup():
-    await seed_admin(db)
+    await init_db(engine)
+    await seed_admin(engine)
 
 
 @app.on_event("shutdown")
-async def shutdown():
-    client.close()
+async def on_shutdown():
+    await engine.dispose()

@@ -1,41 +1,73 @@
 #!/usr/bin/env bash
-# Replit dev startup: MongoDB → seed (if empty) → uvicorn
+# Replit dev startup: SQLite database → seed (if empty) → uvicorn
+# Uses SQLite (no server needed). Set DATABASE_URL in backend/.env.
 set -euo pipefail
 
 BACKEND_DIR="$(cd "$(dirname "$0")/backend" && pwd)"
-MONGO_DATA="/tmp/mongodb-data"
-MONGO_LOG="/tmp/mongodb.log"
 PORT="${PORT:-8080}"
 
-echo "==> Starting local MongoDB..."
-mkdir -p "$MONGO_DATA"
-if ! pgrep -x mongod >/dev/null 2>&1; then
-  mongod --dbpath "$MONGO_DATA" \
-         --logpath "$MONGO_LOG" \
-         --bind_ip 127.0.0.1 \
-         --port 27017 \
-         --fork
-  # Wait for mongod to accept connections (up to 20 s)
-  for i in $(seq 1 20); do
-    mongosh --quiet --eval "db.runCommand({ping:1})" >/dev/null 2>&1 && break
-    sleep 1
-  done
-  echo "==> MongoDB ready."
-else
-  echo "==> MongoDB already running."
+# Ensure dev .env exists with SQLite DATABASE_URL
+ENV_FILE="$BACKEND_DIR/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "==> Creating dev .env with SQLite database..."
+  cat > "$ENV_FILE" <<'EOF'
+# Replit dev environment — SQLite, no server needed
+DATABASE_URL="sqlite+aiosqlite:///./cuestats_dev.db"
+CORS_ORIGINS="*"
+FRONTEND_URL="http://localhost:3000"
+CHALLONGE_API_KEY=""
+ANTHROPIC_API_KEY=""
+JWT_SECRET="dev-insecure-jwt-secret-change-in-prod"
+ADMIN_EMAIL="admin@dev.local"
+ADMIN_PASSWORD="adminpass"
+EOF
+  echo "==> dev .env created."
 fi
 
-echo "==> Checking if seed data is needed..."
-COUNT=$(mongosh cuestats --quiet --eval "db.players.countDocuments({})" 2>/dev/null || echo "0")
-if [ "$COUNT" = "0" ]; then
-  echo "==> Seeding dev database with fake data..."
-  python3 "$BACKEND_DIR/seed_dev.py"
+cd "$BACKEND_DIR"
+
+# Seed if the database is empty or doesn't exist yet
+DB_FILE="./cuestats_dev.db"
+NEEDS_SEED=0
+if [ ! -f "$DB_FILE" ]; then
+  NEEDS_SEED=1
 else
-  echo "==> Dev database has $COUNT players — skipping seed."
+  # Check player count via Python (database.py handles table creation)
+  COUNT=$(python3 -c "
+import asyncio, os
+os.chdir('$(pwd)')
+from dotenv import load_dotenv
+load_dotenv('.env')
+from database import make_engine
+from sqlalchemy import select, func
+import database as T
+
+async def count():
+    engine = make_engine()
+    try:
+        async with engine.connect() as conn:
+            n = (await conn.execute(select(func.count()).select_from(T.players))).scalar()
+            print(n)
+    except Exception:
+        print(0)
+    finally:
+        await engine.dispose()
+
+asyncio.run(count())
+" 2>/dev/null || echo "0")
+  if [ "$COUNT" = "0" ]; then
+    NEEDS_SEED=1
+  fi
+fi
+
+if [ "$NEEDS_SEED" = "1" ]; then
+  echo "==> Seeding dev database with fake data..."
+  python3 seed_dev.py
+else
+  echo "==> Dev database already has data — skipping seed."
 fi
 
 echo "==> Starting FastAPI on port $PORT..."
-cd "$BACKEND_DIR"
 exec python3 -m uvicorn server:app \
   --host 0.0.0.0 \
   --port "$PORT" \
