@@ -2,80 +2,96 @@
 
 A billiards tournament tracker for the Fremont Open — tracks players, matches, and tournament brackets with an AI chat assistant.
 
-## Run & Operate
+Replit is used as a **code editor only**. The application runs on a DreamHost VPS and is deployed via GitHub Actions on every push to `main`.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port from env)
-- `pnpm --filter @workspace/scripts run seed` — seed the database with mock data
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
-- Required env: `SESSION_SECRET` — JWT signing secret for admin auth
+## Run & Operate (on DreamHost VPS)
+
+- `bash deploy/bootstrap.sh` — one-time VPS setup (Python venv, MongoDB, nginx, systemd, cron)
+- `cd backend && ./venv/bin/python sync_job.py --force` — manual Challonge sync
+- `sudo systemctl restart cuestats` — restart the API server
+- `sudo systemctl status cuestats` — check service health
+- Weekly cron runs sync_job.py every Saturday at 11pm automatically
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5 (at `/api`)
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- AI: Anthropic claude-sonnet-4-6 via Replit AI Integrations proxy
-- Auth: JWT (`jsonwebtoken`) for admin routes
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-- Frontend: React 19 + Vite + Tailwind + Shadcn UI + react-query + wouter
+- **Backend**: FastAPI (Python 3.11) + MongoDB (on VPS) + Motor (async driver)
+- **Frontend**: React 19 (JavaScript) + Craco + Tailwind v3 + Shadcn UI + Recharts + react-router-dom v7
+- **AI**: Anthropic `claude-sonnet-4-5-20250929` via direct `anthropic` Python SDK
+- **Auth**: Admin JWT + user SSO via Google / Discord / Facebook (OAuth2)
+- **Sync**: Standalone CLI `backend/sync_job.py` — pulls from Challonge API, weekly cron on VPS
+- **Deploy**: GitHub Actions → rsync to DreamHost VPS → pip install → systemctl restart
 
 ## Where things live
 
-- `lib/db/src/schema/` — all DB table definitions (tournaments, players, matches, sync_meta, admins, audit_log, conversations, messages)
-- `lib/api-spec/openapi.yaml` — source-of-truth OpenAPI spec
-- `lib/api-zod/src/generated/` — generated Zod validators
-- `lib/api-client-react/src/generated/` — generated React Query hooks
-- `artifacts/api-server/src/routes/` — Express route files (one per resource)
-- `artifacts/cuestats/src/pages/` — frontend page components
-- `artifacts/cuestats/src/components/Sidebar.tsx` — persistent nav sidebar
-- `scripts/src/seed.ts` — database seeder with mock tournament/player/match data
+- `backend/server.py` — FastAPI entry point, all public routes
+- `backend/ai_agent.py` — CueStats AI chat (Anthropic SDK)
+- `backend/auth.py` — admin JWT auth + seeding
+- `backend/users.py` — user SSO OAuth routes + follow/claim logic
+- `backend/admin_routes.py` — admin CRUD + audit log
+- `backend/extras_routes.py` — search, compare, OG image, player extras, Fargo
+- `backend/players_extras.py` — streaks, titles, Fargo performance analytics
+- `backend/og_image.py` — OG card PNG generation (Pillow)
+- `backend/sync_job.py` — Challonge → MongoDB sync CLI
+- `backend/requirements.txt` — Python dependencies (no Emergent)
+- `backend/.env.example` — env var template; real `.env` lives on VPS only
+- `frontend/src/pages/` — all page components
+- `frontend/src/components/` — shared components (Sidebar, SearchBar, FargoEditor…)
+- `frontend/src/lib/api.js` — axios client pointed at REACT_APP_BACKEND_URL
+- `deploy/bootstrap.sh` — one-time VPS setup script
+- `deploy/remote_deploy.sh` — remote-side hook run by GitHub Actions over SSH
+- `deploy/nginx.conf` — nginx config reference (bootstrap.sh generates the real one)
+- `deploy/cuestats.service` — systemd unit reference (bootstrap.sh generates the real one)
+- `.github/workflows/deploy.yml` — CI/CD: build frontend → rsync → pip install → restart
 
-## Architecture decisions
+## GitHub Actions secrets required
 
-- Contract-first: OpenAPI spec → Orval codegen → Zod schemas + React Query hooks
-- No Challonge API in initial build — mock seed data instead (`scripts/src/seed.ts`)
-- Admin auth is JWT-only (no session cookies); token stored in `localStorage`
-- AI chat uses SSE streaming: server sends `data: {"text": "..."}` chunks, `data: {"done": true}` at end
-- Billiard Noir dark theme: bg `#0B0E14`, surface `#141923`, primary `#10B981` green, secondary `#F59E0B` amber, loss `#EF4444`
+Set these in your repo → Settings → Secrets → Actions:
 
-## Product
+| Secret | Value |
+|---|---|
+| `SSH_PRIVATE_KEY` | Private key matching the VPS `~/.ssh/authorized_keys` |
+| `DEPLOY_HOST` | VPS IP or hostname |
+| `DEPLOY_USER` | SSH username on VPS |
+| `DEPLOY_PATH` | Absolute path on VPS, e.g. `/home/youruser/cuestats` |
+| `REACT_APP_BACKEND_URL` | `https://fremontopen.com` |
 
-- **Dashboard** — stat cards (tournaments/matches/players), top 5 leaderboard, recent matches feed
-- **Tournaments** — list with game type, status badge, start date; click through to match detail
-- **Tournament Detail** — bracket matches table with round, winner, loser, score, status
-- **Players** — ranked table by win rate with Fargo rating
-- **Player Detail** — stat cards + full match history
-- **Leaderboard** — Hall of Fame with gold/silver/bronze podium for top 3
+## VPS environment variables (backend/.env — never committed)
+
+See `backend/.env.example` for the full list. Key vars:
+
+- `MONGO_URL` — `mongodb://localhost:27017`
+- `DB_NAME` — `cuestats`
+- `ANTHROPIC_API_KEY` — from console.anthropic.com
+- `CHALLONGE_API_KEY` — from challonge.com/settings/developer
+- `JWT_SECRET` — 32-byte hex (`openssl rand -hex 32`)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` — seeded on first startup
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — optional OAuth
+- `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` — optional OAuth
+- `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` — optional OAuth
+
+## Product features
+
+- **Dashboard** — stat cards, top leaderboard, recent matches feed
+- **Tournaments** — list by date; click through to bracket match detail
+- **Players** — ranked by wins, Fargo rating, search
+- **Player Detail** — stat cards, match history, head-to-head, streaks, OG card
+- **Leaderboard** — gold/silver/bronze podium for top 3
 - **Compare** — side-by-side head-to-head stat bars for any two players
-- **Chat** — AI assistant (CueBot) with SSE streaming, persistent conversation history
-- **Admin** — JWT-protected console for managing tournaments/players + audit log
-
-## Default admin credentials (dev/test)
-
-- Email: `admin@cuestats.local`
-- Password: `CueStats2025!`
-- Override via `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars before running the seed
+- **Chat** — AI assistant (CueStats AI) powered by Claude
+- **Admin** — JWT-protected console for tournaments/players + audit log
+- **SSO** — Google / Discord / Facebook login; claim & follow players
 
 ## User preferences
 
-- Use mock seed data (no live Challonge API integration yet)
-- Keep existing monorepo structure — new work goes in existing artifacts unless it's a different product
+- DreamHost VPS is the production runtime — Replit is code editor + GitHub push only
+- MongoDB runs on the VPS itself (no Atlas)
+- No Emergent LLM integration — use Anthropic SDK directly
+- Keep backend and frontend as flat directories (not a monorepo)
 
 ## Gotchas
 
-- Always run `pnpm --filter @workspace/api-spec run codegen` after editing `openapi.yaml`
-- Always run `pnpm --filter @workspace/db run push` after editing schema files in `lib/db/src/schema/`
-- Run `pnpm --filter @workspace/scripts run seed` to repopulate test data (it clears existing rows first)
-- API field names are snake_case (e.g. `winner_name`, `started_at`, `win_rate`) — match these exactly in the frontend
-- The API response for `/tournaments/:id` is `{tournament: {...}, matches: [...]}` (not a flat object)
-- The API response for `/players/:id` is `{player: {...}, matches: [...]}` (not a flat object)
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- `backend/.env` is never deployed by GitHub Actions (excluded in rsync `--exclude .env`)
+- `backend/venv` is never deployed either — `remote_deploy.sh` runs `pip install` on the VPS
+- Frontend build uses `REACT_APP_BACKEND_URL` env var — set via GitHub Actions secret
+- The `/api/search` endpoint lives in `extras_routes.py`, not `server.py`
+- `MONGO_URL` on the VPS is `mongodb://localhost:27017` — MongoDB is local, not Atlas
