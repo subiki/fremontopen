@@ -1,54 +1,99 @@
 #!/usr/bin/env bash
-# One-time bootstrap on a fresh DreamHost VPS.
+# One-time bootstrap for CueStats on DreamHost VPS — NO sudo required.
 #
-# Run this ONCE manually on the server before enabling GitHub Actions CD.
-# It sets up the Python venv, MongoDB, nginx config, systemd unit, and cron.
+# DreamHost VPS does NOT provide sudo access. This script works entirely in
+# user space using:
+#   - Python venv (system python3 is pre-installed on DreamHost VPS)
+#   - loginctl enable-linger  (user-level systemd, supported on DreamHost VPS)
+#   - ~/.config/systemd/user/ (user service, no /etc/ writes needed)
+#   - DreamHost panel Proxy Server (replaces nginx config)
+#   - MongoDB Atlas free tier   (replaces local mongod install)
 #
-# Usage:
-#   curl -fsSL https://raw.githubusercontent.com/subiki/fremontopen/main/deploy/bootstrap.sh | bash
-#   OR after cloning:
+# Run ONCE on the VPS before enabling GitHub Actions CD:
 #   bash deploy/bootstrap.sh
+#
+# Before running, complete the two panel prerequisites below.
+#
+# ─── PREREQUISITES (do these first in the DreamHost panel) ──────────────────
+#
+# 1. MongoDB Atlas (free, no credit card):
+#    a. Create a free account at https://cloud.mongodb.com
+#    b. Build a free M0 cluster (512 MB, free forever)
+#    c. Database Access → Add a user → save the username & password
+#    d. Network Access → Allow access from anywhere (0.0.0.0/0) for simplicity,
+#       or add your VPS IP only for better security.
+#    e. Clusters → Connect → Drivers → copy the connection string
+#       (looks like: mongodb+srv://user:pass@cluster.mongodb.net/cuestats)
+#
+# 2. DreamHost panel Proxy Server:
+#    a. Log in to panel.dreamhost.com
+#    b. Servers & Usage → click Manage next to your VPS
+#    c. Scroll to "Proxy Server" section
+#    d. Fill in:
+#         URL to set up Proxy under: fremontopen.com  (your domain)
+#         Path:                      api              (so /api/ is proxied)
+#         Port Number to Proxy:      8001
+#    e. Click Add Proxy
+#    (SSL is handled automatically by the panel — no certbot needed)
+#
+# ─── OPTIONAL: check Python version ─────────────────────────────────────────
+# DreamHost VPS ships with Python 3.x. Verify before running:
+#   python3 --version       # should be 3.9+ (3.11 preferred)
+# If it's older than 3.9, install a newer version via pyenv:
+#   https://help.dreamhost.com/hc/en-us/articles/115000702772-Installing-a-custom-version-of-Python-3
+# ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
 
 DEPLOY_PATH="${DEPLOY_PATH:-$HOME/cuestats}"
 DOMAIN="${DOMAIN:-fremontopen.com}"
 REPO="${REPO:-https://github.com/subiki/fremontopen.git}"
+WEBROOT="${WEBROOT:-$HOME/$DOMAIN}"   # DreamHost serves static files from here
+PORT=8001                              # Must match the panel proxy config above
 
 echo "==> Bootstrapping CueStats at $DEPLOY_PATH for $DOMAIN"
+echo "    Webroot (static files): $WEBROOT"
+echo "    API port:               $PORT"
+echo ""
 
-# 1. System packages
-if [ -z "${SKIP_APT:-}" ]; then
-  sudo apt update
-  sudo apt install -y python3 python3-venv python3-pip nodejs npm nginx mongodb-org git rsync curl
-fi
-
-# 2. Clone repo if not present
+# ── 1. Clone repo ─────────────────────────────────────────────────────────────
 if [ ! -d "$DEPLOY_PATH" ]; then
   git clone "$REPO" "$DEPLOY_PATH"
+  echo "==> Cloned repo."
+else
+  echo "==> Repo already present at $DEPLOY_PATH"
 fi
 cd "$DEPLOY_PATH"
 
-# 3. Backend venv
+# ── 2. Python venv (no sudo) ─────────────────────────────────────────────────
+echo "==> Creating Python venv..."
 cd backend
 python3 -m venv venv
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install -r requirements.txt
 cd ..
+echo "==> Python venv ready."
 
-# 4. .env
+# ── 3. Write backend/.env template ───────────────────────────────────────────
 if [ ! -f backend/.env ]; then
   cat > backend/.env <<EOF
-MONGO_URL="mongodb://localhost:27017"
+# MongoDB Atlas connection string — replace this entire line
+MONGO_URL="mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/cuestats?retryWrites=true&w=majority"
 DB_NAME="cuestats"
+
 CORS_ORIGINS="https://${DOMAIN}"
 FRONTEND_URL="https://${DOMAIN}"
+
 CHALLONGE_API_KEY="REPLACE_ME"
 ANTHROPIC_API_KEY="REPLACE_ME"
+
+# Generate with: openssl rand -hex 32
 JWT_SECRET="$(openssl rand -hex 32)"
+
 ADMIN_EMAIL="admin@${DOMAIN}"
 ADMIN_PASSWORD="REPLACE_ME"
-# OAuth — fill in after creating provider apps (see README)
+
+# OAuth — leave blank to disable that login method
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 DISCORD_CLIENT_ID=""
@@ -56,105 +101,98 @@ DISCORD_CLIENT_SECRET=""
 FACEBOOK_APP_ID=""
 FACEBOOK_APP_SECRET=""
 EOF
-  echo "==> Wrote backend/.env — EDIT IT NOW with real secrets."
+  echo "==> Wrote backend/.env — EDIT THIS FILE NOW before continuing."
+  echo ""
+  echo "    nano $DEPLOY_PATH/backend/.env"
+  echo ""
+  echo "    Fill in at minimum: MONGO_URL, CHALLONGE_API_KEY,"
+  echo "    ANTHROPIC_API_KEY, ADMIN_PASSWORD"
+  echo ""
+  read -rp "    Press Enter when .env is filled in, or Ctrl-C to exit..."
 fi
 
-# 5. Frontend build (so /frontend/build exists for nginx)
+# ── 4. Build React frontend → copy to DreamHost web root ─────────────────────
+echo "==> Building frontend..."
 cd frontend
-yarn install
+yarn install --frozen-lockfile
 echo "REACT_APP_BACKEND_URL=https://${DOMAIN}" > .env.production
 yarn build
 cd ..
 
-# 6. systemd unit
-SERVICE_FILE="/etc/systemd/system/cuestats.service"
-if [ ! -f "$SERVICE_FILE" ]; then
-  sudo tee "$SERVICE_FILE" >/dev/null <<EOF
+mkdir -p "$WEBROOT"
+cp -r frontend/build/. "$WEBROOT/"
+echo "==> Frontend built and copied to $WEBROOT"
+
+# ── 5. Enable linger so user services persist after logout ───────────────────
+# DreamHost VPS supports loginctl enable-linger (per DreamHost docs:
+# help.dreamhost.com/hc/en-us/articles/26354404192404-Using-linger-with-Node-js)
+loginctl enable-linger
+echo "==> Linger enabled."
+
+# ── 6. User-level systemd service (no sudo required) ─────────────────────────
+mkdir -p ~/.config/systemd/user/
+
+cat > ~/.config/systemd/user/cuestats.service <<EOF
 [Unit]
-Description=CueStats API
-After=network.target mongod.service
+Description=CueStats FastAPI backend
+After=network.target
 
 [Service]
-User=$USER
-WorkingDirectory=$DEPLOY_PATH/backend
-ExecStart=$DEPLOY_PATH/backend/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8001
-Restart=always
-RestartSec=5
+WorkingDirectory=${DEPLOY_PATH}/backend
+ExecStart=${DEPLOY_PATH}/backend/venv/bin/uvicorn server:app --host 127.0.0.1 --port ${PORT}
 Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOF
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now cuestats
-  echo "==> systemd cuestats enabled."
-fi
 
-# 7. Allow this user to restart cuestats without password (for CD)
-SUDOERS_FILE="/etc/sudoers.d/cuestats-restart"
-if [ ! -f "$SUDOERS_FILE" ]; then
-  echo "$USER ALL=NOPASSWD: /bin/systemctl restart cuestats, /bin/systemctl is-active cuestats" \
-    | sudo tee "$SUDOERS_FILE" >/dev/null
-  sudo chmod 440 "$SUDOERS_FILE"
-fi
+systemctl --user daemon-reload
+systemctl --user enable --now cuestats
+echo "==> cuestats user service started."
 
-# 8. nginx config
-NGINX_FILE="/etc/nginx/sites-available/cuestats"
-if [ ! -f "$NGINX_FILE" ]; then
-  sudo tee "$NGINX_FILE" >/dev/null <<EOF
-server {
-    listen 80;
-    server_name ${DOMAIN} www.${DOMAIN};
-
-    root ${DEPLOY_PATH}/frontend/build;
-    index index.html;
-
-    location / {
-        try_files \$uri /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8001;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_read_timeout 120s;
-    }
-
-    # caching for hashed static assets
-    location ~* \\.(?:js|css|png|jpg|jpeg|gif|webp|svg|woff2?)\$ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
+# ── 7. Initial Challonge data sync ───────────────────────────────────────────
+echo "==> Running initial Challonge sync..."
+cd backend
+./venv/bin/python sync_job.py --force || {
+  echo "WARN: Initial sync failed. Run manually once .env is filled in:"
+  echo "      cd $DEPLOY_PATH/backend && ./venv/bin/python sync_job.py --force"
 }
-EOF
-  sudo ln -sf "$NGINX_FILE" /etc/nginx/sites-enabled/cuestats
-  sudo nginx -t && sudo systemctl reload nginx
-  echo "==> nginx configured for $DOMAIN"
-fi
+cd ..
 
-# 9. HTTPS via certbot (skip if SKIP_CERTBOT=1)
-if [ -z "${SKIP_CERTBOT:-}" ] && command -v certbot >/dev/null 2>&1; then
-  sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos -m "admin@$DOMAIN" || true
-fi
-
-# 10. Initial data load (only if DB is empty)
-TOURN_COUNT=$(mongosh --quiet --eval "db.getSiblingDB('cuestats').tournaments.countDocuments({})" || echo "0")
-if [ "$TOURN_COUNT" = "0" ]; then
-  echo "==> Empty DB — running initial Challonge sync"
-  cd "$DEPLOY_PATH/backend" && ./venv/bin/python sync_job.py --force
-fi
-
-# 11. Cron — weekly sync after Saturday matches
-CRON_LINE="0 23 * * 6 cd $DEPLOY_PATH/backend && ./venv/bin/python sync_job.py >> $DEPLOY_PATH/sync.log 2>&1"
-if ! crontab -l 2>/dev/null | grep -qF "$DEPLOY_PATH/backend"; then
+# ── 8. Cron — weekly sync every Saturday at 11pm ─────────────────────────────
+CRON_LINE="0 23 * * 6 cd ${DEPLOY_PATH}/backend && ./venv/bin/python sync_job.py >> ${DEPLOY_PATH}/sync.log 2>&1"
+if ! crontab -l 2>/dev/null | grep -qF "${DEPLOY_PATH}/backend"; then
   (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab -
-  echo "==> Cron installed (Saturday 11pm)"
+  echo "==> Cron installed (Saturdays at 11pm)."
 fi
+
+# ── 9. Smoke test ─────────────────────────────────────────────────────────────
+echo ""
+echo "==> Checking API is up on localhost..."
+sleep 3
+curl -sf "http://127.0.0.1:${PORT}/api/health" && echo "OK" || echo "API not responding yet — give it a few seconds and try: curl http://127.0.0.1:${PORT}/api/health"
 
 echo ""
-echo "==> Bootstrap complete!"
-echo "==> Edit $DEPLOY_PATH/backend/.env with real CHALLONGE_API_KEY, ANTHROPIC_API_KEY, ADMIN_PASSWORD"
-echo "==> Then: sudo systemctl restart cuestats"
-echo "==> Visit: https://$DOMAIN"
+echo "══════════════════════════════════════════════════════════════"
+echo " Bootstrap complete!"
+echo "══════════════════════════════════════════════════════════════"
+echo ""
+echo " Verify everything:"
+echo "   curl http://127.0.0.1:${PORT}/api/health    ← local"
+echo "   curl https://${DOMAIN}/api/health           ← through panel proxy"
+echo ""
+echo " Useful commands:"
+echo "   systemctl --user status cuestats            ← check service"
+echo "   systemctl --user restart cuestats           ← restart API"
+echo "   journalctl --user -u cuestats -f            ← live logs"
+echo ""
+echo " GitHub Actions CD:"
+echo "   Add these 6 secrets to your repo → Settings → Secrets → Actions:"
+echo "     SSH_PRIVATE_KEY       your private key"
+echo "     DEPLOY_HOST           your VPS hostname or IP"
+echo "     DEPLOY_USER           your SSH username"
+echo "     DEPLOY_PATH           ${DEPLOY_PATH}"
+echo "     DEPLOY_WEBROOT        ${WEBROOT}"
+echo "     REACT_APP_BACKEND_URL https://${DOMAIN}"

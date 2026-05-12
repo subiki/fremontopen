@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- Frontend build ---
+      # ── Frontend build ───────────────────────────────────────────────────────
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -26,7 +26,7 @@ jobs:
 
       - name: Install frontend deps
         working-directory: frontend
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       - name: Build frontend
         working-directory: frontend
@@ -36,7 +36,7 @@ jobs:
           echo "REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL" > .env.production
           yarn build
 
-      # --- SSH setup ---
+      # ── SSH setup ────────────────────────────────────────────────────────────
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -44,15 +44,18 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
-      # --- Upload frontend build ---
-      - name: Rsync frontend → server
+      # ── Upload frontend build to DreamHost domain web root ───────────────────
+      # DEPLOY_WEBROOT is the domain's document root, e.g. /home/user/fremontopen.com
+      # DreamHost's web server serves static files directly from this directory.
+      # The panel Proxy Server forwards /api/* to the FastAPI backend on port 8001.
+      - name: Rsync frontend → web root
         run: |
           rsync -az --delete \
             -e "ssh -i ~/.ssh/id_ed25519" \
             frontend/build/ \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/frontend/build/"
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_WEBROOT }}/"
 
-      # --- Upload backend source ---
+      # ── Upload backend source ────────────────────────────────────────────────
       - name: Rsync backend → server
         run: |
           rsync -az --delete \
@@ -65,13 +68,13 @@ jobs:
             backend/ \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/backend/"
 
-      # --- Remote install + restart ---
-      # DEPLOY_PATH is passed as an inline env var so it is visible inside the remote bash session
+      # ── Remote: pip install + systemctl --user restart (no sudo) ────────────
       - name: Remote deploy script
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "DEPLOY_PATH=${{ secrets.DEPLOY_PATH }} bash -s" < deploy/remote_deploy.sh
 
+      # ── Smoke test ───────────────────────────────────────────────────────────
       - name: Smoke test API
         run: |
           curl -fsS --retry 5 --retry-delay 5 \
