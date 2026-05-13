@@ -28,6 +28,7 @@ const monthLabel = (value) => {
 export default function Tournaments() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("date");
+  const [game, setGame] = useState("all");
   const [view, setView] = useState("cards");
   const [loading, setLoading] = useState(true);
 
@@ -43,13 +44,24 @@ export default function Tournaments() {
     load();
   }, []);
 
+  const gameOptions = useMemo(() => {
+    const counts = new Map();
+    list.forEach((t) => {
+      const label = t.game || "Unknown";
+      counts.set(label, (counts.get(label) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [list]);
+
   const sortedList = useMemo(() => {
-    const rows = [...list];
+    const rows = list.filter((t) => game === "all" || (t.game || "Unknown") === game);
     if (sort === "name") return rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     if (sort === "players") return rows.sort((a, b) => (b.player_count || b.participants_count || 0) - (a.player_count || a.participants_count || 0));
     if (sort === "duration") return rows.sort((a, b) => (b.normalized_duration_minutes || 0) - (a.normalized_duration_minutes || 0));
     return rows.sort((a, b) => new Date(b.started_at || b.completed_at || 0) - new Date(a.started_at || a.completed_at || 0));
-  }, [list, sort]);
+  }, [list, sort, game]);
 
   const timelineGroups = useMemo(() => {
     const groups = new Map();
@@ -65,7 +77,7 @@ export default function Tournaments() {
     <>
       <Topbar
         title="Tournaments"
-        subtitle={`${list.length} tournaments synced from Challonge`}
+        subtitle={`${sortedList.length} of ${list.length} tournaments synced from Challonge`}
         onSyncDone={load}
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournaments-page">
@@ -92,22 +104,39 @@ export default function Tournaments() {
               <CalendarDots size={14} /> Timeline
             </button>
           </div>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            data-testid="tournament-sort-select"
-            className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
-          >
-            <option value="date">Sort by date</option>
-            <option value="players">Sort by players</option>
-            <option value="duration">Sort by duration</option>
-            <option value="name">Sort by name</option>
-          </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <select
+              value={game}
+              onChange={(e) => setGame(e.target.value)}
+              data-testid="tournament-game-filter-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value="all">All games</option>
+              {gameOptions.map((option) => (
+                <option key={option.label} value={option.label}>
+                  {option.label} ({option.count})
+                </option>
+              ))}
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              data-testid="tournament-sort-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value="date">Sort by date</option>
+              <option value="players">Sort by players</option>
+              <option value="duration">Sort by duration</option>
+              <option value="name">Sort by name</option>
+            </select>
+          </div>
         </div>
         {loading && !list.length ? (
           <div className="text-[#6B7280]">Loading...</div>
         ) : list.length === 0 ? (
           <div className="text-[#6B7280]">No tournaments yet. Try Sync Now.</div>
+        ) : sortedList.length === 0 ? (
+          <div className="text-[#6B7280]">No tournaments match the current game filter.</div>
         ) : view === "timeline" ? (
           <div className="space-y-8" data-testid="tournament-timeline">
             {timelineGroups.map((group) => (
