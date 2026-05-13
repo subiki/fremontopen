@@ -81,8 +81,8 @@ export default function PlayerDetail() {
   }, [order, decoded]);
 
   const p = data?.player;
-  const matches = data?.matches || [];
-  const h2h = data?.head_to_head || [];
+  const matches = useMemo(() => data?.matches || [], [data?.matches]);
+  const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
