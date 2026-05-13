@@ -18,7 +18,11 @@ Legend: `P0` ship next, `P1` near-term, `P2` nice-to-have, `P3` later/maybe.
 - [x] Challonge sync CLI into local SQLite cache
 - [x] Static JSON export via `backend/export_static.py`
 - [x] Static React build mode for DreamHost shared hosting
+- [x] One-command static build path for export + frontend build
 - [x] GitHub Actions deploy of `frontend/build/` to shared hosting
+- [x] GitHub Actions deploy verification with preflight, rsync, and smoke test
+- [x] README reset for static shared-hosting workflow
+- [x] Challonge marker/note name dedupe in cached matches and players
 - [x] Dashboard, tournaments, players, player profiles, leaderboard
 - [x] Global search over cached players and tournaments
 - [x] Player follow bookmarks using localStorage only
@@ -45,9 +49,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 1.1 | P0 | S | **One-command static build** - root script that runs export + static frontend build |
-| 1.2 | P0 | S | **README reset for shared hosting** - make shared-hosting path the default docs, move VPS notes to legacy |
-| 1.3 | P0 | S | **GitHub Actions deploy verification** - confirm secrets and first successful auto deploy to DreamHost |
 | 1.4 | P1 | M | **Refresh-data workflow** - document and script local Challonge sync -> export -> commit -> deploy |
 | 1.5 | P1 | S | **Cache metadata panel** - show generated time, last Challonge sync, tournament count, player count |
 | 1.6 | P2 | M | **GitHub Actions data refresh** - optional scheduled workflow if secrets and runtime are suitable |
@@ -147,23 +148,26 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **1.1 One-command static build** - reduce deploy friction immediately.
-2. **1.2 README reset for shared hosting** - prevent VPS/API confusion.
-3. **1.3 GitHub Actions deploy verification** - confirm merges really publish.
-4. **2.1 Alias mapping file** - biggest data-quality unlock.
-5. **2.2 Alias suggestion report** - helps clean names without an admin UI.
-6. **2.4 Validation report** - catch bad Challonge/import data before publishing.
-7. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
-8. **4.2 Tournament timeline** - makes the archive easier to browse.
-9. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
-10. **6.1 Dashboard trend cards** - better first impression for the demo.
+1. **2.1 Alias mapping file** - biggest data-quality unlock.
+2. **2.2 Alias suggestion report** - helps clean names without an admin UI.
+3. **2.4 Validation report** - catch bad Challonge/import data before publishing.
+4. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
+5. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
+6. **4.2 Tournament timeline** - makes the archive easier to browse.
+7. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
+8. **6.1 Dashboard trend cards** - better first impression for the demo.
+9. **1.5 Cache metadata panel** - make the production data age obvious.
+10. **8.2 Mobile navigation polish** - improve demo usability on phones.
 
 ---
 
 ## Tracking
 
 This file is the source of truth. GitHub Issues are kept in sync automatically by
-`.github/workflows/sync_backlog.yml` every Monday at 09:00 UTC.
+`.github/workflows/sync_backlog.yml` on pushes to `BACKLOG.md`, every Monday at
+09:00 UTC, and on manual workflow dispatch.
+
+The sync uses the built-in GitHub Actions token with `issues: write` permission.
 
 Because the backlog was reset for the static shared-hosting demo, running the
 sync with `--close-done` may close old issues for removed server/login/chat/admin
