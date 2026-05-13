@@ -222,18 +222,21 @@ async def build_cache() -> Dict[str, Any]:
             if duration_minutes is not None:
                 duration_values.append(duration_minutes)
 
+            player_count = tournament.get("participants_count") or len({
+                name
+                for match in tournament_matches
+                for name in (match.get("winner_name"), match.get("loser_name"))
+                if name
+            })
             tournament["duration_minutes"] = duration_minutes
             tournament["duration_label"] = duration_label
+            tournament["winner"] = winner
+            tournament["player_count"] = player_count
             tournament_details[str(tid)] = {
                 "tournament": tournament,
                 "matches": tournament_matches,
                 "analytics": {
-                    "player_count": tournament.get("participants_count") or len({
-                        name
-                        for match in tournament_matches
-                        for name in (match.get("winner_name"), match.get("loser_name"))
-                        if name
-                    }),
+                    "player_count": player_count,
                     "duration_minutes": duration_minutes,
                     "duration_label": duration_label,
                     "winner": winner,

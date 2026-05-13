@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournaments } from "../lib/api";
-import { Trophy, ArrowSquareOut } from "@phosphor-icons/react";
+import { Trophy, ArrowSquareOut, CalendarDots, Medal } from "@phosphor-icons/react";
 
 const stateColor = (s) => {
   if (s === "complete" || s === "ended") return "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20";
@@ -11,9 +11,24 @@ const stateColor = (s) => {
   return "bg-[#273041] text-[#9CA3AF] border-[#273041]";
 };
 
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+
+const monthLabel = (value) => {
+  if (!value) return "Undated";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Undated";
+  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+};
+
 export default function Tournaments() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("date");
+  const [view, setView] = useState("cards");
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -31,10 +46,20 @@ export default function Tournaments() {
   const sortedList = useMemo(() => {
     const rows = [...list];
     if (sort === "name") return rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    if (sort === "players") return rows.sort((a, b) => (b.participants_count || 0) - (a.participants_count || 0));
+    if (sort === "players") return rows.sort((a, b) => (b.player_count || b.participants_count || 0) - (a.player_count || a.participants_count || 0));
     if (sort === "duration") return rows.sort((a, b) => (b.duration_minutes || 0) - (a.duration_minutes || 0));
-    return rows.sort((a, b) => new Date(b.started_at || 0) - new Date(a.started_at || 0));
+    return rows.sort((a, b) => new Date(b.started_at || b.completed_at || 0) - new Date(a.started_at || a.completed_at || 0));
   }, [list, sort]);
+
+  const timelineGroups = useMemo(() => {
+    const groups = new Map();
+    sortedList.forEach((t) => {
+      const label = monthLabel(t.started_at || t.completed_at);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label).push(t);
+    });
+    return Array.from(groups.entries()).map(([label, tournaments]) => ({ label, tournaments }));
+  }, [sortedList]);
 
   return (
     <>
@@ -44,7 +69,29 @@ export default function Tournaments() {
         onSyncDone={load}
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournaments-page">
-        <div className="mb-5 flex justify-end">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="inline-flex w-fit rounded-md border border-[#273041] bg-[#0B0E14] p-1">
+            <button
+              type="button"
+              onClick={() => setView("cards")}
+              className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
+                view === "cards" ? "bg-[#10B981]/10 text-[#10B981]" : "text-[#9CA3AF] hover:text-[#F3F4F6]"
+              }`}
+              data-testid="tournament-cards-view"
+            >
+              <Trophy size={14} /> Cards
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("timeline")}
+              className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
+                view === "timeline" ? "bg-[#10B981]/10 text-[#10B981]" : "text-[#9CA3AF] hover:text-[#F3F4F6]"
+              }`}
+              data-testid="tournament-timeline-view"
+            >
+              <CalendarDots size={14} /> Timeline
+            </button>
+          </div>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -58,9 +105,56 @@ export default function Tournaments() {
           </select>
         </div>
         {loading && !list.length ? (
-          <div className="text-[#6B7280]">Loading…</div>
+          <div className="text-[#6B7280]">Loading...</div>
         ) : list.length === 0 ? (
           <div className="text-[#6B7280]">No tournaments yet. Try Sync Now.</div>
+        ) : view === "timeline" ? (
+          <div className="space-y-8" data-testid="tournament-timeline">
+            {timelineGroups.map((group) => (
+              <section key={group.label}>
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-[#273041]" />
+                  <h2 className="font-[Outfit] text-sm font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                    {group.label}
+                  </h2>
+                  <div className="h-px flex-1 bg-[#273041]" />
+                </div>
+                <div className="space-y-3">
+                  {group.tournaments.map((t) => (
+                    <Link
+                      key={t.id}
+                      to={`/tournaments/${t.id}`}
+                      className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_auto] gap-3 lg:items-center rounded-lg border border-[#273041] bg-[#141923] px-4 py-3 hover:border-[#10B981]/50 transition-colors"
+                      data-testid={`tournament-timeline-row-${t.id}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-[Outfit] font-semibold text-[#F3F4F6] truncate">
+                            {t.name}
+                          </span>
+                          <span className={`shrink-0 text-[10px] uppercase tracking-wider border px-2 py-0.5 rounded ${stateColor(t.state)}`}>
+                            {t.state || "?"}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-mono">
+                          <span>{t.game || "-"}</span>
+                          <span>{t.player_count || t.participants_count || 0} players</span>
+                          <span>{t.duration_label || "-"}</span>
+                        </div>
+                      </div>
+                      <div className="inline-flex w-fit items-center gap-2 rounded-md border border-[#F59E0B]/20 bg-[#F59E0B]/10 px-3 py-1.5 text-sm text-[#F59E0B]">
+                        <Medal size={14} weight="duotone" />
+                        <span className="font-medium">{t.winner || "No winner"}</span>
+                      </div>
+                      <span className="text-xs font-mono text-[#6B7280]">
+                        {formatDate(t.started_at || t.completed_at)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         ) : (
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
@@ -89,12 +183,16 @@ export default function Tournaments() {
                   {t.name}
                 </h3>
                 <div className="mt-3 flex items-center justify-between text-xs text-[#6B7280]">
-                  <span className="font-mono">{t.game || "—"}</span>
-                  <span className="font-mono">{t.participants_count} players</span>
+                  <span className="font-mono">{t.game || "-"}</span>
+                  <span className="font-mono">{t.player_count || t.participants_count || 0} players</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">Duration</span>
-                  <span className="font-mono">{t.duration_label || "—"}</span>
+                  <span className="font-mono">{t.duration_label || "-"}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#6B7280]">
+                  <span className="font-mono">Winner</span>
+                  <span className="font-mono text-[#F59E0B] truncate">{t.winner || "-"}</span>
                 </div>
                 {t.url ? (
                   <div className="mt-3 inline-flex items-center gap-1 text-[11px] text-[#9CA3AF] group-hover:text-[#10B981]">
