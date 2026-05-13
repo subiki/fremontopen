@@ -33,6 +33,7 @@ from sqlalchemy import select, insert, update
 from database import make_engine, init_db
 import database as T
 from challonge_client import ChallongeClient
+from name_cleaning import clean_player_name, player_name_key
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env", override=True)
@@ -47,11 +48,11 @@ FROZEN_STATES = {"complete", "ended"}
 
 
 def _norm(name):
-    return (name or "").strip()
+    return clean_player_name(name)
 
 
 def _name_key(name: str) -> str:
-    return " ".join(_norm(name).lower().split())
+    return player_name_key(name)
 
 
 def _display_score(name: str) -> tuple:
@@ -62,18 +63,21 @@ def _display_score(name: str) -> tuple:
     return (uppercase, -lowercase, -len(name))
 
 
-def _canonical_name_map(match_rows) -> Dict[str, str]:
+def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
     counts: Dict[str, Dict[str, int]] = {}
+    raw_to_clean: Dict[str, Optional[str]] = {}
     for r in match_rows:
-        for name in (r.winner_name, r.loser_name):
-            name = _norm(name)
-            if not name:
+        for raw_name in (r.winner_name, r.loser_name):
+            clean_name = _norm(raw_name)
+            if raw_name:
+                raw_to_clean[raw_name] = clean_name or None
+            if not clean_name:
                 continue
-            key = _name_key(name)
+            key = _name_key(clean_name)
             counts.setdefault(key, {})
-            counts[key][name] = counts[key].get(name, 0) + 1
+            counts[key][clean_name] = counts[key].get(clean_name, 0) + 1
 
-    aliases: Dict[str, str] = {}
+    aliases: Dict[str, Optional[str]] = {}
     for variants in counts.values():
         canonical = sorted(
             variants,
@@ -82,6 +86,8 @@ def _canonical_name_map(match_rows) -> Dict[str, str]:
         )[0]
         for name in variants:
             aliases[name] = canonical
+    for raw_name, clean_name in raw_to_clean.items():
+        aliases[raw_name] = aliases.get(clean_name, clean_name) if clean_name else None
     return aliases
 
 
@@ -99,8 +105,8 @@ async def _rebuild_players(conn) -> int:
     wins: Dict[str, int] = {}
     losses: Dict[str, int] = {}
     for r in rows:
-        winner_name = aliases.get(r.winner_name, r.winner_name)
-        loser_name = aliases.get(r.loser_name, r.loser_name)
+        winner_name = aliases.get(r.winner_name, _norm(r.winner_name) or None)
+        loser_name = aliases.get(r.loser_name, _norm(r.loser_name) or None)
         if winner_name != r.winner_name:
             await conn.execute(
                 update(T.matches).where(T.matches.c.id == r.id).values(winner_name=winner_name)
@@ -109,6 +115,8 @@ async def _rebuild_players(conn) -> int:
             await conn.execute(
                 update(T.matches).where(T.matches.c.id == r.id).values(loser_name=loser_name)
             )
+        if not winner_name or not loser_name:
+            continue
         wins[winner_name] = wins.get(winner_name, 0) + 1
         losses[loser_name] = losses.get(loser_name, 0) + 1
 
@@ -118,11 +126,13 @@ async def _rebuild_players(conn) -> int:
     existing_rows = (await conn.execute(
         select(T.players.c.name, T.players.c.fargo)
     )).fetchall()
-    existing_fargo = {
-        aliases.get(r.name, r.name): r.fargo
-        for r in existing_rows
-        if r.fargo is not None
-    }
+    existing_fargo = {}
+    for r in existing_rows:
+        if r.fargo is None:
+            continue
+        fargo_name = aliases.get(r.name, _norm(r.name) or None)
+        if fargo_name:
+            existing_fargo[fargo_name] = r.fargo
 
     await conn.execute(T.players.delete())
     for name in all_names:
@@ -224,6 +234,7 @@ async def run_dedupe_only() -> Dict[str, Any]:
             **meta,
             "players": player_count,
             "deduped_at": datetime.now(timezone.utc).isoformat(),
+            "dedupe_challonge_api_calls": 0,
         }
         await _set_sync_meta(conn, "last", meta)
     await engine.dispose()
