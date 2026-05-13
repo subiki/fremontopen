@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, update, insert
 
-from players_extras import compute_streaks, compute_tourney_championships, compute_perf_vs_fargo, wins_over_time
+from players_extras import compute_elo_ratings, compute_streaks, compute_tourney_championships, compute_perf_vs_fargo, wins_over_time
 from og_image import render_player_card
 from users import require_user
 from auth import require_admin
@@ -137,10 +137,26 @@ def make_extras_router(engine):
                     (T.matches.c.winner_name == b) | (T.matches.c.loser_name == b)
                 )
             )).fetchall()
+            all_match_rows = (await conn.execute(select(T.matches))).fetchall()
 
         h2h_matches = [dict(r._mapping) for r in h2h_rows]
         a_wins = sum(1 for m in h2h_matches if m["winner_name"] == a)
         b_wins = sum(1 for m in h2h_matches if m["winner_name"] == b)
+        pa = dict(pa_row._mapping)
+        pb = dict(pb_row._mapping)
+        elo = compute_elo_ratings([dict(r._mapping) for r in all_match_rows])
+        a_rating = elo["ratings"].get(a, elo["initial_rating"])
+        b_rating = elo["ratings"].get(b, elo["initial_rating"])
+        a_probability = 1.0 / (1.0 + pow(10, (b_rating - a_rating) / 400.0))
+        odds = {
+            "a_win_probability": round(a_probability * 100, 1),
+            "b_win_probability": round((1 - a_probability) * 100, 1),
+            "a_rating": a_rating,
+            "b_rating": b_rating,
+            "rating_gap": a_rating - b_rating,
+            "favorite": a if a_probability >= 0.5 else b,
+            "basis": "ELO",
+        }
 
         def _opp_record(rows, name):
             rec: Dict[str, Dict[str, int]] = {}
@@ -161,9 +177,20 @@ def make_extras_router(engine):
         common_rows = [{"opponent": o, "a": rec_a[o], "b": rec_b[o]} for o in common]
 
         return {
-            "a": dict(pa_row._mapping),
-            "b": dict(pb_row._mapping),
-            "h2h": {"a_wins": a_wins, "b_wins": b_wins, "matches": h2h_matches},
+            "a": {**pa, "elo_rating": a_rating},
+            "b": {**pb, "elo_rating": b_rating},
+            "h2h": {"a_wins": a_wins, "b_wins": b_wins, "matches": h2h_matches, "odds": odds},
+            "race_stats": {
+                "races_played": len(h2h_matches),
+                "scored_races": 0,
+                "a_race_wins": a_wins,
+                "b_race_wins": b_wins,
+                "a_racks_won": 0,
+                "a_racks_lost": 0,
+                "b_racks_won": 0,
+                "b_racks_lost": 0,
+                "elo_odds": odds,
+            },
             "common_opponents": common_rows,
         }
 

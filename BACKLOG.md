@@ -56,6 +56,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Tournament filter by game type for faster 8-ball and 9-ball browsing
 - [x] Season standings chart for latest seasonal player records
 - [x] Tournament cash measurement with $10 entries and rounded prize payouts
+- [x] Head-to-head ELO odds promoted into compare payloads and UI
 
 ## Removed From Demo Scope
 

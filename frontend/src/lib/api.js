@@ -28,6 +28,23 @@ const decodePathPart = (value = "") => decodeURIComponent(value.replace(/\+/g, "
 const expectedElo = (ratingA = 1500, ratingB = 1500) =>
   1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
 
+const compareOdds = (pa, pb) => {
+  const ratingA = pa.elo_rating || 1500;
+  const ratingB = pb.elo_rating || 1500;
+  const aOdds = expectedElo(ratingA, ratingB);
+  const aProbability = Math.round(aOdds * 1000) / 10;
+  const bProbability = Math.round((1 - aOdds) * 1000) / 10;
+  return {
+    a_win_probability: aProbability,
+    b_win_probability: bProbability,
+    a_rating: ratingA,
+    b_rating: ratingB,
+    rating_gap: ratingA - ratingB,
+    favorite: aProbability >= bProbability ? pa.name : pb.name,
+    basis: "ELO",
+  };
+};
+
 const parseRackScore = (score = "") => {
   const numbers = String(score).match(/\d+/g)?.map(Number).filter((value) => Number.isFinite(value)) || [];
   if (numbers.length < 2) return null;
@@ -73,7 +90,7 @@ const comparePlayers = (cache, a, b) => {
     },
     { scored_races: 0, a_racks_won: 0, a_racks_lost: 0, b_racks_won: 0, b_racks_lost: 0 }
   );
-  const aOdds = expectedElo(pa.elo_rating, pb.elo_rating);
+  const odds = compareOdds(pa, pb);
 
   const opponentRecord = (name) => {
     const record = {};
@@ -96,7 +113,7 @@ const comparePlayers = (cache, a, b) => {
   return {
     a: pa,
     b: pb,
-    h2h: { a_wins: aWins, b_wins: bWins, matches: h2hMatches },
+    h2h: { a_wins: aWins, b_wins: bWins, matches: h2hMatches, odds },
     race_stats: {
       races_played: h2hMatches.length,
       scored_races: rackStats.scored_races,
@@ -106,12 +123,7 @@ const comparePlayers = (cache, a, b) => {
       a_racks_lost: rackStats.a_racks_lost,
       b_racks_won: rackStats.b_racks_won,
       b_racks_lost: rackStats.b_racks_lost,
-      elo_odds: {
-        a_win_probability: Math.round(aOdds * 1000) / 10,
-        b_win_probability: Math.round((1 - aOdds) * 1000) / 10,
-        a_rating: pa.elo_rating,
-        b_rating: pb.elo_rating,
-      },
+      elo_odds: odds,
     },
     common_opponents: common.map((opponent) => ({
       opponent,

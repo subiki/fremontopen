@@ -171,6 +171,9 @@ def test_compare_two_players(client):
     for k in ["a_wins", "b_wins", "matches"]:
         assert k in data["h2h"]
     assert isinstance(data["h2h"]["matches"], list)
+    assert data["h2h"]["odds"]["basis"] == "ELO"
+    assert abs(data["h2h"]["odds"]["a_win_probability"] + data["h2h"]["odds"]["b_win_probability"] - 100) <= 0.1
+    assert data["race_stats"]["elo_odds"] == data["h2h"]["odds"]
     assert "common_opponents" in data
     assert isinstance(data["common_opponents"], list)
 

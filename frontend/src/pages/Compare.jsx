@@ -109,6 +109,7 @@ export default function Compare() {
                 <Scales size={18} weight="duotone" className="text-[#10B981]" />
                 <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Head-to-head</h2>
               </div>
+              <OddsPanel leftName={A} rightName={B} odds={data.h2h.odds || data.race_stats?.elo_odds} />
               {data.h2h.matches.length === 0 ? (
                 <div className="text-[#6B7280] text-sm">They have not played each other.</div>
               ) : (
@@ -144,25 +145,25 @@ export default function Compare() {
                   label="Races"
                   leftName={A}
                   rightName={B}
-                  left={`${data.race_stats.a_race_wins}W`}
-                  right={`${data.race_stats.b_race_wins}W`}
-                  detail={`${data.race_stats.races_played} played`}
+                  left={`${data.race_stats?.a_race_wins ?? data.h2h.a_wins}W`}
+                  right={`${data.race_stats?.b_race_wins ?? data.h2h.b_wins}W`}
+                  detail={`${data.race_stats?.races_played ?? data.h2h.matches.length} played`}
                 />
                 <CompareMetric
                   label="Racks"
                   leftName={A}
                   rightName={B}
-                  left={`${data.race_stats.a_racks_won}-${data.race_stats.a_racks_lost}`}
-                  right={`${data.race_stats.b_racks_won}-${data.race_stats.b_racks_lost}`}
-                  detail={`${data.race_stats.scored_races} scored races`}
+                  left={`${data.race_stats?.a_racks_won ?? 0}-${data.race_stats?.a_racks_lost ?? 0}`}
+                  right={`${data.race_stats?.b_racks_won ?? 0}-${data.race_stats?.b_racks_lost ?? 0}`}
+                  detail={`${data.race_stats?.scored_races ?? 0} scored races`}
                 />
                 <CompareMetric
                   label="ELO odds"
                   leftName={A}
                   rightName={B}
-                  left={`${data.race_stats.elo_odds.a_win_probability}%`}
-                  right={`${data.race_stats.elo_odds.b_win_probability}%`}
-                  detail={`${data.race_stats.elo_odds.a_rating} vs ${data.race_stats.elo_odds.b_rating}`}
+                  left={`${(data.h2h.odds || data.race_stats?.elo_odds)?.a_win_probability ?? "-"}%`}
+                  right={`${(data.h2h.odds || data.race_stats?.elo_odds)?.b_win_probability ?? "-"}%`}
+                  detail={`${(data.h2h.odds || data.race_stats?.elo_odds)?.a_rating ?? "-"} vs ${(data.h2h.odds || data.race_stats?.elo_odds)?.b_rating ?? "-"}`}
                 />
               </div>
             </section>
@@ -286,6 +287,38 @@ const PlayerInput = ({ label, value, onChange, loading, testid }) => (
     </span>
   </label>
 );
+
+const OddsPanel = ({ leftName, rightName, odds }) => {
+  if (!odds) return null;
+  const left = odds.a_win_probability ?? 50;
+  const right = odds.b_win_probability ?? 50;
+  return (
+    <div className="mb-5 rounded-md border border-[#273041] bg-[#0B0E14] p-4" data-testid="h2h-odds-panel">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">Projected odds</div>
+          <div className="mt-1 text-sm text-[#9CA3AF]">
+            {odds.favorite} is favored by {Math.abs(odds.rating_gap ?? 0)} {odds.basis || "ELO"} points
+          </div>
+        </div>
+        <div className="font-mono text-sm text-[#F3F4F6]">
+          {odds.a_rating} vs {odds.b_rating}
+        </div>
+      </div>
+      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#273041]" aria-hidden="true">
+        <div className="h-full bg-[#10B981]" style={{ width: `${Math.max(0, Math.min(100, left))}%` }} />
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-4 text-xs">
+        <span className="min-w-0 truncate text-[#10B981]">
+          {leftName}: {left}%
+        </span>
+        <span className="min-w-0 truncate text-right text-[#F59E0B]">
+          {rightName}: {right}%
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const CompareMetric = ({ label, leftName, rightName, left, right, detail }) => (
   <div className="rounded-md border border-[#273041] bg-[#0B0E14] p-4">
