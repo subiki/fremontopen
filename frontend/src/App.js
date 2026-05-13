@@ -1,9 +1,8 @@
 import "@/App.css";
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/Layout";
-import { AdminGuard } from "./components/AdminGuard";
 import { initFollowSync } from "./lib/follow";
 import Dashboard from "./pages/Dashboard";
 import Tournaments from "./pages/Tournaments";
@@ -11,12 +10,6 @@ import TournamentDetail from "./pages/TournamentDetail";
 import Players from "./pages/Players";
 import PlayerDetail from "./pages/PlayerDetail";
 import Leaderboard from "./pages/Leaderboard";
-import Chat from "./pages/Chat";
-import AdminLogin from "./pages/AdminLogin";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
-import AuthCallback from "./pages/AuthCallback";
-import MyAccount from "./pages/MyAccount";
 import Compare from "./pages/Compare";
 
 function App() {
@@ -28,9 +21,6 @@ function App() {
     <div className="App" data-testid="app-root">
       <BrowserRouter>
         <Routes>
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tournaments" element={<Tournaments />} />
@@ -38,17 +28,8 @@ function App() {
             <Route path="/players" element={<Players />} />
             <Route path="/players/:name" element={<PlayerDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/me" element={<MyAccount />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminGuard>
-                  <Admin />
-                </AdminGuard>
-              }
-            />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

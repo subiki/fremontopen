@@ -61,7 +61,7 @@ export default function Dashboard() {
     <>
       <Topbar
         title="Dashboard"
-        subtitle="Live billiards intelligence — Fremont Open"
+        subtitle="Cached billiards intelligence - Fremont Open"
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
         <section

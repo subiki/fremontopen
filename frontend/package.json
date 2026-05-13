@@ -59,6 +59,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
+    "build:static": "REACT_APP_STATIC_DATA=true craco build",
     "test": "craco test"
   },
   "browserslist": {

@@ -6,7 +6,6 @@ import { WinsOverTimeChart } from "../components/charts/WinsOverTimeChart";
 import { FargoEditor } from "../components/FargoEditor";
 import { fetchPlayer, fetchLeaderboard, api } from "../lib/api";
 import { isFollowing, toggleFollow, onFollowingChange } from "../lib/follow";
-import { isUserLoggedIn, fetchMe, claimPlayer, fetchClaimInfo } from "../lib/user_auth";
 import { toast } from "sonner";
 import {
   CaretLeft,
@@ -16,7 +15,6 @@ import {
   Star,
   Sword,
   Crosshair,
-  IdentificationBadge,
   ShareNetwork,
   Fire,
   Scales,
@@ -33,25 +31,12 @@ export default function PlayerDetail() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState([]);
   const [following, setFollowing] = useState(isFollowing(decoded));
-  const [userLoggedIn] = useState(isUserLoggedIn());
-  const [claimInfo, setClaimInfo] = useState({ claimed: false });
-  const [myClaim, setMyClaim] = useState(null);
-  const [claiming, setClaiming] = useState(false);
   const [extras, setExtras] = useState(null);
 
   useEffect(() => {
     setFollowing(isFollowing(decoded));
     return onFollowingChange(() => setFollowing(isFollowing(decoded)));
   }, [decoded]);
-
-  useEffect(() => {
-    fetchClaimInfo(decoded).then(setClaimInfo).catch(() => {});
-    if (userLoggedIn) {
-      fetchMe().then((m) => setMyClaim(m.claimed_player)).catch(() => {});
-    } else {
-      setMyClaim(null);
-    }
-  }, [decoded, userLoggedIn]);
 
   // Load extras (streaks, titles, perf, wins-over-time)
   useEffect(() => {
@@ -113,30 +98,7 @@ export default function PlayerDetail() {
     setFollowing(now);
   };
 
-  const handleClaim = async () => {
-    if (!userLoggedIn) {
-      navigate("/login");
-      return;
-    }
-    if (!window.confirm(`Claim "${decoded}" as your player profile? You can only claim one.`)) return;
-    setClaiming(true);
-    try {
-      await claimPlayer(decoded);
-      toast.success("Profile claimed! Your account is now linked to this player.");
-      setMyClaim(decoded);
-      setClaimInfo({ claimed: true });
-    } catch (e) {
-      const msg = e?.response?.data?.detail || e.message;
-      toast.error(typeof msg === "string" ? msg : "Failed to claim");
-    } finally {
-      setClaiming(false);
-    }
-  };
-
-  const isMine = myClaim === decoded;
-  const canClaim = userLoggedIn && !myClaim && !claimInfo.claimed;
-
-  const sharePath = `${window.location.origin}/p/${encodeURIComponent(decoded)}`;
+  const sharePath = `${window.location.origin}/players/${encodeURIComponent(decoded)}`;
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(sharePath);
@@ -158,27 +120,6 @@ export default function PlayerDetail() {
         <ShareNetwork size={14} />
         <span className="hidden sm:inline">Share</span>
       </button>
-      {isMine ? (
-        <span
-          className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981]"
-          data-testid="this-is-me-badge"
-          title="This is your claimed profile"
-        >
-          <IdentificationBadge size={14} weight="fill" />
-          This is me
-        </span>
-      ) : canClaim ? (
-        <button
-          type="button"
-          onClick={handleClaim}
-          disabled={claiming}
-          data-testid="claim-button"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-[#141923] border border-[#10B981]/40 text-[#10B981] hover:bg-[#10B981]/10 disabled:opacity-40 transition-colors"
-        >
-          <IdentificationBadge size={14} />
-          This is me
-        </button>
-      ) : null}
       <button
         type="button"
         onClick={handleFollow}
@@ -259,7 +200,6 @@ export default function PlayerDetail() {
               <FargoEditor
                 playerName={decoded}
                 currentFargo={extras?.fargo}
-                isOwner={isMine}
                 onSaved={(newVal) => setExtras((e) => ({ ...(e || {}), fargo: newVal }))}
               />
               <PerfCard perf={extras?.perf_vs_fargo} />
