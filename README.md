@@ -1,246 +1,151 @@
 # Fremont Open
 
-A read-only billiards aggregator + AI Q&A site for the Fremont Open weekly tournament. End-user UI **never** calls Challonge — data is pulled by a CLI on a schedule. Cached in MySQL. Designed to stay well under Challonge's 500 calls/month free quota (steady state ~3 calls/week).
+Fremont Open is a static billiards stats site built from cached Challonge data.
+The demo is designed for DreamHost shared hosting: no public backend, no login,
+no admin UI, no AI chat, and no server-side writes.
+
+The local workflow is:
+
+1. Sync Challonge into local SQLite.
+2. Export a static JSON cache.
+3. Build the React site in static mode.
+4. Deploy `frontend/build/` to the DreamHost web root.
+
+The deployed site never calls Challonge directly.
 
 ## Stack
-- **Backend**: FastAPI (Python 3.11) — read-only `/api/*` + admin `/api/admin/*` (JWT) + user SSO `/api/auth/{provider}/...`
-- **Database**: MySQL (DreamHost panel, production) · SQLite (local dev — no server needed)
-- **Sync**: `backend/sync_job.py` standalone CLI (incremental, skips frozen tournaments)
-- **AI**: Claude Sonnet 4.5 via Anthropic SDK (`anthropic` Python package)
-- **Frontend**: React 19 + Tailwind + Shadcn UI, Billiard Noir dark theme
-- **Auth**:
-  - **Admin** — single account, bcrypt+JWT, brute-force lockout
-  - **Users** — SSO via Google, Discord, Facebook (OAuth 2.0 authorization-code flow), 30-day session token
 
-## Features
-- Dashboard / Tournaments / Players / Player profiles / Leaderboard / AI Chat (Claude Sonnet 4.5)
-- Player profile: Follow, Prev/Next nav, Biggest Rivals, Most Defeated
-- **SSO sign-in**: users follow players across devices, **claim** their player profile (privacy-first — usernames never exposed to others)
-- **Admin** (`/admin`): merge duplicate players, rename, edit/delete matches, manual sync, audit log
-- Health check at `/api/health`
+- Frontend: React 19, Tailwind, Recharts, static JSON data mode
+- Data cache: `frontend/public/data/cache.json`
+- Local database: SQLite at `backend/cuestats_dev.db`
+- Sync/export: Python CLI scripts in `backend/`
+- Hosting: DreamHost shared hosting static web root
+- CI/CD: GitHub Actions rsync deploy on pushes to `main`
 
----
+## Current Features
 
-## Local development
+- Dashboard summary
+- Tournament browser
+- Player directory and player profiles
+- Leaderboard
+- Global search over cached players and tournaments
+- Local player follow bookmarks with `localStorage`
+- Player profile previous/next navigation
+- Biggest rivals and most defeated split
+- Player streaks, titles, and wins-over-time chart
+- Side-by-side player comparison
 
-```bash
-git clone https://github.com/subiki/fremontopen.git fremontopen.com && cd fremontopen.com
+## Local Data Refresh
 
-# backend
+Use normal incremental refreshes most of the time. This keeps Challonge API
+usage low after historical tournaments are cached.
+
+```powershell
 cd backend
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cat > .env <<'EOF'
-DATABASE_URL="sqlite+aiosqlite:///./fremontopen_dev.db"
-CORS_ORIGINS="*"
-FRONTEND_URL="http://localhost:3000"
-CHALLONGE_API_KEY="<your-challonge-key>"
-ANTHROPIC_API_KEY="<your-anthropic-key>"
-JWT_SECRET="<random-64-hex>"
-ADMIN_EMAIL="admin@example.com"
-ADMIN_PASSWORD="changeme"
-# OAuth (leave empty to disable that provider)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-DISCORD_CLIENT_ID=""
-DISCORD_CLIENT_SECRET=""
-FACEBOOK_APP_ID=""
-FACEBOOK_APP_SECRET=""
-EOF
-python sync_job.py --force            # one-time data load
-uvicorn server:app --reload --port 8001 &
-
-# frontend
-cd ../frontend
-yarn install
-echo "REACT_APP_BACKEND_URL=http://localhost:8001" > .env
-yarn start
+.venv\Scripts\python.exe sync_job.py
+.venv\Scripts\python.exe sync_job.py --dedupe-only
+.venv\Scripts\python.exe export_static.py
 ```
 
-Public site at http://localhost:3000 — admin at /admin/login.
+For a one-time full replacement from `https://fremontopen.challonge.com`, set
+`CHALLONGE_SUBDOMAIN="fremontopen"` in `backend/.env`, then run:
 
----
-
-## OAuth Provider Setup
-
-For each SSO provider you want to enable, you need an OAuth app + a redirect URI pointing to your frontend.
-
-The **redirect URI** in every provider should be exactly: `<FRONTEND_URL>/auth/callback`
-(e.g. `https://fremontopen.com/auth/callback`)
-
-### Google
-1. https://console.cloud.google.com/ → APIs & Services → Credentials → **Create OAuth client ID** (type: Web)
-2. Authorized redirect URIs: `https://fremontopen.com/auth/callback` (and `http://localhost:3000/auth/callback` for dev)
-3. Copy the **Client ID** and **Client Secret** into `.env`:
-   ```
-   GOOGLE_CLIENT_ID="<id>.apps.googleusercontent.com"
-   GOOGLE_CLIENT_SECRET="<secret>"
-   ```
-
-### Discord
-1. https://discord.com/developers/applications → **New Application** → OAuth2 tab
-2. Redirects: `https://fremontopen.com/auth/callback`
-3. Copy **Client ID** and **Client Secret** into `.env`:
-   ```
-   DISCORD_CLIENT_ID="..."
-   DISCORD_CLIENT_SECRET="..."
-   ```
-
-### Facebook / Instagram
-1. https://developers.facebook.com/apps → **Create App** → type **Consumer**
-2. Add product: **Facebook Login** → Settings → Valid OAuth Redirect URIs: `https://fremontopen.com/auth/callback`
-3. Make the app **Live** (top-right toggle) for public sign-in
-4. Copy **App ID** and **App Secret** (Settings → Basic) into `.env`:
-   ```
-   FACEBOOK_APP_ID="..."
-   FACEBOOK_APP_SECRET="..."
-   ```
-
-After updating `.env`, restart the backend: `systemctl --user restart fremontopen`.
-
----
-
-## Production deployment — DreamHost VPS
-
-No sudo required — runs entirely in user space via user-level systemd and DreamHost panel Proxy Server.
-
-### One-time server bootstrap
-
-```bash
-ssh you@your-server
-bash ~/fremontopen.com/deploy/bootstrap.sh
+```powershell
+cd backend
+.venv\Scripts\python.exe sync_job.py --replace
+.venv\Scripts\python.exe sync_job.py --dedupe-only
+.venv\Scripts\python.exe export_static.py
 ```
 
-The bootstrap script creates the Python venv, writes the `.env` template (pauses for you to fill it in), copies the frontend to the web root, registers the user systemd service, runs the initial Challonge sync, and installs the Saturday-11pm cron.
+Do not run `--replace` casually. It fetches participants and matches for every
+tournament returned by Challonge and can use a large share of the monthly
+free-tier API budget.
 
-Visit `https://fremontopen.com` and `/admin/login`.
+## Local Static Build
 
----
+From the repo root:
 
-## CI/CD from GitHub Actions
-
-On every push to `main`, GitHub Actions builds the frontend, rsyncs both apps to your server, installs backend deps, and restarts the API.
-
-### 1. Generate a deploy SSH key
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-fremontopen" -f ~/.ssh/fremontopen_deploy
+```powershell
+cd frontend
+$env:REACT_APP_STATIC_DATA='true'
+yarn build
 ```
 
-### 2. Authorize the public key on the server
+The deployable files are written to:
 
-```bash
-ssh-copy-id -i ~/.ssh/fremontopen_deploy.pub you@your-server
-# Verify password-less login:
-ssh -i ~/.ssh/fremontopen_deploy you@your-server 'echo ok'
+```text
+frontend/build/
 ```
 
-### 3. Add GitHub repository secrets
+## DreamHost Shared Hosting Deploy
 
-At `https://github.com/subiki/fremontopen/settings/secrets/actions` create:
+The production deploy workflow is:
 
-| Secret | Value |
+```text
+.github/workflows/deploy.yml
+```
+
+It runs on every push to `main` and can also be started manually from the
+GitHub Actions tab.
+
+Required GitHub repository secrets:
+
+| Secret | Example |
 |---|---|
-| `SSH_PRIVATE_KEY` | Contents of `~/.ssh/fremontopen_deploy` (full private key) |
-| `DEPLOY_HOST` | `fremontopen.com` (or server IP) |
-| `DEPLOY_USER` | Your SSH username |
-| `DEPLOY_PATH` | e.g. `/home/subiki/fremontopen.com` |
-| `DEPLOY_WEBROOT` | e.g. `/home/subiki/fremontopen.com` |
-| `REACT_APP_BACKEND_URL` | `https://fremontopen.com` |
+| `SSH_PRIVATE_KEY` | Full private deploy key text |
+| `DEPLOY_HOST` | `iad1-shared-b8-43.dreamhost.com` |
+| `DEPLOY_USER` | `dh_vykniy` |
+| `DEPLOY_WEBROOT` | `/home/dh_vykniy/fremontopen.com` |
+| `DEPLOY_SITE_HOST` | `fremontopen.com` |
 
-### 4. Push to main → auto-deploy
-
-```bash
-git push origin main
-```
-
-Watch progress at `https://github.com/subiki/fremontopen/actions`. The workflow:
-- builds the frontend (~1 min) using `REACT_APP_BACKEND_URL` secret
-- rsyncs `frontend/build/` and `backend/` to the server
-- runs `deploy/remote_deploy.sh` (pip install + systemctl --user restart)
-- smoke-tests `GET /api/health`
-
-You can also trigger manually via **Actions → Deploy to DreamHost → Run workflow**.
-
-### Notes
-- `backend/.env` on the server is **never** overwritten by deploys — rotate secrets manually on the server, then `systemctl --user restart fremontopen`.
-- `rsync --delete` removes orphan files from `backend/` and `frontend/build/`. The `.env` is excluded.
-- The Saturday cron runs `sync_job.py` independently of deploys.
-
----
-
-## Routes & data flow
-
-| Action | Endpoint | Source | Auth |
-|---|---|---|---|
-| Public browse | `/api/stats`, `/api/tournaments`, `/api/players`, `/api/leaderboard` | MySQL | none |
-| AI Chat | `/api/chat` | MySQL → Claude | none |
-| User SSO start | `/api/auth/{provider}/start` | — | none |
-| User SSO callback | `/api/auth/{provider}/callback?code=...` | provider → MySQL | none |
-| User self | `/api/me`, `/api/me/follow`, `/api/me/claim` | MySQL | user JWT |
-| Player claim status | `/api/players/{name}/claim-info` (returns only `{claimed}` — no identity) | MySQL | none |
-| Admin login | `/api/auth/login` | bcrypt + JWT | none |
-| Admin mutations | `/api/admin/*` | MySQL | admin JWT |
-| Cron sync | `python sync_job.py` | Challonge → MySQL | shell |
-| Manual sync | `POST /api/admin/sync` | Challonge → MySQL | admin JWT |
-
-There is **no public endpoint that calls Challonge**.
-
----
-
-## Challonge API budget
-
-| Scenario | API calls |
-|---|---|
-| Steady-state weekly cron | 1–3 |
-| Completed tournaments | **never** refetched |
-| `--force` rebuild (all 4 tournaments) | 9 |
-
-Cap is 500/month. Actual usage ~12-15/month.
-
----
-
-## Operations cheat-sheet
+The matching public key must be present on DreamHost in:
 
 ```bash
-# manual sync
-ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py"
-
-# force rebuild (use sparingly)
-ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py --force"
-
-# single tournament refresh
-ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py --tournament 16321058"
-
-# rotate admin password
-ssh server "vi ~/fremontopen.com/backend/.env && systemctl --user restart fremontopen"
-
-# rotate OAuth credentials
-ssh server "vi ~/fremontopen.com/backend/.env && systemctl --user restart fremontopen"
-
-# tail logs
-ssh server "journalctl --user -u fremontopen -f"
-ssh server "tail -f ~/fremontopen.com/sync.log"
+~/.ssh/authorized_keys
 ```
 
----
+Verify SSH from your local machine with the same private key:
 
-## Privacy model
-
-- **Anonymous visitors** see everything (player stats, matches, chat) — no login required
-- **Signed-in users** can additionally: follow players (synced across devices), claim ONE player as theirs
-- **What's never exposed**: usernames, emails, providers, or any account info of OTHER users
-- The only thing other users can see is the `claimed` boolean on a player profile (yes/no), not WHO claimed it
-- No direct messaging
-- Sessions are stateless 30-day JWTs in localStorage. Sign-out clears the token immediately.
-
----
-
-## Backlog & contributing
-
-See [`BACKLOG.md`](BACKLOG.md). Bulk-create issues:
-```bash
-bash scripts/create_github_issues.sh
+```powershell
+ssh -i $HOME\.ssh\fremontopen_deploy dh_vykniy@iad1-shared-b8-43.dreamhost.com 'echo ok'
 ```
 
-Issue templates in `.github/ISSUE_TEMPLATE/`.
+The workflow preflights secrets, SSH login, webroot existence, and webroot
+write permissions before running `rsync`.
+
+## Manual Upload
+
+If GitHub Actions is blocked, build locally and upload the contents of
+`frontend/build/` into the DreamHost domain directory:
+
+```text
+/home/dh_vykniy/fremontopen.com/
+```
+
+Include hidden files. The build includes `.htaccess` so direct React routes like
+`/players/Dennis%20Orcollo` load correctly.
+
+## Backlog And Issues
+
+The backlog lives in:
+
+```text
+BACKLOG.md
+```
+
+GitHub issues are synced by:
+
+```text
+.github/workflows/sync_backlog.yml
+scripts/create_github_issues.sh
+```
+
+The sync workflow creates issues from active backlog rows and closes old issues
+when rows are moved out of the active backlog.
+
+## Legacy Hosted Features
+
+FastAPI, MySQL production hosting, login, admin edits, AI chat, OAuth, and
+dynamic server-side features are intentionally out of scope for the shared
+hosting demo. They can return later if the project moves to VPS or serverless
+hosting.

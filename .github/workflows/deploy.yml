@@ -17,6 +17,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preflight deploy secrets
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_WEBROOT: ${{ secrets.DEPLOY_WEBROOT }}
+          DEPLOY_SITE_HOST: ${{ secrets.DEPLOY_SITE_HOST }}
+        run: |
+          missing=0
+          require_secret() {
+            if [ -z "${!1}" ]; then
+              echo "::error title=Missing GitHub secret::$1 is required for DreamHost static deploy"
+              missing=1
+            fi
+          }
+
+          require_secret SSH_PRIVATE_KEY
+          require_secret DEPLOY_HOST
+          require_secret DEPLOY_USER
+          require_secret DEPLOY_WEBROOT
+          require_secret DEPLOY_SITE_HOST
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+          {
+            echo "## DreamHost Static Deploy"
+            echo "- Preflight secrets: passed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -31,40 +62,68 @@ jobs:
       - name: Build static frontend
         working-directory: frontend
         env:
-          CI: "false"
           REACT_APP_STATIC_DATA: "true"
         run: yarn build
 
+      - name: Report build
+        run: |
+          {
+            echo "- Static React build: passed"
+            echo "- Cache artifact: frontend/build/data/cache.json"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Verify SSH and webroot
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_WEBROOT: ${{ secrets.DEPLOY_WEBROOT }}
+        run: |
+          SSH_OPTS="-i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+
+          ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "echo ssh-ok" >/dev/null
+          ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" \
+            "test -d '$DEPLOY_WEBROOT' || { echo 'Deploy webroot does not exist'; exit 2; }; test -w '$DEPLOY_WEBROOT' || { echo 'Deploy webroot is not writable'; exit 3; }"
+
+          {
+            echo "- SSH login: passed"
+            echo "- DreamHost webroot: exists and writable"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Rsync static site to DreamHost web root
         env:
           DEPLOY_WEBROOT: ${{ secrets.DEPLOY_WEBROOT }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          TARGET="${DEPLOY_WEBROOT:-${DEPLOY_PATH}/passenger_root/public}"
-          if [ -z "$TARGET" ]; then
-            echo "Set DEPLOY_WEBROOT or DEPLOY_PATH in repository secrets." >&2
-            exit 1
-          fi
           rsync -az --delete \
             -e "ssh -i ~/.ssh/id_ed25519" \
             frontend/build/ \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${TARGET}/"
+            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_WEBROOT/"
+
+          echo "- Rsync upload: passed" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Smoke test static site
         env:
           DEPLOY_SITE_HOST: ${{ secrets.DEPLOY_SITE_HOST }}
         run: |
-          if [ -z "$DEPLOY_SITE_HOST" ]; then
-            echo "DEPLOY_SITE_HOST is not set; skipping smoke test."
-            exit 0
-          fi
-          curl -fsS --retry 5 --retry-delay 5 \
-            "https://${DEPLOY_SITE_HOST}/" \
-            | grep -qi "<!doctype html"
+          curl -fsSL \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-connrefused \
+            -H "Cache-Control: no-cache" \
+            -H "Pragma: no-cache" \
+            "https://${DEPLOY_SITE_HOST}/?deploy_check=${GITHUB_SHA}" \
+            -o /tmp/fremontopen-smoke.html
+
+          grep -qi "<!doctype html" /tmp/fremontopen-smoke.html
+          echo "- Smoke test: passed" >> "$GITHUB_STEP_SUMMARY"
