@@ -7,7 +7,7 @@
 #   - Backend code already rsync'd to $DEPLOY_PATH/backend  (done by workflow)
 #   - Frontend build already rsync'd to $DEPLOY_WEBROOT     (done by workflow)
 #   - Python venv exists at $DEPLOY_PATH/backend/venv
-#   - User systemd service "cuestats" is registered and linger is enabled
+#   - User systemd service "fremontopen" is registered and linger is enabled
 #   - backend/.env exists on the VPS and is NEVER touched by this script
 #
 # DreamHost VPS note: static files are served directly from $DEPLOY_WEBROOT
@@ -34,16 +34,16 @@ echo "==> Updating Python dependencies..."
 ./venv/bin/pip install --quiet -r requirements.txt
 
 # Restart using user-level systemd (no sudo — DreamHost VPS supports this via linger)
-echo "==> Restarting cuestats service..."
-systemctl --user restart cuestats
+echo "==> Restarting fremontopen service..."
+systemctl --user restart fremontopen
 
 # Confirm it came back up
 sleep 3
-if systemctl --user is-active cuestats >/dev/null 2>&1; then
-  echo "==> cuestats is running."
+if systemctl --user is-active fremontopen >/dev/null 2>&1; then
+  echo "==> fremontopen is running."
 else
-  echo "ERROR: cuestats failed to start. SSH in and check:"
-  echo "       journalctl --user -u cuestats -n 50"
+  echo "ERROR: fremontopen failed to start. SSH in and check:"
+  echo "       journalctl --user -u fremontopen -n 50"
   exit 1
 fi
 

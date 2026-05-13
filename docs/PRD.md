@@ -1,10 +1,10 @@
-# CueStats — Fremont Open Edition
+# Fremont Open — PRD
 
 ## Architecture
 - **Backend**: FastAPI (3.11) — read-only `/api/*` + admin `/api/admin/*` + user SSO + extras (search, OG cards, compare, fargo)
-- **Database**: MongoDB
+- **Database**: MySQL (DreamHost panel, production) · SQLite (local dev)
 - **Sync**: `backend/sync_job.py` standalone CLI — incremental, skips frozen tournaments
-- **AI**: Claude Sonnet 4.5 via Emergent Universal Key
+- **AI**: Claude Sonnet 4.5 via Anthropic SDK
 - **Frontend**: React 19 + Tailwind + Shadcn UI + recharts, Billiard Noir dark theme
 - **Auth**: Admin JWT (bcrypt+lockout) + User SSO (Google/Discord/Facebook OAuth, 30d tokens)
 - **CI/CD**: GitHub Actions → DreamHost VPS
@@ -19,8 +19,6 @@
 - [x] **Wins-over-time** chart (recharts line: cumulative W and L)
 - [x] **Compare** page at `/compare/:a/:b` — side-by-side stats, head-to-head, common opponents
 - [x] **Share** button on player profile copies the `/p/:name` URL to clipboard
-- [x] **36/36 backend tests** pass (15 regression + 21 new) + frontend visual verification
-- [x] Data restored after destructive tests via `python sync_job.py --force`
 
 ## Previous iterations
 - Iter 4: SSO (Google/Discord/Facebook) + claim profile + privacy
@@ -56,7 +54,7 @@
 - Tournament participants by game type (currently in Compare context only)
 
 ## Test Credentials
-- Admin: `admin@fremontopen.com` / `fremont2026!` (rotate via `backend/.env` + `systemctl restart cuestats`)
+- Admin: `admin@fremontopen.com` / `fremont2026!` (rotate via `backend/.env` + `systemctl --user restart fremontopen`)
 - SSO: configured via `{PROVIDER}_CLIENT_ID/SECRET` in `backend/.env`
 
 ## Deployment

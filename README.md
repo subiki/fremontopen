@@ -1,10 +1,10 @@
-# CueStats — Fremont Open Edition
+# Fremont Open
 
-A read-only billiards aggregator + AI Q&A site for the Fremont Open weekly tournament. End-user UI **never** calls Challonge — data is pulled by a CLI on a schedule. Cached in MongoDB. Designed to stay well under Challonge's 500 calls/month free quota (steady state ~3 calls/week).
+A read-only billiards aggregator + AI Q&A site for the Fremont Open weekly tournament. End-user UI **never** calls Challonge — data is pulled by a CLI on a schedule. Cached in MySQL. Designed to stay well under Challonge's 500 calls/month free quota (steady state ~3 calls/week).
 
 ## Stack
 - **Backend**: FastAPI (Python 3.11) — read-only `/api/*` + admin `/api/admin/*` (JWT) + user SSO `/api/auth/{provider}/...`
-- **Database**: MongoDB
+- **Database**: MySQL (DreamHost panel, production) · SQLite (local dev — no server needed)
 - **Sync**: `backend/sync_job.py` standalone CLI (incremental, skips frozen tournaments)
 - **AI**: Claude Sonnet 4.5 via Anthropic SDK (`anthropic` Python package)
 - **Frontend**: React 19 + Tailwind + Shadcn UI, Billiard Noir dark theme
@@ -24,15 +24,14 @@ A read-only billiards aggregator + AI Q&A site for the Fremont Open weekly tourn
 ## Local development
 
 ```bash
-git clone https://github.com/subiki/fremontopen.git cuestats && cd cuestats
+git clone https://github.com/subiki/fremontopen.git fremontopen.com && cd fremontopen.com
 
 # backend
 cd backend
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cat > .env <<'EOF'
-MONGO_URL="mongodb://localhost:27017"
-DB_NAME="cuestats"
+DATABASE_URL="sqlite+aiosqlite:///./fremontopen_dev.db"
 CORS_ORIGINS="*"
 FRONTEND_URL="http://localhost:3000"
 CHALLONGE_API_KEY="<your-challonge-key>"
@@ -97,27 +96,22 @@ The **redirect URI** in every provider should be exactly: `<FRONTEND_URL>/auth/c
    FACEBOOK_APP_SECRET="..."
    ```
 
-After updating `.env`, restart the backend: `sudo systemctl restart cuestats`.
+After updating `.env`, restart the backend: `systemctl --user restart fremontopen`.
 
 ---
 
 ## Production deployment — DreamHost VPS
 
-Designed for a **DreamHost VPS or DreamCompute** instance (~$10/mo, root access).
+No sudo required — runs entirely in user space via user-level systemd and DreamHost panel Proxy Server.
 
 ### One-time server bootstrap
 
 ```bash
 ssh you@your-server
-git clone https://github.com/subiki/fremontopen.git ~/cuestats
-cd ~/cuestats
-bash deploy/bootstrap.sh
+bash ~/fremontopen.com/deploy/bootstrap.sh
 ```
 
-The bootstrap script installs runtime, builds frontend, sets up systemd + nginx + certbot, runs initial Challonge sync, installs the Saturday-11pm cron. Then **edit `~/cuestats/backend/.env`** with real secrets + OAuth credentials and:
-```bash
-sudo systemctl restart cuestats
-```
+The bootstrap script creates the Python venv, writes the `.env` template (pauses for you to fill it in), copies the frontend to the web root, registers the user systemd service, runs the initial Challonge sync, and installs the Saturday-11pm cron.
 
 Visit `https://fremontopen.com` and `/admin/login`.
 
@@ -130,15 +124,15 @@ On every push to `main`, GitHub Actions builds the frontend, rsyncs both apps to
 ### 1. Generate a deploy SSH key
 
 ```bash
-ssh-keygen -t ed25519 -C "github-actions-cuestats" -f ~/.ssh/cuestats_deploy
+ssh-keygen -t ed25519 -C "github-actions-fremontopen" -f ~/.ssh/fremontopen_deploy
 ```
 
 ### 2. Authorize the public key on the server
 
 ```bash
-ssh-copy-id -i ~/.ssh/cuestats_deploy.pub you@your-server
+ssh-copy-id -i ~/.ssh/fremontopen_deploy.pub you@your-server
 # Verify password-less login:
-ssh -i ~/.ssh/cuestats_deploy you@your-server 'echo ok'
+ssh -i ~/.ssh/fremontopen_deploy you@your-server 'echo ok'
 ```
 
 ### 3. Add GitHub repository secrets
@@ -147,10 +141,11 @@ At `https://github.com/subiki/fremontopen/settings/secrets/actions` create:
 
 | Secret | Value |
 |---|---|
-| `SSH_PRIVATE_KEY` | Contents of `~/.ssh/cuestats_deploy` (full private key) |
+| `SSH_PRIVATE_KEY` | Contents of `~/.ssh/fremontopen_deploy` (full private key) |
 | `DEPLOY_HOST` | `fremontopen.com` (or server IP) |
 | `DEPLOY_USER` | Your SSH username |
-| `DEPLOY_PATH` | e.g. `/home/subiki/cuestats` |
+| `DEPLOY_PATH` | e.g. `/home/subiki/fremontopen.com` |
+| `DEPLOY_WEBROOT` | e.g. `/home/subiki/fremontopen.com` |
 | `REACT_APP_BACKEND_URL` | `https://fremontopen.com` |
 
 ### 4. Push to main → auto-deploy
@@ -162,13 +157,13 @@ git push origin main
 Watch progress at `https://github.com/subiki/fremontopen/actions`. The workflow:
 - builds the frontend (~1 min) using `REACT_APP_BACKEND_URL` secret
 - rsyncs `frontend/build/` and `backend/` to the server
-- runs `deploy/remote_deploy.sh` (pip install + systemctl restart)
+- runs `deploy/remote_deploy.sh` (pip install + systemctl --user restart)
 - smoke-tests `GET /api/health`
 
 You can also trigger manually via **Actions → Deploy to DreamHost → Run workflow**.
 
 ### Notes
-- `backend/.env` on the server is **never** overwritten by deploys — rotate secrets manually on the server, then `sudo systemctl restart cuestats`.
+- `backend/.env` on the server is **never** overwritten by deploys — rotate secrets manually on the server, then `systemctl --user restart fremontopen`.
 - `rsync --delete` removes orphan files from `backend/` and `frontend/build/`. The `.env` is excluded.
 - The Saturday cron runs `sync_job.py` independently of deploys.
 
@@ -178,16 +173,16 @@ You can also trigger manually via **Actions → Deploy to DreamHost → Run work
 
 | Action | Endpoint | Source | Auth |
 |---|---|---|---|
-| Public browse | `/api/stats`, `/api/tournaments`, `/api/players`, `/api/leaderboard` | MongoDB | none |
-| AI Chat | `/api/chat` | MongoDB → Claude | none |
+| Public browse | `/api/stats`, `/api/tournaments`, `/api/players`, `/api/leaderboard` | MySQL | none |
+| AI Chat | `/api/chat` | MySQL → Claude | none |
 | User SSO start | `/api/auth/{provider}/start` | — | none |
-| User SSO callback | `/api/auth/{provider}/callback?code=...` | provider → MongoDB | none |
-| User self | `/api/me`, `/api/me/follow`, `/api/me/claim` | MongoDB | user JWT |
-| Player claim status | `/api/players/{name}/claim-info` (returns only `{claimed}` — no identity) | MongoDB | none |
+| User SSO callback | `/api/auth/{provider}/callback?code=...` | provider → MySQL | none |
+| User self | `/api/me`, `/api/me/follow`, `/api/me/claim` | MySQL | user JWT |
+| Player claim status | `/api/players/{name}/claim-info` (returns only `{claimed}` — no identity) | MySQL | none |
 | Admin login | `/api/auth/login` | bcrypt + JWT | none |
-| Admin mutations | `/api/admin/*` | MongoDB | admin JWT |
-| Cron sync | `python sync_job.py` | Challonge → MongoDB | shell |
-| Manual sync | `POST /api/admin/sync` | Challonge → MongoDB | admin JWT |
+| Admin mutations | `/api/admin/*` | MySQL | admin JWT |
+| Cron sync | `python sync_job.py` | Challonge → MySQL | shell |
+| Manual sync | `POST /api/admin/sync` | Challonge → MySQL | admin JWT |
 
 There is **no public endpoint that calls Challonge**.
 
@@ -209,23 +204,23 @@ Cap is 500/month. Actual usage ~12-15/month.
 
 ```bash
 # manual sync
-ssh server "cd ~/cuestats/backend && ./venv/bin/python sync_job.py"
+ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py"
 
 # force rebuild (use sparingly)
-ssh server "cd ~/cuestats/backend && ./venv/bin/python sync_job.py --force"
+ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py --force"
 
 # single tournament refresh
-ssh server "cd ~/cuestats/backend && ./venv/bin/python sync_job.py --tournament 16321058"
+ssh server "cd ~/fremontopen.com/backend && ./venv/bin/python sync_job.py --tournament 16321058"
 
 # rotate admin password
-ssh server "vi ~/cuestats/backend/.env && sudo systemctl restart cuestats"
+ssh server "vi ~/fremontopen.com/backend/.env && systemctl --user restart fremontopen"
 
 # rotate OAuth credentials
-ssh server "vi ~/cuestats/backend/.env && sudo systemctl restart cuestats"
+ssh server "vi ~/fremontopen.com/backend/.env && systemctl --user restart fremontopen"
 
 # tail logs
-ssh server "sudo journalctl -u cuestats -f"
-ssh server "tail -f ~/cuestats/sync.log"
+ssh server "journalctl --user -u fremontopen -f"
+ssh server "tail -f ~/fremontopen.com/sync.log"
 ```
 
 ---
@@ -243,7 +238,7 @@ ssh server "tail -f ~/cuestats/sync.log"
 
 ## Backlog & contributing
 
-See [`BACKLOG.md`](BACKLOG.md) — 69 items, 11 epics. Bulk-create issues:
+See [`BACKLOG.md`](BACKLOG.md). Bulk-create issues:
 ```bash
 bash scripts/create_github_issues.sh
 ```

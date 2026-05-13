@@ -8,8 +8,8 @@ Replit is used as a **code editor only**. The application runs on a DreamHost VP
 
 - `bash deploy/bootstrap.sh` — one-time VPS setup (Python venv, MySQL tables, user systemd, cron)
 - `cd backend && ./venv/bin/python sync_job.py --force` — manual Challonge sync
-- `systemctl --user restart cuestats` — restart the API server (no sudo needed)
-- `systemctl --user status cuestats` — check service health
+- `systemctl --user restart fremontopen` — restart the API server (no sudo needed)
+- `systemctl --user status fremontopen` — check service health
 - Weekly cron runs sync_job.py every Saturday at 11pm automatically
 
 ## Stack
@@ -100,38 +100,6 @@ See `backend/.env.example` for the full list. Key vars:
 - Dev database is SQLite (file at `backend/cuestats_dev.db`) — no server to start
 - No Emergent LLM integration — use Anthropic SDK directly
 - Keep backend and frontend as flat directories (not a monorepo)
-
-## Mobile App (Expo / React Native)
-
-The mobile companion lives in `artifacts/cuestats-mobile/`.
-
-### Running locally (Replit)
-The Expo workflow has a known port-detection quirk in this Replit environment: the
-`restart_workflow` tool always reports `DIDNT_OPEN_A_PORT` even though the service
-binds its port in milliseconds. **This is a false-negative — the workflow runs correctly.**
-
-Workaround: click **Run** on the `artifacts/cuestats-mobile: expo` workflow in the
-Replit workflow panel. Once running, the terminal shows an Expo QR code you can scan
-with **Expo Go** on iOS or Android.
-
-### Connecting to the production backend
-Set `EXPO_PUBLIC_BACKEND_URL=https://fremontopen.com` in `eas.json` or your CI
-environment. The mobile API client reads this env var first, then falls back to
-`EXPO_PUBLIC_DOMAIN` (Replit dev proxy), then `/api` (shared proxy).
-
-### Smoke-test checklist (manual, via Expo Go)
-1. **Dashboard** — stat cards load (total players, matches, tournaments), recent matches list appears
-2. **Players** — player list loads; search filters results; tapping a player opens detail screen
-3. **Player Detail** — stats, match history, head-to-head table all render; back button works
-4. **Leaderboard** — gold/silver/bronze podium visible, full ranked list below
-5. **Chat** — sending a message streams a response from CueStats AI; multiple turns work
-
-### Key files
-- `artifacts/cuestats-mobile/lib/api.ts` — fetch client (`EXPO_PUBLIC_BACKEND_URL` → `EXPO_PUBLIC_DOMAIN` → `/api`)
-- `artifacts/cuestats-mobile/scripts/dev.js` — HTTP+WebSocket proxy wrapper (binds PORT instantly, starts Metro on 8081)
-- `artifacts/cuestats-mobile/constants/colors.ts` — dark billiards theme tokens
-- `artifacts/cuestats-mobile/app/(tabs)/` — Dashboard, Players, Leaderboard, Chat screens
-- `artifacts/cuestats-mobile/app/player/[name].tsx` — Player detail screen
 
 ## Gotchas
 
