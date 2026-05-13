@@ -54,7 +54,7 @@ Set these in your repo → Settings → Secrets → Actions:
 | `SSH_PRIVATE_KEY` | Private key matching the VPS `~/.ssh/authorized_keys` |
 | `DEPLOY_HOST` | VPS IP or hostname |
 | `DEPLOY_USER` | SSH username on VPS |
-| `DEPLOY_PATH` | Absolute path on VPS, e.g. `/home/youruser/cuestats` |
+| `DEPLOY_PATH` | Absolute path on VPS, e.g. `/home/youruser/fremontopen.com` |
 | `DEPLOY_WEBROOT` | Absolute path to domain web root, e.g. `/home/youruser/fremontopen.com` |
 | `REACT_APP_BACKEND_URL` | `https://fremontopen.com` |
 | `GH_TOKEN` | GitHub PAT with `issues: write` scope — used by the weekly backlog sync |
