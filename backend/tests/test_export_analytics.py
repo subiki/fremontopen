@@ -12,6 +12,7 @@ from export_static import (
     _is_qualified_player,
     _normalized_duration_minutes,
     _recent_activity_summary,
+    _season_standings,
 )
 
 
@@ -134,3 +135,23 @@ def test_attendance_stats_tracks_played_and_streaks():
     assert stats["A"]["current_streak"] == 2
     assert stats["A"]["best_streak"] == 2
     assert stats["B"]["current_streak"] == 0
+
+
+def test_season_standings_group_matches_by_tournament_date():
+    tournaments = [
+        {"id": 1, "name": "Spring One", "started_at": "2026-04-01T12:00:00-07:00"},
+        {"id": 2, "name": "Summer One", "started_at": "2026-07-01T12:00:00-07:00"},
+    ]
+    matches = [
+        {**match(1, "A", "B"), "tournament_id": 1},
+        {**match(2, "A", "C"), "tournament_id": 1},
+        {**match(1, "B", "A"), "tournament_id": 2},
+    ]
+
+    seasons = _season_standings(tournaments, matches)
+
+    assert [season["season"] for season in seasons] == ["2026 Summer", "2026 Spring"]
+    assert seasons[1]["matches"] == 2
+    assert seasons[1]["tournaments"] == 1
+    assert seasons[1]["players"][0]["player"] == "A"
+    assert seasons[1]["players"][0]["wins"] == 2

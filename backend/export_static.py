@@ -287,6 +287,94 @@ def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str,
     return stats
 
 
+def _season_for_date(value: Optional[str]) -> Optional[Dict[str, Any]]:
+    date = _parse_dt(value)
+    if not date:
+        return None
+    if date.month in (3, 4, 5):
+        name = "Spring"
+        order = 2
+    elif date.month in (6, 7, 8):
+        name = "Summer"
+        order = 3
+    elif date.month in (9, 10, 11):
+        name = "Fall"
+        order = 4
+    else:
+        name = "Winter"
+        order = 1
+    return {
+        "key": f"{date.year}-{order}",
+        "label": f"{date.year} {name}",
+        "sort": date.year * 10 + order,
+    }
+
+
+def _season_standings(
+    tournaments: List[Dict[str, Any]],
+    matches: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    tournament_dates = {
+        tournament.get("id"): tournament.get("started_at") or tournament.get("completed_at")
+        for tournament in tournaments
+    }
+    seasons: Dict[str, Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if match.get("state") != "complete" or not winner or not loser:
+            continue
+
+        match_date = tournament_dates.get(match.get("tournament_id")) or match.get("completed_at")
+        season = _season_for_date(match_date)
+        if not season:
+            continue
+
+        bucket = seasons.setdefault(
+            season["key"],
+            {
+                "season": season["label"],
+                "season_key": season["key"],
+                "sort": season["sort"],
+                "matches": 0,
+                "tournament_ids": set(),
+                "players": {},
+            },
+        )
+        bucket["matches"] += 1
+        if match.get("tournament_id") is not None:
+            bucket["tournament_ids"].add(match.get("tournament_id"))
+
+        for player_name, result in ((winner, "wins"), (loser, "losses")):
+            row = bucket["players"].setdefault(player_name, {"player": player_name, "wins": 0, "losses": 0})
+            row[result] += 1
+
+    rows = []
+    for bucket in seasons.values():
+        players = []
+        for player in bucket["players"].values():
+            total = player["wins"] + player["losses"]
+            players.append({
+                **player,
+                "matches": total,
+                "win_rate": round((player["wins"] / total) * 100, 1) if total else 0.0,
+            })
+        players.sort(key=lambda row: (-row["wins"], -row["win_rate"], row["losses"], row["player"].casefold()))
+        rows.append({
+            "season": bucket["season"],
+            "season_key": bucket["season_key"],
+            "_sort": bucket["sort"],
+            "matches": bucket["matches"],
+            "tournaments": len(bucket["tournament_ids"]),
+            "players": players[:8],
+        })
+
+    sorted_rows = sorted(rows, key=lambda row: row["_sort"], reverse=True)
+    for row in sorted_rows:
+        row.pop("_sort", None)
+    return sorted_rows
+
+
 async def _last_sync(conn) -> Optional[Dict[str, Any]]:
     row = (await conn.execute(
         select(T.sync_meta).where(T.sync_meta.c.key == "last")
@@ -534,6 +622,7 @@ async def build_cache() -> Dict[str, Any]:
         sync_status = last_sync or {"status": "never_synced"}
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
+        season_standings = _season_standings(tournaments, matches)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),
@@ -575,6 +664,7 @@ async def build_cache() -> Dict[str, Any]:
             },
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
+            "season_standings": season_standings[:6],
             "players": players,
             "recent_matches": [
                 m for m in matches

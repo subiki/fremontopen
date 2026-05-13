@@ -5,6 +5,7 @@ import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales } 
 import { fetchStats, fetchPlayers } from "../lib/api";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -61,6 +62,8 @@ export default function Dashboard() {
   const durationTrend = stats?.tournament_duration_trend || [];
   const dashboardTrends = stats?.dashboard_trends || {};
   const cacheMetadata = stats?.cache_metadata || {};
+  const seasonStandings = stats?.season_standings || [];
+  const latestSeason = seasonStandings[0];
 
   return (
     <>
@@ -167,6 +170,38 @@ export default function Dashboard() {
                 : null
             }
           />
+        </section>
+
+        <section
+          className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+          data-testid="season-standings-panel"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+            <div className="lg:w-72 shrink-0">
+              <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                Season Standings
+              </h2>
+              <div className="mt-1 text-sm text-[#9CA3AF]">
+                {latestSeason
+                  ? `${latestSeason.season} - ${latestSeason.matches} matches across ${latestSeason.tournaments} tournaments`
+                  : "No season data yet"}
+              </div>
+              <div className="mt-4 space-y-2">
+                {seasonStandings.slice(0, 4).map((season) => (
+                  <div
+                    key={season.season_key}
+                    className="flex items-center justify-between rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2 text-sm"
+                  >
+                    <span className="text-[#F3F4F6]">{season.season}</span>
+                    <span className="font-mono text-xs text-[#9CA3AF]">{season.matches} matches</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <SeasonStandingsChart season={latestSeason} />
+            </div>
+          </div>
         </section>
 
         <section
@@ -442,6 +477,52 @@ const MetadataStat = ({ label, value }) => (
     </dd>
   </div>
 );
+
+const SeasonStandingsChart = ({ season }) => {
+  const data = (season?.players || []).slice(0, 6);
+  if (data.length === 0) {
+    return <div className="text-[#6B7280] text-sm">No season standings available.</div>;
+  }
+
+  return (
+    <div className="h-72 w-full" data-testid="season-standings-chart">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <CartesianGrid stroke="#273041" strokeDasharray="3 3" />
+          <XAxis
+            dataKey="player"
+            stroke="#6B7280"
+            tick={{ fontSize: 11 }}
+            interval={0}
+            tickFormatter={(value) => shortName(value)}
+          />
+          <YAxis stroke="#6B7280" tick={{ fontSize: 11 }} />
+          <Tooltip
+            contentStyle={{
+              background: "#141923",
+              border: "1px solid #273041",
+              borderRadius: 6,
+              fontSize: 12,
+              color: "#F3F4F6",
+            }}
+            formatter={(value, name, row) => {
+              if (name === "wins") return [`${value} wins`, row.payload.player];
+              return [`${value} losses`, row.payload.player];
+            }}
+          />
+          <Bar dataKey="wins" fill="#10B981" radius={[4, 4, 0, 0]} name="wins" />
+          <Bar dataKey="losses" fill="#EF4444" radius={[4, 4, 0, 0]} name="losses" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const shortName = (value = "") => {
+  const parts = String(value).split(" ").filter(Boolean);
+  if (parts.length < 2) return value;
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+};
 
 const AnalyticsList = ({ title, rows, empty, renderRow }) => (
   <section className="bg-[#141923] border border-[#273041] rounded-lg p-6">

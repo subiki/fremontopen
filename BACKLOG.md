@@ -54,6 +54,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Race versus rack stats with ELO odds in compare views
 - [x] Historical tournament backfill CLI for arbitrary Challonge tournament IDs or slugs
 - [x] Tournament filter by game type for faster 8-ball and 9-ball browsing
+- [x] Season standings chart for latest seasonal player records
 
 ## Removed From Demo Scope
 
@@ -112,7 +113,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 6.2 | P1 | S | **Season standings chart** |
 | 6.3 | P1 | M | **Player form chart** - rolling last-10 match win rate |
 | 6.4 | P2 | S | **Tournament difficulty indicator** |
 | 6.5 | P2 | S | **Light mode toggle** |
@@ -155,16 +155,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **6.2 Season standings chart** - start shaping season-style league views.
-2. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-3. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-4. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
-5. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
-6. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
-7. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
-8. **6.3 Player form chart** - show rolling last-10 match win rate.
-9. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-10. **8.1 PWA install / offline cache** - make the static demo friendlier on phones.
+1. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+2. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+3. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
+4. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
+5. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
+6. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
+7. **6.3 Player form chart** - show rolling last-10 match win rate.
+8. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+9. **8.1 PWA install / offline cache** - make the static demo friendlier on phones.
+10. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 
