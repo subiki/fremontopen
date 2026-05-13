@@ -40,6 +40,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Player analytics for average placement and top finish counts
 - [x] Alias mapping file for deliberate local player-name merges during dedupe/export
 - [x] Alias suggestion report for fuzzy duplicate player-name review
+- [x] Validation report for missing winners, impossible scores, duplicate matches, and blank names
 
 ## Removed From Demo Scope
 
@@ -66,7 +67,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 2.4 | P1 | S | **Validation report** - flag missing winners, impossible scores, duplicate matches, blank names |
 | 2.5 | P1 | M | **Historical tournament backfill** - local script for arbitrary Challonge tournament IDs |
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
 | 2.7 | P1 | S | **Manual overrides file** - local JSON/YAML for Fargo, nicknames, hidden tournaments, and notes |
@@ -153,16 +153,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **2.4 Validation report** - catch bad Challonge/import data before publishing.
-2. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
-3. **4.2 Tournament timeline** - makes the archive easier to browse.
-4. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
-5. **6.1 Dashboard trend cards** - better first impression for the demo.
-6. **1.5 Cache metadata panel** - make the production data age obvious.
-7. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
-8. **3.4 Attendance streak** - show consistency across events.
-9. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
-10. **3.6 Rating history chart** - track player rating changes once ratings are available.
+1. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
+2. **4.2 Tournament timeline** - makes the archive easier to browse.
+3. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
+4. **6.1 Dashboard trend cards** - better first impression for the demo.
+5. **1.5 Cache metadata panel** - make the production data age obvious.
+6. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
+7. **3.4 Attendance streak** - show consistency across events.
+8. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
+9. **3.6 Rating history chart** - track player rating changes once ratings are available.
+10. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
 
 ---
 

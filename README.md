@@ -90,6 +90,19 @@ cd backend
 The report is written to `backend/alias_suggestions.json` and is not applied
 automatically.
 
+## Local Validation Report
+
+Generate a local data-quality report before publishing refreshed cache data:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe validation_report.py
+```
+
+The report is written to `backend/validation_report.json` and is intentionally
+ignored by Git. It flags missing winners, blank names, impossible or suspicious
+scores, duplicate cached matches, and matches that reference missing tournaments.
+
 ## Local Static Build
 
 From the repo root:

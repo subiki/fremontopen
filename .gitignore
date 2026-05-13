@@ -34,6 +34,7 @@ node_modules
 # misc
 frontend/.env
 backend/alias_suggestions.json
+backend/validation_report.json
 /.sass-cache
 /connect.lock
 /coverage
