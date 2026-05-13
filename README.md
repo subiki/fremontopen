@@ -61,6 +61,35 @@ Do not run `--replace` casually. It fetches participants and matches for every
 tournament returned by Challonge and can use a large share of the monthly
 free-tier API budget.
 
+## Local Player Alias Mapping
+
+Use `backend/player_aliases.json` for deliberate player-name merges during the
+local dedupe/export path. The file is safe to keep empty by default:
+
+```json
+{
+  "aliases": {
+    "Canonical Player Name": ["Alias Name", "Nickname Variant"]
+  }
+}
+```
+
+After editing aliases, run `sync_job.py --dedupe-only` from `backend/`, then run
+`export_static.py` to rebuild `frontend/public/data/cache.json`. Conflicting
+aliases are rejected so one alias cannot silently map to multiple canonical
+players.
+
+To generate a review-only report of likely duplicates before editing the alias
+file:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe alias_suggestions.py
+```
+
+The report is written to `backend/alias_suggestions.json` and is not applied
+automatically.
+
 ## Local Static Build
 
 From the repo root:

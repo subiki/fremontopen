@@ -3,7 +3,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from name_cleaning import clean_player_name, player_name_key
+import json
+
+import pytest
+
+from name_cleaning import clean_player_name, player_name_key, load_alias_map
 
 
 def test_clean_player_name_removes_markers_and_notes():
@@ -24,3 +28,36 @@ def test_clean_player_name_removes_bye_placeholders():
 
 def test_player_name_key_casefolds_and_normalizes_space():
     assert player_name_key("  CAMILLA   KEENAN-KOCH* ") == "camilla keenan-koch"
+
+
+def test_load_alias_map_uses_canonical_to_aliases_shape(tmp_path):
+    path = tmp_path / "player_aliases.json"
+    path.write_text(
+        json.dumps({
+            "aliases": {
+                "James Smith": ["Jim", "Jimmy S.* (invitation pending)"]
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    aliases = load_alias_map(path)
+
+    assert aliases["jim"] == "James Smith"
+    assert aliases["jimmy s."] == "James Smith"
+
+
+def test_load_alias_map_rejects_conflicting_aliases(tmp_path):
+    path = tmp_path / "player_aliases.json"
+    path.write_text(
+        json.dumps({
+            "aliases": {
+                "James Smith": ["Jim"],
+                "Jim Stone": ["Jim"],
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        load_alias_map(path)

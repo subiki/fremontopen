@@ -28,3 +28,17 @@ def test_first_name_alias_stays_separate_when_multiple_full_name_matches():
     ])
 
     assert aliases["John"] == "John"
+
+
+def test_alias_override_maps_manual_alias_to_canonical(monkeypatch):
+    monkeypatch.setattr(
+        "sync_job.load_alias_map",
+        lambda: {"jimmy s.": "James Smith"},
+    )
+
+    aliases = _canonical_name_map([
+        row("Jimmy S.", "Alex Stone"),
+        row("James Smith", "Taylor Reed"),
+    ])
+
+    assert aliases["Jimmy S."] == "James Smith"

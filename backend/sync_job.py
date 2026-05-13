@@ -34,7 +34,7 @@ from sqlalchemy import select, insert, update
 from database import make_engine, init_db
 import database as T
 from challonge_client import ChallongeClient
-from name_cleaning import clean_player_name, player_name_key
+from name_cleaning import clean_player_name, player_name_key, load_alias_map
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env", override=True)
@@ -89,6 +89,17 @@ def _apply_unique_first_name_aliases(aliases: Dict[str, Optional[str]]) -> None:
             aliases[name] = matches[0]
 
 
+def _apply_alias_overrides(aliases: Dict[str, Optional[str]]) -> None:
+    override_map = load_alias_map()
+    if not override_map:
+        return
+
+    for name in list(aliases.keys()):
+        target = override_map.get(_name_key(name))
+        if target:
+            aliases[name] = target
+
+
 def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
     counts: Dict[str, Dict[str, int]] = {}
     raw_to_clean: Dict[str, Optional[str]] = {}
@@ -113,6 +124,7 @@ def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
         for name in variants:
             aliases[name] = canonical
     _apply_unique_first_name_aliases(aliases)
+    _apply_alias_overrides(aliases)
     for raw_name, clean_name in raw_to_clean.items():
         aliases[raw_name] = aliases.get(clean_name, clean_name) if clean_name else None
     return aliases

@@ -31,6 +31,15 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Player streaks, tournament titles, wins-over-time chart
 - [x] Side-by-side compare page
 - [x] DreamHost shared-hosting deployment guide
+- [x] Unique first-name dedupe rule for unambiguous first-name-only Challonge duplicates
+- [x] Mobile navigation polish with bottom nav and tighter mobile spacing
+- [x] Sort controls for players, tournaments, and leaderboard
+- [x] Game-type labels surfaced in match/stat views
+- [x] Expanded visible stats for placements, top finishes, tournament size, duration, and title leaders
+- [x] Tournament analytics for player count, duration, and winner leaderboard
+- [x] Player analytics for average placement and top finish counts
+- [x] Alias mapping file for deliberate local player-name merges during dedupe/export
+- [x] Alias suggestion report for fuzzy duplicate player-name review
 
 ## Removed From Demo Scope
 
@@ -57,9 +66,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 2.1 | P0 | M | **Alias mapping file** - local config to merge names like "Jim", "Jimbo", "Jimmy S." during export |
-| 2.2 | P0 | M | **Alias suggestion report** - fuzzy-match likely duplicate player names before export |
-| 2.3 | P0 | S | **Unique first-name dedupe rule** - auto-combine a first-name-only player with exactly one matching first+last player; leave multiple matches unresolved |
 | 2.4 | P1 | S | **Validation report** - flag missing winners, impossible scores, duplicate matches, blank names |
 | 2.5 | P1 | M | **Historical tournament backfill** - local script for arbitrary Challonge tournament IDs |
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
@@ -70,9 +76,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 3.1 | P0 | M | **ELO rating** computed from all cached matches |
-| 3.10 | JFL | M | **Player analytics: average placement and top finish counts** - compute average placement and top-1/top-2/top-3/top-4 finish counts |
-| 3.2 | P0 | S | **Expanded stat set** - add visible totals for tournament appearances, titles, opponent count, game-type record, recent form, and streaks |
-| 3.3 | P0 | S | **Game-type breakdown** per player, sourced from tournament game labels such as 8-ball and 9-ball |
 | 3.4 | P1 | S | **Attendance streak** and tournaments-played stats |
 | 3.5 | P1 | S | **Leaderboard streak chips** - current streak, best streak, titles |
 | 3.6 | P1 | M | **Rating history chart** per player |
@@ -84,7 +87,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 4.7 | JFL | M | **Tournament analytics: player count, duration, and winner leaderboard** - show tournament size trends, duration, and ranked tournament winners |
 | 4.1 | P1 | M | **Bracket visualization** on tournament detail |
 | 4.2 | P1 | S | **Tournament timeline** - week-by-week archive with winner badges |
 | 4.3 | P1 | S | **Tournament filter** by game type |
@@ -129,8 +131,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 8.1 | P1 | S | **PWA install / offline cache** for static assets and `cache.json` |
-| 8.2 | P0 | S | **Mobile navigation polish** - thumb-friendly nav, better table scrolling, and tighter mobile spacing |
-| 8.3 | P0 | S | **Sort controls** - sortable players, leaderboard, tournaments, and stat views |
 | 8.4 | P1 | S | **Keyboard shortcuts** - `/` search, `g p`, `g t`, `g l` |
 | 8.5 | P2 | S | **Case-insensitive player URLs** |
 | 8.6 | P2 | S | **404/static fallback polish** for unknown players and tournaments |
@@ -153,16 +153,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **4.7 Tournament analytics: player count, duration, and winner leaderboard** - JFL.
-2. **3.10 Player analytics: average placement and top finish counts** - JFL.
-3. **8.2 Mobile navigation polish** - improve demo usability on phones first.
-4. **8.3 Sort controls** - make players, tournaments, leaderboards, and stat views easier to scan.
-5. **3.3 Game-type breakdown** - show 8-ball / 9-ball style labels in player and tournament stats.
-6. **3.2 Expanded stat set** - increase visible stats before deeper ranking work.
-7. **2.3 Unique first-name dedupe rule** - merge only unambiguous first-name-only duplicates.
-8. **2.1 Alias mapping file** - biggest manual data-quality unlock.
-9. **2.2 Alias suggestion report** - helps clean names without an admin UI.
-10. **2.4 Validation report** - catch bad Challonge/import data before publishing.
+1. **2.4 Validation report** - catch bad Challonge/import data before publishing.
+2. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
+3. **4.2 Tournament timeline** - makes the archive easier to browse.
+4. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
+5. **6.1 Dashboard trend cards** - better first impression for the demo.
+6. **1.5 Cache metadata panel** - make the production data age obvious.
+7. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
+8. **3.4 Attendance streak** - show consistency across events.
+9. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
+10. **3.6 Rating history chart** - track player rating changes once ratings are available.
 
 ---
 
