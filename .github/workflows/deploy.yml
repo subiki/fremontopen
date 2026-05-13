@@ -43,14 +43,28 @@ jobs:
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Rsync static site to DreamHost web root
+        env:
+          DEPLOY_WEBROOT: ${{ secrets.DEPLOY_WEBROOT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
+          TARGET="${DEPLOY_WEBROOT:-${DEPLOY_PATH}/passenger_root/public}"
+          if [ -z "$TARGET" ]; then
+            echo "Set DEPLOY_WEBROOT or DEPLOY_PATH in repository secrets." >&2
+            exit 1
+          fi
           rsync -az --delete \
             -e "ssh -i ~/.ssh/id_ed25519" \
             frontend/build/ \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_WEBROOT }}/"
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${TARGET}/"
 
       - name: Smoke test static site
+        env:
+          DEPLOY_SITE_HOST: ${{ secrets.DEPLOY_SITE_HOST }}
         run: |
+          if [ -z "$DEPLOY_SITE_HOST" ]; then
+            echo "DEPLOY_SITE_HOST is not set; skipping smoke test."
+            exit 0
+          fi
           curl -fsS --retry 5 --retry-delay 5 \
-            "https://${{ secrets.DEPLOY_SITE_HOST }}/" \
+            "https://${DEPLOY_SITE_HOST}/" \
             | grep -qi "<!doctype html"
