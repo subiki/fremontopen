@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { WinsOverTimeChart } from "../components/charts/WinsOverTimeChart";
+import { EloRatingChart } from "../components/charts/EloRatingChart";
 import { FargoEditor } from "../components/FargoEditor";
 import { fetchPlayer, fetchLeaderboard, api } from "../lib/api";
 import { isFollowing, toggleFollow, onFollowingChange } from "../lib/follow";
@@ -287,11 +288,16 @@ export default function PlayerDetail() {
               <PerfCard perf={extras?.perf_vs_fargo} />
             </div>
 
-            {/* Wins-over-time chart */}
-            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="chart-card">
-              <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">Wins over time</h2>
-              <WinsOverTimeChart data={extras?.wins_over_time || []} />
-            </section>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+              <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="chart-card">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">Wins over time</h2>
+                <WinsOverTimeChart data={extras?.wins_over_time || []} />
+              </section>
+              <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="elo-chart-card">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">ELO rating history</h2>
+                <EloRatingChart data={elo.history || []} />
+              </section>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <RivalryCard
