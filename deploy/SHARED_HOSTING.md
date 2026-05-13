@@ -47,3 +47,19 @@ cd backend
 ```
 
 Then rebuild and upload `frontend/build/` again.
+
+## Auto deploy from GitHub merges
+
+`.github/workflows/deploy.yml` deploys on every push to `main`, including pull
+request merges. Add these repository secrets in GitHub Actions:
+
+```text
+SSH_PRIVATE_KEY   Private key that can SSH into DreamHost
+DEPLOY_HOST       DreamHost SSH host, for example iad1-shared-b8-43.dreamhost.com
+DEPLOY_USER       DreamHost shell user, for example dh_vykniy
+DEPLOY_WEBROOT    Domain web directory, for example /home/dh_vykniy/fremontopen.com
+DEPLOY_SITE_HOST  Public web host, for example fremontopen.com
+```
+
+The workflow does not upload or run the backend. It deploys the committed static
+cache and React build only.
