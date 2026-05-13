@@ -134,6 +134,39 @@ export default function Compare() {
               )}
             </section>
 
+            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="race-rack-card">
+              <div className="flex items-center gap-2 mb-4">
+                <ArrowsLeftRight size={18} weight="duotone" className="text-[#10B981]" />
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Race versus rack</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <CompareMetric
+                  label="Races"
+                  leftName={A}
+                  rightName={B}
+                  left={`${data.race_stats.a_race_wins}W`}
+                  right={`${data.race_stats.b_race_wins}W`}
+                  detail={`${data.race_stats.races_played} played`}
+                />
+                <CompareMetric
+                  label="Racks"
+                  leftName={A}
+                  rightName={B}
+                  left={`${data.race_stats.a_racks_won}-${data.race_stats.a_racks_lost}`}
+                  right={`${data.race_stats.b_racks_won}-${data.race_stats.b_racks_lost}`}
+                  detail={`${data.race_stats.scored_races} scored races`}
+                />
+                <CompareMetric
+                  label="ELO odds"
+                  leftName={A}
+                  rightName={B}
+                  left={`${data.race_stats.elo_odds.a_win_probability}%`}
+                  right={`${data.race_stats.elo_odds.b_win_probability}%`}
+                  detail={`${data.race_stats.elo_odds.a_rating} vs ${data.race_stats.elo_odds.b_rating}`}
+                />
+              </div>
+            </section>
+
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="common-opponents-card">
               <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">Common opponents</h2>
               {data.common_opponents.length === 0 ? (
@@ -252,6 +285,23 @@ const PlayerInput = ({ label, value, onChange, loading, testid }) => (
       />
     </span>
   </label>
+);
+
+const CompareMetric = ({ label, leftName, rightName, left, right, detail }) => (
+  <div className="rounded-md border border-[#273041] bg-[#0B0E14] p-4">
+    <div className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</div>
+    <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="min-w-0">
+        <div className="truncate text-xs text-[#9CA3AF]">{leftName}</div>
+        <div className="mt-1 font-mono text-2xl text-[#10B981]">{left}</div>
+      </div>
+      <div className="min-w-0 text-right">
+        <div className="truncate text-xs text-[#9CA3AF]">{rightName}</div>
+        <div className="mt-1 font-mono text-2xl text-[#F59E0B]">{right}</div>
+      </div>
+    </div>
+    <div className="mt-3 text-xs text-[#6B7280]">{detail}</div>
+  </div>
 );
 
 const PlayerColumn = ({ player }) => (

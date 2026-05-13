@@ -51,6 +51,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Leaderboard streak chips for current streak, best streak, and titles
 - [x] Rating history chart per player
 - [x] Normalized ranking and duration data to reduce low-volume and left-open tournament skew
+- [x] Race versus rack stats with ELO odds in compare views
 
 ## Removed From Demo Scope
 
@@ -102,7 +103,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 5.2 | P1 | M | **Rivalry index** - rank pairs by matches played, closeness, and streak swings |
-| 5.7 | P1 | M | **Race versus rack stats** - show races played, racks played, and ELO odds in compare views |
 | 5.3 | P1 | S | **Rivalry of the week** on dashboard |
 | 5.4 | P2 | M | **H2H heatmap matrix** across all players |
 | 5.5 | P2 | S | **Upset tracker** - rating underdog wins after ELO lands |
@@ -155,16 +155,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **5.7 Race versus rack stats** - GitHub #64: show races, racks, and ELO odds in compare views.
-2. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
-3. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
-4. **6.2 Season standings chart** - start shaping season-style league views.
-5. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-6. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-7. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
-8. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
-9. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
-10. **4.1 Bracket visualization** - make tournament detail pages easier to read.
+1. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
+2. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
+3. **6.2 Season standings chart** - start shaping season-style league views.
+4. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+5. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+6. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
+7. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
+8. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
+9. **4.1 Bracket visualization** - make tournament detail pages easier to read.
+10. **8.1 PWA install / offline cache** - make the static demo friendlier on phones.
 
 ---
 

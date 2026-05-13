@@ -25,6 +25,20 @@ const notFound = (detail = "Not found") => {
 
 const decodePathPart = (value = "") => decodeURIComponent(value.replace(/\+/g, "%20"));
 
+const expectedElo = (ratingA = 1500, ratingB = 1500) =>
+  1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+
+const parseRackScore = (score = "") => {
+  const numbers = String(score).match(/\d+/g)?.map(Number).filter((value) => Number.isFinite(value)) || [];
+  if (numbers.length < 2) return null;
+  const [left, right] = numbers;
+  if (left === 0 && right === 0) return null;
+  return {
+    winner_racks: Math.max(left, right),
+    loser_racks: Math.min(left, right),
+  };
+};
+
 const comparePlayers = (cache, a, b) => {
   const pa = cache.players.find((p) => p.name === a);
   const pb = cache.players.find((p) => p.name === b);
@@ -39,6 +53,27 @@ const comparePlayers = (cache, a, b) => {
     .reverse();
   const aWins = h2hMatches.filter((m) => m.winner_name === a).length;
   const bWins = h2hMatches.filter((m) => m.winner_name === b).length;
+  const rackStats = h2hMatches.reduce(
+    (acc, match) => {
+      const parsed = parseRackScore(match.scores);
+      if (!parsed) return acc;
+      acc.scored_races += 1;
+      if (match.winner_name === a) {
+        acc.a_racks_won += parsed.winner_racks;
+        acc.a_racks_lost += parsed.loser_racks;
+        acc.b_racks_won += parsed.loser_racks;
+        acc.b_racks_lost += parsed.winner_racks;
+      } else {
+        acc.b_racks_won += parsed.winner_racks;
+        acc.b_racks_lost += parsed.loser_racks;
+        acc.a_racks_won += parsed.loser_racks;
+        acc.a_racks_lost += parsed.winner_racks;
+      }
+      return acc;
+    },
+    { scored_races: 0, a_racks_won: 0, a_racks_lost: 0, b_racks_won: 0, b_racks_lost: 0 }
+  );
+  const aOdds = expectedElo(pa.elo_rating, pb.elo_rating);
 
   const opponentRecord = (name) => {
     const record = {};
@@ -62,6 +97,22 @@ const comparePlayers = (cache, a, b) => {
     a: pa,
     b: pb,
     h2h: { a_wins: aWins, b_wins: bWins, matches: h2hMatches },
+    race_stats: {
+      races_played: h2hMatches.length,
+      scored_races: rackStats.scored_races,
+      a_race_wins: aWins,
+      b_race_wins: bWins,
+      a_racks_won: rackStats.a_racks_won,
+      a_racks_lost: rackStats.a_racks_lost,
+      b_racks_won: rackStats.b_racks_won,
+      b_racks_lost: rackStats.b_racks_lost,
+      elo_odds: {
+        a_win_probability: Math.round(aOdds * 1000) / 10,
+        b_win_probability: Math.round((1 - aOdds) * 1000) / 10,
+        a_rating: pa.elo_rating,
+        b_rating: pb.elo_rating,
+      },
+    },
     common_opponents: common.map((opponent) => ({
       opponent,
       a: recA[opponent],
