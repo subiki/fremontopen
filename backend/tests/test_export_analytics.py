@@ -13,6 +13,7 @@ from export_static import (
     _normalized_duration_minutes,
     _recent_activity_summary,
     _season_standings,
+    _tournament_prize_payouts,
 )
 
 
@@ -43,6 +44,31 @@ def test_normalized_duration_excludes_likely_left_open_tournaments():
 def test_qualified_player_requires_minimum_matches():
     assert _is_qualified_player({"wins": 6, "losses": 4})
     assert not _is_qualified_player({"wins": 5, "losses": 4})
+
+
+def test_tournament_prize_payouts_round_to_five_and_award_whole_pot():
+    payouts = _tournament_prize_payouts(
+        15,
+        {"Winner": 1, "Runner Up": 2, "Third": 3, "Fourth": 4},
+    )
+
+    assert payouts["pot"] == 150
+    assert payouts["awarded"] == 150
+    assert payouts["unassigned"] == 0
+    assert [row["amount"] for row in payouts["payouts"]] == [75, 45, 25, 5]
+
+
+def test_tournament_prize_payouts_splits_tied_places():
+    payouts = _tournament_prize_payouts(
+        8,
+        {"Winner": 1, "Runner Up": 2, "Third A": 3, "Third B": 3},
+    )
+
+    third = next(row for row in payouts["payouts"] if row["place"] == 3)
+    assert payouts["pot"] == 80
+    assert payouts["awarded"] == 80
+    assert third["split"] is True
+    assert third["players"] == ["Third A", "Third B"]
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

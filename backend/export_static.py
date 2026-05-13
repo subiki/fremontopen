@@ -6,6 +6,7 @@ short-lived shell job, export this cache, then build/upload the React app.
 import argparse
 import asyncio
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -28,6 +29,7 @@ PROJECT_ROOT = ROOT_DIR.parent
 DEFAULT_OUT = PROJECT_ROOT / "frontend" / "public" / "data" / "cache.json"
 MAX_NORMAL_TOURNAMENT_DURATION_MINUTES = 12 * 60
 DEFAULT_RANKING_MIN_MATCHES = 10
+ENTRY_FEE_DOLLARS = 10
 
 
 def _row_to_dict(row) -> Dict[str, Any]:
@@ -73,6 +75,71 @@ def _format_duration(minutes: Optional[int]) -> Optional[str]:
     if hours:
         return f"{hours}h"
     return f"{mins}m"
+
+
+def _round_to_nearest_five(value: float) -> int:
+    return int(math.floor((value / 5) + 0.5) * 5)
+
+
+def _tournament_prize_payouts(
+    player_count: int,
+    placements: Dict[str, int],
+    entry_fee: int = ENTRY_FEE_DOLLARS,
+) -> Dict[str, Any]:
+    pot = max(0, int(player_count or 0) * entry_fee)
+    place_targets = {
+        1: pot * 0.5,
+        2: pot * 0.5 * 0.6,
+        3: pot * 0.5 * 0.3,
+        4: pot * 0.5 * 0.1,
+    }
+    place_payouts = {place: _round_to_nearest_five(amount) for place, amount in place_targets.items()}
+    delta = pot - sum(place_payouts.values())
+    if delta:
+        reconcile_place = next(
+            (place for place in (4, 3, 2, 1) if place_payouts.get(place, 0) + delta >= 0),
+            1,
+        )
+        place_payouts[reconcile_place] += delta
+
+    payout_rows = []
+    for place in (1, 2, 3, 4):
+        players = sorted(
+            [player for player, player_place in placements.items() if player_place == place],
+            key=str.casefold,
+        )
+        if not players:
+            continue
+        place_total = place_payouts[place]
+        per_player = _round_to_nearest_five(place_total / len(players)) if players else 0
+        payout_rows.append({
+            "place": place,
+            "players": players,
+            "amount": place_total,
+            "per_player": per_player,
+            "split": len(players) > 1,
+        })
+
+    awarded = sum(row["amount"] for row in payout_rows)
+    unassigned = pot - awarded
+    if unassigned and payout_rows:
+        payout_rows[-1]["amount"] += unassigned
+        payout_rows[-1]["per_player"] = (
+            _round_to_nearest_five(payout_rows[-1]["amount"] / len(payout_rows[-1]["players"]))
+            if payout_rows[-1]["players"]
+            else 0
+        )
+        awarded = pot
+
+    return {
+        "entry_fee": entry_fee,
+        "player_count": player_count,
+        "pot": pot,
+        "payouts": payout_rows,
+        "awarded": awarded,
+        "unassigned": pot - awarded,
+        "rules": "Entry is $10 per player. First gets half the pot; the remaining half is split 60/30/10 for second, third, and fourth. Payouts are rounded to the nearest $5 and reconciled to award the full pot.",
+    }
 
 
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
@@ -471,6 +538,7 @@ async def build_cache() -> Dict[str, Any]:
                 for name in (match.get("winner_name"), match.get("loser_name"))
                 if name
             })
+            prize_pool = _tournament_prize_payouts(player_count, placements)
             tournament["duration_minutes"] = duration_minutes
             tournament["duration_label"] = duration_label
             tournament["normalized_duration_minutes"] = normalized_duration
@@ -478,11 +546,18 @@ async def build_cache() -> Dict[str, Any]:
             tournament["duration_outlier"] = duration_minutes is not None and normalized_duration is None
             tournament["winner"] = winner
             tournament["player_count"] = player_count
+            tournament["prize_pool"] = prize_pool["pot"]
             tournament_details[str(tid)] = {
                 "tournament": tournament,
                 "matches": tournament_matches,
                 "analytics": {
                     "player_count": player_count,
+                    "entry_fee": prize_pool["entry_fee"],
+                    "prize_pool": prize_pool["pot"],
+                    "prize_payouts": prize_pool["payouts"],
+                    "prize_awarded": prize_pool["awarded"],
+                    "prize_unassigned": prize_pool["unassigned"],
+                    "prize_rules": prize_pool["rules"],
                     "duration_minutes": duration_minutes,
                     "duration_label": duration_label,
                     "normalized_duration_minutes": normalized_duration,
@@ -641,6 +716,8 @@ async def build_cache() -> Dict[str, Any]:
             "average_tournament_duration_label": tournament_analytics["average_duration_label"],
             "duration_outlier_count": duration_outlier_count,
             "duration_outlier_threshold_minutes": MAX_NORMAL_TOURNAMENT_DURATION_MINUTES,
+            "entry_fee": ENTRY_FEE_DOLLARS,
+            "total_prize_pool": sum(t.get("prize_pool") or 0 for t in tournaments),
             "top_tournament_winners": tournament_analytics["winner_leaderboard"][:4],
             "ranking_min_matches": DEFAULT_RANKING_MIN_MATCHES,
             "qualified_player_count": len([player for player in players if _is_qualified_player(player)]),

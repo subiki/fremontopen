@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
-import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales } from "@phosphor-icons/react";
+import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
 import { fetchStats, fetchPlayers } from "../lib/api";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -125,6 +125,13 @@ export default function Dashboard() {
             accent="text-[#F59E0B]"
             icon={Medal}
             testid="stat-most-titles"
+          />
+          <StatCard
+            label="Prize Pool"
+            value={formatMoney(stats?.total_prize_pool)}
+            accent="text-[#F59E0B]"
+            icon={CurrencyDollar}
+            testid="stat-prize-pool"
           />
         </section>
 
@@ -441,6 +448,11 @@ const formatDateTime = (value) => {
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
+
+const formatMoney = (value) =>
+  typeof value === "number"
+    ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+    : "-";
 
 const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   const body = (

@@ -55,6 +55,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Historical tournament backfill CLI for arbitrary Challonge tournament IDs or slugs
 - [x] Tournament filter by game type for faster 8-ball and 9-ball browsing
 - [x] Season standings chart for latest seasonal player records
+- [x] Tournament cash measurement with $10 entries and rounded prize payouts
 
 ## Removed From Demo Scope
 
