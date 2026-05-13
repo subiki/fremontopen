@@ -14,6 +14,7 @@ Optimization strategy (≤ 500 Challonge calls/month budget):
 - A brand-new tournament costs 2 calls (participants + matches).
 
 Use --force to override the skip and rebuild everything.
+Use --replace to delete old public cache rows before syncing returned tournaments.
 Use --tournament <id> to refresh a single tournament regardless of state.
 """
 import os
@@ -49,6 +50,41 @@ def _norm(name):
     return (name or "").strip()
 
 
+def _name_key(name: str) -> str:
+    return " ".join(_norm(name).lower().split())
+
+
+def _display_score(name: str) -> tuple:
+    # Prefer names that occur often, then names with intentional capitalization.
+    letters = [c for c in name if c.isalpha()]
+    uppercase = sum(1 for c in letters if c.isupper())
+    lowercase = sum(1 for c in letters if c.islower())
+    return (uppercase, -lowercase, -len(name))
+
+
+def _canonical_name_map(match_rows) -> Dict[str, str]:
+    counts: Dict[str, Dict[str, int]] = {}
+    for r in match_rows:
+        for name in (r.winner_name, r.loser_name):
+            name = _norm(name)
+            if not name:
+                continue
+            key = _name_key(name)
+            counts.setdefault(key, {})
+            counts[key][name] = counts[key].get(name, 0) + 1
+
+    aliases: Dict[str, str] = {}
+    for variants in counts.values():
+        canonical = sorted(
+            variants,
+            key=lambda n: (variants[n], *_display_score(n)),
+            reverse=True,
+        )[0]
+        for name in variants:
+            aliases[name] = canonical
+    return aliases
+
+
 async def _rebuild_players(conn) -> int:
     """Recompute the players table from matches. Takes an open connection.
     Returns total player count."""
@@ -59,11 +95,22 @@ async def _rebuild_players(conn) -> int:
         )
     )).fetchall()
 
+    aliases = _canonical_name_map(rows)
     wins: Dict[str, int] = {}
     losses: Dict[str, int] = {}
     for r in rows:
-        wins[r.winner_name] = wins.get(r.winner_name, 0) + 1
-        losses[r.loser_name] = losses.get(r.loser_name, 0) + 1
+        winner_name = aliases.get(r.winner_name, r.winner_name)
+        loser_name = aliases.get(r.loser_name, r.loser_name)
+        if winner_name != r.winner_name:
+            await conn.execute(
+                update(T.matches).where(T.matches.c.id == r.id).values(winner_name=winner_name)
+            )
+        if loser_name != r.loser_name:
+            await conn.execute(
+                update(T.matches).where(T.matches.c.id == r.id).values(loser_name=loser_name)
+            )
+        wins[winner_name] = wins.get(winner_name, 0) + 1
+        losses[loser_name] = losses.get(loser_name, 0) + 1
 
     all_names = set(wins) | set(losses)
 
@@ -71,7 +118,11 @@ async def _rebuild_players(conn) -> int:
     existing_rows = (await conn.execute(
         select(T.players.c.name, T.players.c.fargo)
     )).fetchall()
-    existing_fargo = {r.name: r.fargo for r in existing_rows if r.fargo is not None}
+    existing_fargo = {
+        aliases.get(r.name, r.name): r.fargo
+        for r in existing_rows
+        if r.fargo is not None
+    }
 
     await conn.execute(T.players.delete())
     for name in all_names:
@@ -152,7 +203,43 @@ async def _set_sync_meta(conn, key: str, value: Any) -> None:
         await conn.execute(insert(T.sync_meta).values(key=key, value=value))
 
 
-async def run_sync(force: bool = False, only_tournament: Optional[int] = None) -> Dict[str, Any]:
+async def _clear_public_cache(conn) -> None:
+    """Remove public Challonge-derived data before a replacement sync."""
+    await conn.execute(T.matches.delete())
+    await conn.execute(T.players.delete())
+    await conn.execute(T.tournaments.delete())
+    await conn.execute(T.sync_meta.delete())
+
+
+async def run_dedupe_only() -> Dict[str, Any]:
+    """Canonicalize exact case/spacing duplicate player names without API calls."""
+    engine = make_engine()
+    await init_db(engine)
+    async with engine.begin() as conn:
+        before = (await conn.execute(select(T.players))).fetchall()
+        player_count = await _rebuild_players(conn)
+        after = (await conn.execute(select(T.players))).fetchall()
+        meta = (await _get_sync_meta(conn, "last")) or {}
+        meta = {
+            **meta,
+            "players": player_count,
+            "deduped_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await _set_sync_meta(conn, "last", meta)
+    await engine.dispose()
+    return {
+        "status": "ok",
+        "players_before": len(before),
+        "players_after": len(after),
+        "challonge_api_calls": 0,
+    }
+
+
+async def run_sync(
+    force: bool = False,
+    only_tournament: Optional[int] = None,
+    replace: bool = False,
+) -> Dict[str, Any]:
     engine = make_engine()
     await init_db(engine)
     cc = ChallongeClient()
@@ -168,7 +255,13 @@ async def run_sync(force: bool = False, only_tournament: Optional[int] = None) -
     skipped_unchanged = 0
 
     async with engine.begin() as conn:
-        seen: Dict[str, str] = (await _get_sync_meta(conn, "tournaments_seen")) or {}
+        if replace:
+            if only_tournament:
+                raise ValueError("--replace cannot be combined with --tournament")
+            await _clear_public_cache(conn)
+            seen = {}
+        else:
+            seen: Dict[str, str] = (await _get_sync_meta(conn, "tournaments_seen")) or {}
 
         for t in tournaments:
             t_id = t.get("id")
@@ -235,6 +328,8 @@ async def run_sync(force: bool = False, only_tournament: Optional[int] = None) -
             "tournaments_skipped_unchanged": skipped_unchanged,
             "players": player_count,
             "challonge_api_calls": api_calls,
+            "replace": replace,
+            "challonge_subdomain": os.environ.get("CHALLONGE_SUBDOMAIN") or None,
         }
         await _set_sync_meta(conn, "last", summary)
         await _set_sync_meta(conn, "tournaments_seen", seen)
@@ -248,11 +343,22 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="CueStats Challonge sync")
     parser.add_argument("--force", action="store_true",
                         help="Refetch ALL tournaments, including completed.")
+    parser.add_argument("--replace", action="store_true",
+                        help="Delete old public cache rows before syncing returned tournaments.")
+    parser.add_argument("--dedupe-only", action="store_true",
+                        help="Canonicalize cached player names and rebuild aggregates without API calls.")
     parser.add_argument("--tournament", type=int,
                         help="Refresh a single tournament by Challonge id.")
     args = parser.parse_args()
     try:
-        result = asyncio.run(run_sync(force=args.force, only_tournament=args.tournament))
+        if args.dedupe_only:
+            result = asyncio.run(run_dedupe_only())
+        else:
+            result = asyncio.run(run_sync(
+                force=args.force,
+                only_tournament=args.tournament,
+                replace=args.replace,
+            ))
         print(result)
         return 0
     except Exception as e:

@@ -7,14 +7,17 @@ CHALLONGE_BASE = "https://api.challonge.com/v1"
 
 
 class ChallongeClient:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, subdomain: Optional[str] = None):
         self.api_key = api_key or os.environ.get("CHALLONGE_API_KEY")
+        self.subdomain = subdomain if subdomain is not None else os.environ.get("CHALLONGE_SUBDOMAIN")
         if not self.api_key:
             raise ValueError("CHALLONGE_API_KEY not set")
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         params = params or {}
         params["api_key"] = self.api_key
+        if self.subdomain:
+            params["subdomain"] = self.subdomain
         headers = {
             "User-Agent": "CueStats/1.0 (+https://cuestats.app)",
             "Accept": "application/json",

@@ -38,15 +38,30 @@ direct URLs like `/players/Dennis%20Orcollo` load through React Router.
 
 ## Refresh data
 
-When you have new Challonge data locally:
+For normal refreshes, use the incremental sync. This usually costs one
+Challonge API call after completed tournaments have already been cached:
 
 ```powershell
 cd backend
-.venv\Scripts\python.exe sync_job.py --force
+.venv\Scripts\python.exe sync_job.py
 .venv\Scripts\python.exe export_static.py
 ```
 
 Then rebuild and upload `frontend/build/` again.
+
+For a one-time full replacement from `https://fremontopen.challonge.com`, set
+`CHALLONGE_SUBDOMAIN="fremontopen"` in `backend/.env`, then run:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe sync_job.py --replace
+.venv\Scripts\python.exe sync_job.py --dedupe-only
+.venv\Scripts\python.exe export_static.py
+```
+
+Do not run `--replace` casually. It fetches participants and matches for every
+tournament returned by Challonge and can approach the monthly free-tier API
+limit.
 
 ## Auto deploy from GitHub merges
 
