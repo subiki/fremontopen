@@ -111,6 +111,12 @@ export default function Dashboard() {
             testid="stat-avg-duration"
           />
           <StatCard
+            label="Qualified Players"
+            value={stats?.qualified_player_count ?? "—"}
+            icon={Users}
+            testid="stat-qualified-players"
+          />
+          <StatCard
             label="Most Titles"
             value={topTournamentWinners[0] ? `${topTournamentWinners[0].wins}` : "—"}
             accent="text-[#F59E0B]"

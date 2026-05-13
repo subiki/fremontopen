@@ -8,6 +8,7 @@ export default function Players() {
   const [list, setList] = useState([]);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("wins");
+  const [minMatches, setMinMatches] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = async (term = "") => {
@@ -25,7 +26,7 @@ export default function Players() {
   }, [q]);
 
   const sortedList = useMemo(() => {
-    const rows = [...list];
+    const rows = [...list].filter((p) => (p.wins || 0) + (p.losses || 0) >= minMatches);
     const byNumberDesc = (key) => (a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity);
     if (sort === "name") return rows.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
@@ -36,7 +37,7 @@ export default function Players() {
     }
     if (sort === "top_4") return rows.sort(byNumberDesc("top_4_finishes"));
     return rows.sort(byNumberDesc("wins"));
-  }, [list, sort]);
+  }, [list, sort, minMatches]);
 
   return (
     <>
@@ -56,20 +57,33 @@ export default function Players() {
               className="w-full bg-[#0B0E14] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-4 py-2.5 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
             />
           </div>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            data-testid="player-sort-select"
-            className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
-          >
-            <option value="wins">Sort by wins</option>
-            <option value="elo">Sort by ELO</option>
-            <option value="tournaments">Sort by tournaments</option>
-            <option value="win_rate">Sort by win rate</option>
-            <option value="average_placement">Sort by avg place</option>
-            <option value="top_4">Sort by top 4s</option>
-            <option value="name">Sort by name</option>
-          </select>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={minMatches}
+              onChange={(e) => setMinMatches(Number(e.target.value))}
+              data-testid="player-min-matches-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value={0}>All players</option>
+              <option value={5}>Min 5 matches</option>
+              <option value={10}>Min 10 matches</option>
+              <option value={25}>Min 25 matches</option>
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              data-testid="player-sort-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value="wins">Sort by wins</option>
+              <option value="elo">Sort by ELO</option>
+              <option value="tournaments">Sort by tournaments</option>
+              <option value="win_rate">Sort by win rate</option>
+              <option value="average_placement">Sort by avg place</option>
+              <option value="top_4">Sort by top 4s</option>
+              <option value="name">Sort by name</option>
+            </select>
+          </div>
         </div>
 
         <div className="bg-[#141923] border border-[#273041] rounded-lg overflow-x-auto">

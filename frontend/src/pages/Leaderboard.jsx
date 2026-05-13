@@ -7,6 +7,7 @@ import { Crown } from "@phosphor-icons/react";
 export default function Leaderboard() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("wins");
+  const [minMatches, setMinMatches] = useState(10);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -22,7 +23,7 @@ export default function Leaderboard() {
   }, []);
 
   const sortedList = useMemo(() => {
-    const rows = [...list];
+    const rows = [...list].filter((p) => (p.wins || 0) + (p.losses || 0) >= minMatches);
     const byNumberDesc = (key) => (a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity);
     if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
     if (sort === "win_rate") return rows.sort(byNumberDesc("win_rate"));
@@ -31,7 +32,7 @@ export default function Leaderboard() {
     }
     if (sort === "top_4") return rows.sort(byNumberDesc("top_4_finishes"));
     return rows.sort(byNumberDesc("wins"));
-  }, [list, sort]);
+  }, [list, sort, minMatches]);
 
   const max = Math.max(1, ...sortedList.map((p) => p.wins + p.losses));
 
@@ -39,7 +40,22 @@ export default function Leaderboard() {
     <>
       <Topbar title="Leaderboard" subtitle="Players ranked by total wins and top finishes" onSyncDone={load} />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="leaderboard-page">
-        <div className="mb-5 flex justify-end">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-[#9CA3AF]">
+            Showing players with at least <span className="font-mono text-[#F3F4F6]">{minMatches}</span> matches.
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+          <select
+            value={minMatches}
+            onChange={(e) => setMinMatches(Number(e.target.value))}
+            data-testid="leaderboard-min-matches-select"
+            className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+          >
+            <option value={0}>All players</option>
+            <option value={5}>Min 5 matches</option>
+            <option value={10}>Min 10 matches</option>
+            <option value={25}>Min 25 matches</option>
+          </select>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -52,11 +68,12 @@ export default function Leaderboard() {
             <option value="average_placement">Sort by avg place</option>
             <option value="top_4">Sort by top 4s</option>
           </select>
+          </div>
         </div>
         {loading && !list.length ? (
           <div className="text-[#6B7280]">Loading…</div>
-        ) : list.length === 0 ? (
-          <div className="text-[#6B7280]">No data yet.</div>
+        ) : sortedList.length === 0 ? (
+          <div className="text-[#6B7280]">No players match the current minimum.</div>
         ) : (
           <div className="bg-[#141923] border border-[#273041] rounded-lg p-2 overflow-x-auto">
             <ul>

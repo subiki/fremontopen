@@ -26,6 +26,8 @@ from players_extras import (
 ROOT_DIR = Path(__file__).parent
 PROJECT_ROOT = ROOT_DIR.parent
 DEFAULT_OUT = PROJECT_ROOT / "frontend" / "public" / "data" / "cache.json"
+MAX_NORMAL_TOURNAMENT_DURATION_MINUTES = 12 * 60
+DEFAULT_RANKING_MIN_MATCHES = 10
 
 
 def _row_to_dict(row) -> Dict[str, Any]:
@@ -55,6 +57,12 @@ def _duration_minutes(started_at: Optional[str], completed_at: Optional[str]) ->
     return round((end - start).total_seconds() / 60)
 
 
+def _normalized_duration_minutes(minutes: Optional[int]) -> Optional[int]:
+    if minutes is None or minutes > MAX_NORMAL_TOURNAMENT_DURATION_MINUTES:
+        return None
+    return minutes
+
+
 def _format_duration(minutes: Optional[int]) -> Optional[str]:
     if minutes is None:
         return None
@@ -65,6 +73,10 @@ def _format_duration(minutes: Optional[int]) -> Optional[str]:
     if hours:
         return f"{hours}h"
     return f"{mins}m"
+
+
+def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
+    return ((player.get("wins") or 0) + (player.get("losses") or 0)) >= minimum_matches
 
 
 def _completed_matches(matches: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -343,6 +355,7 @@ async def build_cache() -> Dict[str, Any]:
         winner_counts: Dict[str, int] = {}
         all_placements: Dict[str, Dict[str, int]] = {}
         duration_values: List[int] = []
+        duration_outlier_count = 0
 
         for tournament in tournaments:
             tid = tournament["id"]
@@ -352,14 +365,17 @@ async def build_cache() -> Dict[str, Any]:
             )
             duration_minutes = _duration_minutes(tournament.get("started_at"), tournament.get("completed_at"))
             duration_label = _format_duration(duration_minutes)
+            normalized_duration = _normalized_duration_minutes(duration_minutes)
             placements = _infer_tournament_placements(tournament_matches)
             winner = next((name for name, place in placements.items() if place == 1), None)
             if winner:
                 winner_counts[winner] = winner_counts.get(winner, 0) + 1
             for player_name, place in placements.items():
                 all_placements.setdefault(player_name, {})[str(tid)] = place
-            if duration_minutes is not None:
-                duration_values.append(duration_minutes)
+            if normalized_duration is not None:
+                duration_values.append(normalized_duration)
+            elif duration_minutes is not None:
+                duration_outlier_count += 1
 
             player_count = tournament.get("participants_count") or len({
                 name
@@ -369,6 +385,9 @@ async def build_cache() -> Dict[str, Any]:
             })
             tournament["duration_minutes"] = duration_minutes
             tournament["duration_label"] = duration_label
+            tournament["normalized_duration_minutes"] = normalized_duration
+            tournament["normalized_duration_label"] = _format_duration(normalized_duration)
+            tournament["duration_outlier"] = duration_minutes is not None and normalized_duration is None
             tournament["winner"] = winner
             tournament["player_count"] = player_count
             tournament_details[str(tid)] = {
@@ -378,6 +397,9 @@ async def build_cache() -> Dict[str, Any]:
                     "player_count": player_count,
                     "duration_minutes": duration_minutes,
                     "duration_label": duration_label,
+                    "normalized_duration_minutes": normalized_duration,
+                    "normalized_duration_label": _format_duration(normalized_duration),
+                    "duration_outlier": tournament["duration_outlier"],
                     "winner": winner,
                     "placements": [
                         {"player": name, "place": place}
@@ -393,19 +415,21 @@ async def build_cache() -> Dict[str, Any]:
                     "date": tournament.get("started_at") or tournament.get("completed_at"),
                     "players": tournament.get("participants_count"),
                 })
-            if duration_minutes is not None:
+            if normalized_duration is not None:
                 tournament_analytics["duration_trend"].append({
                     "tournament_id": tid,
                     "tournament_name": tournament.get("name"),
                     "date": tournament.get("started_at") or tournament.get("completed_at"),
-                    "duration_minutes": duration_minutes,
-                    "duration_label": duration_label,
+                    "duration_minutes": normalized_duration,
+                    "duration_label": _format_duration(normalized_duration),
                 })
 
         tournament_analytics["player_count_trend"].sort(key=lambda row: row.get("date") or "")
         tournament_analytics["duration_trend"].sort(key=lambda row: row.get("date") or "")
         tournament_analytics["winner_leaderboard"] = _ranking_rows(winner_counts)
         tournament_analytics["total_with_duration"] = len(duration_values)
+        tournament_analytics["duration_outlier_count"] = duration_outlier_count
+        tournament_analytics["duration_outlier_threshold_minutes"] = MAX_NORMAL_TOURNAMENT_DURATION_MINUTES
         if duration_values:
             avg_duration = round(sum(duration_values) / len(duration_values))
             tournament_analytics["average_duration_minutes"] = avg_duration
@@ -526,7 +550,11 @@ async def build_cache() -> Dict[str, Any]:
             "average_tournament_players": tournament_analytics["average_players"],
             "average_tournament_duration_minutes": tournament_analytics["average_duration_minutes"],
             "average_tournament_duration_label": tournament_analytics["average_duration_label"],
+            "duration_outlier_count": duration_outlier_count,
+            "duration_outlier_threshold_minutes": MAX_NORMAL_TOURNAMENT_DURATION_MINUTES,
             "top_tournament_winners": tournament_analytics["winner_leaderboard"][:4],
+            "ranking_min_matches": DEFAULT_RANKING_MIN_MATCHES,
+            "qualified_player_count": len([player for player in players if _is_qualified_player(player)]),
             "top_elo_players": sorted(
                 [
                     {

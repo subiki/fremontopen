@@ -9,6 +9,8 @@ from export_static import (
     _attendance_stats,
     _duration_minutes,
     _infer_tournament_placements,
+    _is_qualified_player,
+    _normalized_duration_minutes,
     _recent_activity_summary,
 )
 
@@ -29,6 +31,17 @@ def test_duration_minutes_uses_start_and_end_timestamps():
         "2026-05-09T13:26:54.541-07:00",
         "2026-05-09T17:10:07.615-07:00",
     ) == 223
+
+
+def test_normalized_duration_excludes_likely_left_open_tournaments():
+    assert _normalized_duration_minutes(719) == 719
+    assert _normalized_duration_minutes(721) is None
+    assert _normalized_duration_minutes(None) is None
+
+
+def test_qualified_player_requires_minimum_matches():
+    assert _is_qualified_player({"wins": 6, "losses": 4})
+    assert not _is_qualified_player({"wins": 5, "losses": 4})
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

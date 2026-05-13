@@ -47,7 +47,7 @@ export default function Tournaments() {
     const rows = [...list];
     if (sort === "name") return rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     if (sort === "players") return rows.sort((a, b) => (b.player_count || b.participants_count || 0) - (a.player_count || a.participants_count || 0));
-    if (sort === "duration") return rows.sort((a, b) => (b.duration_minutes || 0) - (a.duration_minutes || 0));
+    if (sort === "duration") return rows.sort((a, b) => (b.normalized_duration_minutes || 0) - (a.normalized_duration_minutes || 0));
     return rows.sort((a, b) => new Date(b.started_at || b.completed_at || 0) - new Date(a.started_at || a.completed_at || 0));
   }, [list, sort]);
 
@@ -139,7 +139,7 @@ export default function Tournaments() {
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-mono">
                           <span>{t.game || "-"}</span>
                           <span>{t.player_count || t.participants_count || 0} players</span>
-                          <span>{t.duration_label || "-"}</span>
+                          <span>{t.duration_outlier ? "outlier" : t.normalized_duration_label || "-"}</span>
                         </div>
                       </div>
                       <div className="inline-flex w-fit items-center gap-2 rounded-md border border-[#F59E0B]/20 bg-[#F59E0B]/10 px-3 py-1.5 text-sm text-[#F59E0B]">
@@ -188,7 +188,7 @@ export default function Tournaments() {
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">Duration</span>
-                  <span className="font-mono">{t.duration_label || "-"}</span>
+                  <span className="font-mono">{t.duration_outlier ? "outlier" : t.normalized_duration_label || "-"}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#6B7280]">
                   <span className="font-mono">Winner</span>
