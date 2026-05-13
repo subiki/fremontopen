@@ -40,6 +40,26 @@ The deployed site never calls Challonge directly.
 Use normal incremental refreshes most of the time. This keeps Challonge API
 usage low after historical tournaments are cached.
 
+From the repo root, run the full local refresh workflow:
+
+```powershell
+.\scripts\refresh-static-data.ps1
+```
+
+That runs Challonge sync, conservative dedupe, the validation report, static
+cache export, and the static React build. To verify export/build without calling
+Challonge, run:
+
+```powershell
+.\scripts\refresh-static-data.ps1 -SkipSync
+```
+
+If local PowerShell script execution is disabled, use:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\refresh-static-data.ps1 -SkipSync
+```
+
 ```powershell
 cd backend
 .venv\Scripts\python.exe sync_job.py
