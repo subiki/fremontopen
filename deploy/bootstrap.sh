@@ -168,9 +168,9 @@ echo "==> Linger enabled."
 # ── 6. User-level systemd service (no sudo required) ─────────────────────────
 mkdir -p ~/.config/systemd/user/
 
-cat > ~/.config/systemd/user/cuestats.service <<EOF
+cat > ~/.config/systemd/user/fremontopen.service <<EOF
 [Unit]
-Description=CueStats FastAPI backend
+Description=Fremont Open FastAPI backend
 After=network.target
 
 [Service]
@@ -185,8 +185,8 @@ WantedBy=default.target
 EOF
 
 systemctl --user daemon-reload
-systemctl --user enable --now cuestats
-echo "==> cuestats user service started."
+systemctl --user enable --now fremontopen
+echo "==> fremontopen user service started."
 
 # ── 7. Initial Challonge data sync ───────────────────────────────────────────
 echo "==> Running initial Challonge sync..."
@@ -220,9 +220,9 @@ echo "   curl http://127.0.0.1:${PORT}/api/health    ← local"
 echo "   curl https://${DOMAIN}/api/health           ← through panel proxy"
 echo ""
 echo " Useful commands:"
-echo "   systemctl --user status cuestats            ← check service"
-echo "   systemctl --user restart cuestats           ← restart API"
-echo "   journalctl --user -u cuestats -f            ← live logs"
+echo "   systemctl --user status fremontopen          ← check service"
+echo "   systemctl --user restart fremontopen        ← restart API"
+echo "   journalctl --user -u fremontopen -f         ← live logs"
 echo ""
 echo " GitHub Actions CD:"
 echo "   Add these 6 secrets to your repo → Settings → Secrets → Actions:"

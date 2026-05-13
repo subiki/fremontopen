@@ -13,13 +13,13 @@
 └───────────────────────────────┼──────────────────────────────────────┘
                                 │
                 ┌───────────────▼─────────────────┐
-                │           nginx (443)            │
-                │   /  → static frontend/build/    │
-                │   /api → 127.0.0.1:8001 (uvicorn)│
+                │     DreamHost panel Proxy        │
+                │  /  → static ~/fremontopen.com/  │
+                │  /api → 127.0.0.1:8001 (uvicorn) │
                 └───────────────┬─────────────────┘
                                 │
                 ┌───────────────▼─────────────────┐
-                │      FastAPI (cuestats.service)  │
+                │    FastAPI (fremontopen.service) │
                 │  Routers:                        │
                 │  - read-only public /api/*       │
                 │  - /api/auth (admin login)       │
@@ -31,7 +31,7 @@
                 └───┬───────────┬──────────┬───────┘
                     │           │          │
         ┌───────────▼──┐   ┌────▼────┐   ┌─▼──────────┐
-        │   MongoDB    │   │  Claude │   │ Pillow OG  │
+        │    MySQL     │   │  Claude │   │ Pillow OG  │
         │  tournaments │   │ Sonnet  │   │  card PNG  │
         │  matches     │   │  4.5    │   │ generator  │
         │  players     │   │  (LLM)  │   └────────────┘
@@ -104,8 +104,9 @@ Single record. `email`, `password_hash` (bcrypt). Seeded from `.env` on each sta
 Every admin mutation: `{action, payload, at}`.
 
 ### `sync_meta`
-- `_id="last"` → last-run summary (when, status, counts)
-- `_id="tournaments"` → `seen: {tournament_id: updated_at}` for skip-frozen logic
+Key/value store (JSON column):
+- `"last"` → last-run summary (when, status, counts)
+- `"tournaments_seen"` → `{tournament_id: updated_at}` for skip-frozen logic
 
 ## Auth model
 
@@ -117,7 +118,7 @@ Two distinct JWT systems sharing `JWT_SECRET`:
 | `role` | `admin` | `user` |
 | `type` | `access` | `session` |
 | TTL | 24h | 30d |
-| Storage | localStorage `cuestats_admin_token` | localStorage `cuestats_user_token` |
+| Storage | localStorage `fremontopen_admin_token` | localStorage `fremontopen_user_token` |
 | Dependency | `require_admin` | `require_user` / `optional_user` |
 | Cannot impersonate | each other (different role+type) |
 
@@ -126,7 +127,7 @@ Two distinct JWT systems sharing `JWT_SECRET`:
 ```
 fetch Challonge tournament list                          [+1 call]
 for each tournament t:
-    upsert tournament doc
+    upsert tournament row
     if t.state ∈ {complete, ended} AND seen[t.id]:
         skip                                              [+0 calls]
     elif seen[t.id] == t.updated_at:
@@ -154,11 +155,11 @@ git push origin main
   → GitHub Actions: deploy.yml
     → checkout
     → yarn build (with REACT_APP_BACKEND_URL secret)
-    → rsync frontend/build/ → server:DEPLOY_PATH/frontend/build/
+    → rsync frontend/build/ → server:DEPLOY_WEBROOT/
     → rsync backend/ → server:DEPLOY_PATH/backend/    (preserves .env)
     → ssh: bash deploy/remote_deploy.sh
       → pip install -r requirements.txt
-      → sudo systemctl restart cuestats   (passwordless via sudoers rule)
+      → systemctl --user restart fremontopen
     → smoke test: curl /api/health
 ```
 
