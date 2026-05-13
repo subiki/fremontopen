@@ -31,6 +31,7 @@ jobs:
       - name: Build static frontend
         working-directory: frontend
         env:
+          CI: "false"
           REACT_APP_STATIC_DATA: "true"
         run: yarn build
 
