@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-DEPLOY_PATH="${DEPLOY_PATH:-$HOME/cuestats}"
+DEPLOY_PATH="${DEPLOY_PATH:-$HOME/fremontopen.com}"
 
 echo "==> Remote deploy to $DEPLOY_PATH"
 cd "$DEPLOY_PATH/backend"

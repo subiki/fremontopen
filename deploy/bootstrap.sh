@@ -47,7 +47,7 @@
 
 set -euo pipefail
 
-DEPLOY_PATH="${DEPLOY_PATH:-$HOME/cuestats}"
+DEPLOY_PATH="${DEPLOY_PATH:-$HOME/fremontopen.com}"
 DOMAIN="${DOMAIN:-fremontopen.com}"
 REPO="${REPO:-https://github.com/subiki/fremontopen.git}"
 WEBROOT="${WEBROOT:-$HOME/$DOMAIN}"   # DreamHost serves static files from here
