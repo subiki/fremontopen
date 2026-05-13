@@ -1,6 +1,13 @@
 name: Weekly Backlog Sync
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - BACKLOG.md
+      - scripts/create_github_issues.sh
+      - .github/workflows/sync_backlog.yml
   schedule:
     - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
   workflow_dispatch:      # Allow manual trigger from the Actions tab
