@@ -20,6 +20,7 @@ import {
   Scales,
   TrendUp,
   TrendDown,
+  Medal,
 } from "@phosphor-icons/react";
 
 export default function PlayerDetail() {
@@ -83,6 +84,8 @@ export default function PlayerDetail() {
   const p = data?.player;
   const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
+  const placements = extras?.placements;
+  const topFinishes = placements?.top_finishes || {};
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
@@ -191,7 +194,57 @@ export default function PlayerDetail() {
               <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" />
               <StatCard label="Total" value={p.wins + p.losses} testid="pd-total" />
               <StatCard label="Win Rate" value={`${p.win_rate}%`} accent="text-[#10B981]" testid="pd-win-rate" />
+              <StatCard
+                label="Avg Place"
+                value={placements?.average ?? "—"}
+                accent="text-[#F59E0B]"
+                icon={Medal}
+                testid="pd-average-placement"
+              />
+              <StatCard
+                label="1st Place"
+                value={topFinishes.first ?? "—"}
+                accent="text-[#F59E0B]"
+                icon={Trophy}
+                testid="pd-first-place"
+              />
+              <StatCard
+                label="Top 3"
+                value={topFinishes.top_3 ?? "—"}
+                icon={Medal}
+                testid="pd-top-three"
+              />
+              <StatCard
+                label="Top 4"
+                value={topFinishes.top_4 ?? "—"}
+                icon={Medal}
+                testid="pd-top-four"
+              />
             </div>
+
+            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                  Placement Analytics
+                </h2>
+                <span className="text-xs text-[#6B7280]">
+                  Lower average placement is better
+                </span>
+              </div>
+              {!placements || !placements.tournaments_counted ? (
+                <div className="text-[#6B7280] text-sm">
+                  Placement data is not available for this player yet.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <PlacementStat label="Avg" value={placements.average} />
+                  <PlacementStat label="Top 1" value={topFinishes.first} />
+                  <PlacementStat label="Top 2" value={topFinishes.top_2} />
+                  <PlacementStat label="Top 3" value={topFinishes.top_3} />
+                  <PlacementStat label="Top 4" value={topFinishes.top_4} />
+                </div>
+              )}
+            </section>
 
             {/* Streaks + Titles + Fargo + Performance */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
@@ -358,6 +411,17 @@ const RivalryCard = ({
       </ul>
     )}
   </section>
+);
+
+const PlacementStat = ({ label, value }) => (
+  <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3">
+    <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+      {label}
+    </div>
+    <div className="mt-2 font-mono text-2xl font-semibold text-[#F3F4F6]">
+      {value ?? "—"}
+    </div>
+  </div>
 );
 
 

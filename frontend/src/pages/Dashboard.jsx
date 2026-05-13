@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
-import { Trophy, Users, Target, ChartLineUp, Star } from "@phosphor-icons/react";
+import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal } from "@phosphor-icons/react";
 import { fetchStats, fetchPlayers } from "../lib/api";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -56,6 +56,9 @@ export default function Dashboard() {
 
   const topPlayers = (stats?.players || []).slice(0, 5);
   const recent = stats?.recent_matches || [];
+  const topTournamentWinners = stats?.top_tournament_winners || [];
+  const playerTrend = stats?.tournament_player_count_trend || [];
+  const durationTrend = stats?.tournament_duration_trend || [];
 
   return (
     <>
@@ -92,6 +95,25 @@ export default function Dashboard() {
             accent="text-[#10B981]"
             icon={ChartLineUp}
             testid="stat-top-wl"
+          />
+          <StatCard
+            label="Avg Field"
+            value={stats?.average_tournament_players ?? "—"}
+            icon={Users}
+            testid="stat-avg-field"
+          />
+          <StatCard
+            label="Avg Duration"
+            value={stats?.average_tournament_duration_label ?? "—"}
+            icon={Clock}
+            testid="stat-avg-duration"
+          />
+          <StatCard
+            label="Most Titles"
+            value={topTournamentWinners[0] ? `${topTournamentWinners[0].wins}` : "—"}
+            accent="text-[#F59E0B]"
+            icon={Medal}
+            testid="stat-most-titles"
           />
         </section>
 
@@ -138,6 +160,62 @@ export default function Dashboard() {
             </ul>
           </section>
         ) : null}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <AnalyticsList
+            title="Tournament Winners"
+            rows={topTournamentWinners}
+            empty="No tournament winners yet."
+            renderRow={(row) => (
+              <>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono text-xs text-[#6B7280] w-6">
+                    {ordinal(row.rank)}
+                  </span>
+                  <Link
+                    to={`/players/${encodeURIComponent(row.player)}`}
+                    className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                  >
+                    {row.player}
+                  </Link>
+                </div>
+                <span className="font-mono text-sm text-[#F59E0B]">{row.wins} titles</span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title="Field Size Trend"
+            rows={playerTrend}
+            empty="No player-count trend yet."
+            renderRow={(row) => (
+              <>
+                <Link
+                  to={`/tournaments/${row.tournament_id}`}
+                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                >
+                  {row.tournament_name}
+                </Link>
+                <span className="font-mono text-sm text-[#9CA3AF]">{row.players ?? "—"} players</span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title="Duration Trend"
+            rows={durationTrend}
+            empty="No duration data yet."
+            renderRow={(row) => (
+              <>
+                <Link
+                  to={`/tournaments/${row.tournament_id}`}
+                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                >
+                  {row.tournament_name}
+                </Link>
+                <span className="font-mono text-sm text-[#9CA3AF]">{row.duration_label || "—"}</span>
+              </>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section
@@ -225,6 +303,9 @@ export default function Dashboard() {
                       </Link>
                     </div>
                     <div className="font-mono text-xs text-[#9CA3AF] shrink-0">
+                      <span className="hidden sm:inline text-[#6B7280] mr-2">
+                        {m.tournament_game || "Game TBD"}
+                      </span>
                       {m.scores || "—"}
                     </div>
                   </li>
@@ -237,3 +318,32 @@ export default function Dashboard() {
     </>
   );
 }
+
+const ordinal = (rank) => {
+  if (rank === 1) return "1st";
+  if (rank === 2) return "2nd";
+  if (rank === 3) return "3rd";
+  return `${rank}th`;
+};
+
+const AnalyticsList = ({ title, rows, empty, renderRow }) => (
+  <section className="bg-[#141923] border border-[#273041] rounded-lg p-6">
+    <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">
+      {title}
+    </h2>
+    {rows.length === 0 ? (
+      <div className="text-[#6B7280] text-sm">{empty}</div>
+    ) : (
+      <ul className="divide-y divide-[#273041]/60">
+        {rows.map((row, index) => (
+          <li
+            key={row.player || row.tournament_id || index}
+            className="py-3 flex items-center justify-between gap-4 text-sm"
+          >
+            {renderRow(row)}
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+);

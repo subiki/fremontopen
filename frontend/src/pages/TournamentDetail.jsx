@@ -22,6 +22,8 @@ export default function TournamentDetail() {
 
   const t = data?.tournament;
   const matches = data?.matches || [];
+  const analytics = data?.analytics || {};
+  const placements = analytics.placements || [];
 
   return (
     <>
@@ -40,12 +42,48 @@ export default function TournamentDetail() {
           <div className="text-[#EF4444]">Tournament not found.</div>
         ) : (
           <>
-            <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
               <Info label="State" value={t.state || "—"} />
               <Info label="Game" value={t.game || "—"} />
-              <Info label="Participants" value={t.participants_count} />
+              <Info label="Participants" value={analytics.player_count || t.participants_count || "—"} />
+              <Info label="Duration" value={analytics.duration_label || t.duration_label || "—"} />
               <Info label="Started" value={t.started_at ? new Date(t.started_at).toLocaleDateString() : "—"} />
             </div>
+
+            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                  Top Finishers
+                </h2>
+                <span className="text-xs text-[#6B7280]">
+                  Ties share the same placement
+                </span>
+              </div>
+              {placements.length === 0 ? (
+                <div className="text-[#6B7280] text-sm">
+                  Placement data is not available for this tournament.
+                </div>
+              ) : (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {placements.slice(0, 4).map((row) => (
+                    <li
+                      key={`${row.place}-${row.player}`}
+                      className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3"
+                    >
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                        {ordinal(row.place)}
+                      </div>
+                      <Link
+                        to={`/players/${encodeURIComponent(row.player)}`}
+                        className="mt-1 block text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                      >
+                        {row.player}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
             <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-3">Matches</h2>
             <div className="bg-[#141923] border border-[#273041] rounded-lg overflow-x-auto">
@@ -119,6 +157,13 @@ const Info = ({ label, value }) => (
     <div className="mt-1 font-mono text-[#F3F4F6]">{value}</div>
   </div>
 );
+
+const ordinal = (place) => {
+  if (place === 1) return "1st";
+  if (place === 2) return "2nd";
+  if (place === 3) return "3rd";
+  return `${place}th`;
+};
 
 const Th = ({ children }) => (
   <th className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] px-5 py-3">

@@ -21,7 +21,7 @@
 #
 # What it does:
 #   1. Creates one GitHub label per epic slug  (e.g. "epic:tournaments")
-#   2. Creates P0 / P1 / P2 / P3 priority labels if they don't already exist
+#   2. Creates jfl / P0 / P1 / P2 / P3 priority labels if they don't already exist
 #   3. Fetches all existing issue titles (open + closed) upfront, then for each
 #      non-Done backlog row: creates a GitHub Issue if no matching issue exists,
 #      or skips it.  --dry-run reports exactly which items are missing (new)
@@ -96,6 +96,55 @@ LABELS_CREATED=0
 ISSUES_CREATED=0
 ISSUES_SKIPPED=0
 ISSUES_CLOSED=0
+
+# ---------------------------------------------------------------------------
+# Optional detailed issue bodies
+# ---------------------------------------------------------------------------
+# Sections under "## JFL Issue Details" can override the generic issue body.
+# Each "### <Title>" heading must match a backlog row's bold title exactly.
+# ---------------------------------------------------------------------------
+declare -A detailed_issue_bodies=()
+
+flush_detail_body() {
+  if [[ -n "${detail_title:-}" ]]; then
+    detailed_issue_bodies["$detail_title"]="$detail_body"
+  fi
+}
+
+in_jfl_details=false
+detail_title=""
+detail_body=""
+while IFS= read -r raw_line; do
+  line="${raw_line%$'\r'}"
+
+  if [[ "$line" =~ ^##[[:space:]]+JFL[[:space:]]+Issue[[:space:]]+Details ]]; then
+    in_jfl_details=true
+    continue
+  fi
+
+  if $in_jfl_details && [[ "$line" =~ ^##[[:space:]]+ && ! "$line" =~ ^##[[:space:]]+JFL[[:space:]]+Issue[[:space:]]+Details ]]; then
+    flush_detail_body
+    break
+  fi
+
+  $in_jfl_details || continue
+
+  if [[ "$line" =~ ^###[[:space:]]+(.+) ]]; then
+    # Treat known issue-title headings as body delimiters. Nested headings
+    # inside the body, such as "### Acceptance criteria", are preserved.
+    heading="${BASH_REMATCH[1]}"
+    if [[ "$heading" == "Tournament analytics: player count, duration, and winner leaderboard" || "$heading" == "Player analytics: average placement and top finish counts" ]]; then
+      flush_detail_body
+      detail_title="$heading"
+      detail_body=""
+      continue
+    fi
+  fi
+
+  if [[ -n "$detail_title" ]]; then
+    detail_body+="${line}"$'\n'
+  fi
+done < "$BACKLOG"
 
 # ---------------------------------------------------------------------------
 # Helper: create_label <name> <color_hex> <description>
@@ -218,12 +267,14 @@ declare -a EPIC_NUMBER_TO_SLUG=(
 
 # Priority label colours
 declare -A PRIORITY_COLORS=(
+  [JFL]="5319e7"
   [P0]="b60205"
   [P1]="e4680a"
   [P2]="fbca04"
   [P3]="0e8a16"
 )
 declare -A PRIORITY_DESCS=(
+  [JFL]="Highest priority"
   [P0]="Ship next — blocking"
   [P1]="Near-term"
   [P2]="Nice-to-have"
@@ -243,8 +294,12 @@ echo ""
 # Step 2 — Create priority labels
 # ---------------------------------------------------------------------------
 echo "=== Step 2: Priority labels ==="
-for p in P0 P1 P2 P3; do
-  create_label "$p" "${PRIORITY_COLORS[$p]}" "${PRIORITY_DESCS[$p]}"
+for p in JFL P0 P1 P2 P3; do
+  label_name="$p"
+  if [[ "$p" == "JFL" ]]; then
+    label_name="jfl"
+  fi
+  create_label "$label_name" "${PRIORITY_COLORS[$p]}" "${PRIORITY_DESCS[$p]}"
 done
 create_label "enhancement" "a2eeef" "Feature work from BACKLOG.md"
 echo ""
@@ -343,7 +398,7 @@ while IFS= read -r raw_line; do
   fi
 
   # Parse data rows:  | 1.1 | P1 | M | **Title** rest of description |
-  if $in_table && [[ "$line" =~ ^\|[[:space:]]*([0-9]+\.[0-9]+)[[:space:]]*\|[[:space:]]*(P[0-3])[[:space:]]*\|[[:space:]]*([SML])[[:space:]]*\|(.+)\|[[:space:]]*$ ]]; then
+  if $in_table && [[ "$line" =~ ^\|[[:space:]]*([0-9]+\.[0-9]+)[[:space:]]*\|[[:space:]]*(JFL|P[0-3])[[:space:]]*\|[[:space:]]*([SML])[[:space:]]*\|(.+)\|[[:space:]]*$ ]]; then
     item_num="${BASH_REMATCH[1]}"
     priority="${BASH_REMATCH[2]}"
     effort="${BASH_REMATCH[3]}"
@@ -389,7 +444,15 @@ Part of the **${EPIC_DESCS[$current_epic_slug]}** epic (backlog item ${item_num}
 ### Estimated effort
 ${effort_label}"
 
-    labels="epic:${current_epic_slug},${priority},enhancement"
+    if [[ -n "${detailed_issue_bodies[$title]+_}" ]]; then
+      body="${detailed_issue_bodies[$title]}"
+    fi
+
+    priority_label="$priority"
+    if [[ "$priority" == "JFL" ]]; then
+      priority_label="jfl"
+    fi
+    labels="epic:${current_epic_slug},${priority_label},enhancement"
 
     # Check against pre-fetched set (works in both normal and --dry-run mode).
     # After creating, mark the title as seen so repeated titles within one run

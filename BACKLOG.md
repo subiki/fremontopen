@@ -9,7 +9,7 @@ Prioritized feature list for the current product direction:
 
 Effort labels: **S** <= 1 day, **M** 1-3 days, **L** > 3 days.
 
-Legend: `P0` ship next, `P1` near-term, `P2` nice-to-have, `P3` later/maybe.
+Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `P3` later/maybe.
 
 ---
 
@@ -59,28 +59,32 @@ These were intentionally removed for the shared-hosting demo. They can return la
 |---|---|---|---|
 | 2.1 | P0 | M | **Alias mapping file** - local config to merge names like "Jim", "Jimbo", "Jimmy S." during export |
 | 2.2 | P0 | M | **Alias suggestion report** - fuzzy-match likely duplicate player names before export |
-| 2.3 | P1 | S | **Manual overrides file** - local JSON/YAML for Fargo, nicknames, hidden tournaments, and notes |
+| 2.3 | P0 | S | **Unique first-name dedupe rule** - auto-combine a first-name-only player with exactly one matching first+last player; leave multiple matches unresolved |
 | 2.4 | P1 | S | **Validation report** - flag missing winners, impossible scores, duplicate matches, blank names |
 | 2.5 | P1 | M | **Historical tournament backfill** - local script for arbitrary Challonge tournament IDs |
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
+| 2.7 | P1 | S | **Manual overrides file** - local JSON/YAML for Fargo, nicknames, hidden tournaments, and notes |
 
 ## EPIC 3 - Player Stats And Rankings
 
 | # | P | Effort | Item |
 |---|---|---|---|
 | 3.1 | P0 | M | **ELO rating** computed from all cached matches |
-| 3.2 | P1 | M | **Rating history chart** per player |
-| 3.3 | P1 | S | **Game-type breakdown** per player |
+| 3.10 | JFL | M | **Player analytics: average placement and top finish counts** - compute average placement and top-1/top-2/top-3/top-4 finish counts |
+| 3.2 | P0 | S | **Expanded stat set** - add visible totals for tournament appearances, titles, opponent count, game-type record, recent form, and streaks |
+| 3.3 | P0 | S | **Game-type breakdown** per player, sourced from tournament game labels such as 8-ball and 9-ball |
 | 3.4 | P1 | S | **Attendance streak** and tournaments-played stats |
 | 3.5 | P1 | S | **Leaderboard streak chips** - current streak, best streak, titles |
-| 3.6 | P2 | M | **Strength of schedule** using opponent win rate / rating |
-| 3.7 | P2 | S | **Player nicknames** from local overrides file |
-| 3.8 | P3 | S | **Equipment/custom cue fields** from local overrides file |
+| 3.6 | P1 | M | **Rating history chart** per player |
+| 3.7 | P2 | M | **Strength of schedule** using opponent win rate / rating |
+| 3.8 | P2 | S | **Player nicknames** from local overrides file |
+| 3.9 | P3 | S | **Equipment/custom cue fields** from local overrides file |
 
 ## EPIC 4 - Tournament Views
 
 | # | P | Effort | Item |
 |---|---|---|---|
+| 4.7 | JFL | M | **Tournament analytics: player count, duration, and winner leaderboard** - show tournament size trends, duration, and ranked tournament winners |
 | 4.1 | P1 | M | **Bracket visualization** on tournament detail |
 | 4.2 | P1 | S | **Tournament timeline** - week-by-week archive with winner badges |
 | 4.3 | P1 | S | **Tournament filter** by game type |
@@ -125,11 +129,12 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 8.1 | P1 | S | **PWA install / offline cache** for static assets and `cache.json` |
-| 8.2 | P1 | S | **Mobile navigation polish** - hamburger/drawer, better table scrolling |
-| 8.3 | P1 | S | **Keyboard shortcuts** - `/` search, `g p`, `g t`, `g l` |
-| 8.4 | P2 | S | **Case-insensitive player URLs** |
-| 8.5 | P2 | S | **404/static fallback polish** for unknown players and tournaments |
-| 8.6 | P3 | S | **Pinch-zoom bracket view** |
+| 8.2 | P0 | S | **Mobile navigation polish** - thumb-friendly nav, better table scrolling, and tighter mobile spacing |
+| 8.3 | P0 | S | **Sort controls** - sortable players, leaderboard, tournaments, and stat views |
+| 8.4 | P1 | S | **Keyboard shortcuts** - `/` search, `g p`, `g t`, `g l` |
+| 8.5 | P2 | S | **Case-insensitive player URLs** |
+| 8.6 | P2 | S | **404/static fallback polish** for unknown players and tournaments |
+| 8.7 | P3 | S | **Pinch-zoom bracket view** |
 
 ## EPIC 9 - Future Hosted Features
 
@@ -148,16 +153,80 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **2.1 Alias mapping file** - biggest data-quality unlock.
-2. **2.2 Alias suggestion report** - helps clean names without an admin UI.
-3. **2.4 Validation report** - catch bad Challonge/import data before publishing.
-4. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
-5. **3.1 ELO rating** - creates a stronger leaderboard than raw wins.
-6. **4.2 Tournament timeline** - makes the archive easier to browse.
-7. **5.1 Compare picker UI** - makes the existing compare feature discoverable.
-8. **6.1 Dashboard trend cards** - better first impression for the demo.
-9. **1.5 Cache metadata panel** - make the production data age obvious.
-10. **8.2 Mobile navigation polish** - improve demo usability on phones.
+1. **4.7 Tournament analytics: player count, duration, and winner leaderboard** - JFL.
+2. **3.10 Player analytics: average placement and top finish counts** - JFL.
+3. **8.2 Mobile navigation polish** - improve demo usability on phones first.
+4. **8.3 Sort controls** - make players, tournaments, leaderboards, and stat views easier to scan.
+5. **3.3 Game-type breakdown** - show 8-ball / 9-ball style labels in player and tournament stats.
+6. **3.2 Expanded stat set** - increase visible stats before deeper ranking work.
+7. **2.3 Unique first-name dedupe rule** - merge only unambiguous first-name-only duplicates.
+8. **2.1 Alias mapping file** - biggest manual data-quality unlock.
+9. **2.2 Alias suggestion report** - helps clean names without an admin UI.
+10. **2.4 Validation report** - catch bad Challonge/import data before publishing.
+
+---
+
+## JFL Issue Details
+
+### Tournament analytics: player count, duration, and winner leaderboard
+
+Labels: `jfl`, `epic:tournaments`, `enhancement`
+
+### Epic
+tournaments
+
+### Summary
+Add tournament analytics showing player count trends, tournament duration, and the players with the most tournament wins.
+
+### Feature request
+For tournament views and/or dashboard analytics, add metrics that help understand tournament size, length, and historical winners.
+
+### Acceptance criteria
+
+- [ ] Compute the number of players in each tournament.
+- [ ] Show the average number of players over time.
+- [ ] Display the trend in a chart, table, or dashboard card.
+- [ ] Compute tournament duration when start/end timestamps are available.
+- [ ] Show duration on tournament detail pages.
+- [ ] Add a duration trend or summary view.
+- [ ] Count tournament wins by player.
+- [ ] Show the players with the most tournament wins.
+- [ ] Clearly display 1st, 2nd, 3rd, and 4th ranked tournament winners.
+- [ ] Handle ties clearly and consistently.
+- [ ] Handle missing or incomplete tournament data gracefully.
+
+### Notes
+JFL-priority feature request.
+
+### Player analytics: average placement and top finish counts
+
+Labels: `jfl`, `epic:rankings`, `enhancement`
+
+### Epic
+rankings
+
+### Summary
+Add player analytics showing average placement and how often each player finishes in the top 1, 2, 3, and 4.
+
+### Feature request
+For player detail pages and rankings, add placement-based statistics that show player consistency and top finishes beyond simple win/loss records.
+
+### Acceptance criteria
+
+- [ ] Compute each player's placement per tournament where placement data is available.
+- [ ] Compute average placement per player.
+- [ ] Display average placement on player detail pages.
+- [ ] Make clear that lower average placement is better.
+- [ ] Count 1st-place finishes per player.
+- [ ] Count top-2 finishes per player.
+- [ ] Count top-3 finishes per player.
+- [ ] Count top-4 finishes per player.
+- [ ] Display top finish counts on player detail pages.
+- [ ] Consider adding average placement and top finish counts to leaderboard/table views.
+- [ ] Handle ties and missing placement data consistently.
+
+### Notes
+JFL-priority feature request.
 
 ---
 

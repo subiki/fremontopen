@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournaments } from "../lib/api";
@@ -13,6 +13,7 @@ const stateColor = (s) => {
 
 export default function Tournaments() {
   const [list, setList] = useState([]);
+  const [sort, setSort] = useState("date");
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -27,6 +28,14 @@ export default function Tournaments() {
     load();
   }, []);
 
+  const sortedList = useMemo(() => {
+    const rows = [...list];
+    if (sort === "name") return rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    if (sort === "players") return rows.sort((a, b) => (b.participants_count || 0) - (a.participants_count || 0));
+    if (sort === "duration") return rows.sort((a, b) => (b.duration_minutes || 0) - (a.duration_minutes || 0));
+    return rows.sort((a, b) => new Date(b.started_at || 0) - new Date(a.started_at || 0));
+  }, [list, sort]);
+
   return (
     <>
       <Topbar
@@ -35,6 +44,19 @@ export default function Tournaments() {
         onSyncDone={load}
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournaments-page">
+        <div className="mb-5 flex justify-end">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            data-testid="tournament-sort-select"
+            className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+          >
+            <option value="date">Sort by date</option>
+            <option value="players">Sort by players</option>
+            <option value="duration">Sort by duration</option>
+            <option value="name">Sort by name</option>
+          </select>
+        </div>
         {loading && !list.length ? (
           <div className="text-[#6B7280]">Loading…</div>
         ) : list.length === 0 ? (
@@ -44,7 +66,7 @@ export default function Tournaments() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
             data-testid="tournaments-grid"
           >
-            {list.map((t) => (
+            {sortedList.map((t) => (
               <Link
                 key={t.id}
                 to={`/tournaments/${t.id}`}
@@ -69,6 +91,10 @@ export default function Tournaments() {
                 <div className="mt-3 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">{t.game || "—"}</span>
                   <span className="font-mono">{t.participants_count} players</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
+                  <span className="font-mono">Duration</span>
+                  <span className="font-mono">{t.duration_label || "—"}</span>
                 </div>
                 {t.url ? (
                   <div className="mt-3 inline-flex items-center gap-1 text-[11px] text-[#9CA3AF] group-hover:text-[#10B981]">

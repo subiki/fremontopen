@@ -23,6 +23,7 @@ import logging
 import asyncio
 import uuid
 import argparse
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -63,6 +64,31 @@ def _display_score(name: str) -> tuple:
     return (uppercase, -lowercase, -len(name))
 
 
+def _name_parts(name: str) -> list[str]:
+    return [part for part in re.split(r"[\s-]+", name.strip()) if part]
+
+
+def _apply_unique_first_name_aliases(aliases: Dict[str, Optional[str]]) -> None:
+    names = [name for name in aliases if name and aliases.get(name) == name]
+    by_first_name: Dict[str, list[str]] = {}
+    first_only: list[str] = []
+
+    for name in names:
+        parts = _name_parts(name)
+        if not parts:
+            continue
+        first_key = parts[0].casefold()
+        if len(parts) == 1:
+            first_only.append(name)
+        else:
+            by_first_name.setdefault(first_key, []).append(name)
+
+    for name in first_only:
+        matches = by_first_name.get(name.casefold(), [])
+        if len(matches) == 1:
+            aliases[name] = matches[0]
+
+
 def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
     counts: Dict[str, Dict[str, int]] = {}
     raw_to_clean: Dict[str, Optional[str]] = {}
@@ -86,6 +112,7 @@ def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
         )[0]
         for name in variants:
             aliases[name] = canonical
+    _apply_unique_first_name_aliases(aliases)
     for raw_name, clean_name in raw_to_clean.items():
         aliases[raw_name] = aliases.get(clean_name, clean_name) if clean_name else None
     return aliases
