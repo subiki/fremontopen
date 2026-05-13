@@ -67,7 +67,7 @@ export default function Leaderboard() {
                 return (
                   <li
                     key={p.name}
-                    className="min-w-[920px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
+                    className="min-w-[1080px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
                     data-testid={`leaderboard-row-${i}`}
                   >
                     <div className="w-7 shrink-0 flex items-center justify-center">
@@ -118,6 +118,11 @@ export default function Leaderboard() {
                         T4 {p.top_4_finishes ?? 0}
                       </span>
                     </div>
+                    <div className="w-52 shrink-0 flex justify-end gap-2 text-[11px] font-mono">
+                      <Chip label="Cur" value={p.attendance_streak ?? 0} />
+                      <Chip label="Best" value={p.best_attendance_streak ?? 0} />
+                      <Chip label="Titles" value={p.top_1_finishes ?? 0} accent />
+                    </div>
                   </li>
                 );
               })}
@@ -128,3 +133,15 @@ export default function Leaderboard() {
     </>
   );
 }
+
+const Chip = ({ label, value, accent = false }) => (
+  <span
+    className={`rounded border px-2 py-1 ${
+      accent
+        ? "border-[#F59E0B]/20 bg-[#F59E0B]/10 text-[#F59E0B]"
+        : "border-[#273041] bg-[#0B0E14] text-[#9CA3AF]"
+    }`}
+  >
+    {label} {value}
+  </span>
+);
