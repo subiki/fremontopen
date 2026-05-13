@@ -44,6 +44,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] ELO ratings computed from cached matches and surfaced in player ranking views
 - [x] Tournament timeline archive with winner badges
 - [x] Compare picker UI for choosing two players without hand-editing URLs
+- [x] Dashboard trend cards for latest sync, active players, hottest player, and closest rivalry
 
 ## Removed From Demo Scope
 
@@ -109,7 +110,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 6.1 | P1 | S | **Dashboard trend cards** - latest sync, active players, hottest player, closest rivalry |
 | 6.2 | P1 | S | **Season standings chart** |
 | 6.3 | P1 | M | **Player form chart** - rolling last-10 match win rate |
 | 6.4 | P2 | S | **Tournament difficulty indicator** |
@@ -153,16 +153,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **6.1 Dashboard trend cards** - better first impression for the demo.
-2. **1.5 Cache metadata panel** - make the production data age obvious.
-3. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
-4. **3.4 Attendance streak** - show consistency across events.
-5. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
-6. **3.6 Rating history chart** - track player rating changes once ratings are available.
-7. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
-8. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
-9. **6.2 Season standings chart** - start shaping season-style league views.
-10. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+1. **1.5 Cache metadata panel** - make the production data age obvious.
+2. **1.4 Refresh-data workflow** - make local sync -> export -> commit repeatable.
+3. **3.4 Attendance streak** - show consistency across events.
+4. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
+5. **3.6 Rating history chart** - track player rating changes once ratings are available.
+6. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
+7. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
+8. **6.2 Season standings chart** - start shaping season-style league views.
+9. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+10. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
 
 ---
 

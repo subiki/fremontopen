@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
-import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal } from "@phosphor-icons/react";
+import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales } from "@phosphor-icons/react";
 import { fetchStats, fetchPlayers } from "../lib/api";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -59,6 +59,7 @@ export default function Dashboard() {
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
+  const dashboardTrends = stats?.dashboard_trends || {};
 
   return (
     <>
@@ -114,6 +115,50 @@ export default function Dashboard() {
             accent="text-[#F59E0B]"
             icon={Medal}
             testid="stat-most-titles"
+          />
+        </section>
+
+        <section
+          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
+          data-testid="dashboard-trend-cards"
+        >
+          <TrendCard
+            label="Latest Sync"
+            value={formatDateTime(dashboardTrends.latest_sync)}
+            detail={`${stats?.total_tournaments ?? "-"} tournaments cached`}
+            icon={Clock}
+          />
+          <TrendCard
+            label="Active Players"
+            value={dashboardTrends.active_players ?? "-"}
+            detail={`${dashboardTrends.activity_match_count ?? 0} recent matches`}
+            icon={Users}
+          />
+          <TrendCard
+            label="Hottest Player"
+            value={dashboardTrends.hottest_player?.player || "-"}
+            detail={
+              dashboardTrends.hottest_player
+                ? `${dashboardTrends.hottest_player.wins}-${dashboardTrends.hottest_player.losses} last ${dashboardTrends.hottest_player.matches}`
+                : "No recent record"
+            }
+            icon={Fire}
+            to={dashboardTrends.hottest_player ? `/players/${encodeURIComponent(dashboardTrends.hottest_player.player)}` : null}
+          />
+          <TrendCard
+            label="Closest Rivalry"
+            value={dashboardTrends.closest_rivalry?.label || "-"}
+            detail={
+              dashboardTrends.closest_rivalry
+                ? `${dashboardTrends.closest_rivalry.a_wins}-${dashboardTrends.closest_rivalry.b_wins} over ${dashboardTrends.closest_rivalry.matches}`
+                : "No rivalry yet"
+            }
+            icon={Scales}
+            to={
+              dashboardTrends.closest_rivalry
+                ? `/compare/${encodeURIComponent(dashboardTrends.closest_rivalry.player_a)}/${encodeURIComponent(dashboardTrends.closest_rivalry.player_b)}`
+                : null
+            }
           />
         </section>
 
@@ -324,6 +369,38 @@ const ordinal = (rank) => {
   if (rank === 2) return "2nd";
   if (rank === 3) return "3rd";
   return `${rank}th`;
+};
+
+const formatDateTime = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
+  const body = (
+    <div className="bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/40 transition-colors h-full">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+            {label}
+          </div>
+          <div className="mt-3 truncate font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
+            {value}
+          </div>
+          <div className="mt-2 text-sm text-[#9CA3AF] truncate">
+            {detail}
+          </div>
+        </div>
+        <div className="w-10 h-10 rounded-md bg-[#0B0E14] border border-[#273041] flex items-center justify-center shrink-0">
+          <Icon size={18} weight="duotone" className="text-[#10B981]" />
+        </div>
+      </div>
+    </div>
+  );
+
+  return to ? <Link to={to}>{body}</Link> : body;
 };
 
 const AnalyticsList = ({ title, rows, empty, renderRow }) => (

@@ -137,6 +137,91 @@ def _ranking_rows(counts: Dict[str, int], limit: int = 10) -> List[Dict[str, Any
     return out
 
 
+def _recent_activity_summary(matches: List[Dict[str, Any]], window: int = 30) -> Dict[str, Any]:
+    completed = [
+        m for m in matches
+        if m.get("state") == "complete"
+        and m.get("completed_at")
+        and m.get("winner_name")
+        and m.get("loser_name")
+    ]
+    parsed = [(m, _parse_dt(m.get("completed_at"))) for m in completed]
+    parsed = [(m, dt) for m, dt in parsed if dt]
+    if not parsed:
+        return {
+            "window_days": window,
+            "active_players": 0,
+            "match_count": 0,
+            "hottest_player": None,
+        }
+
+    latest = max(dt for _, dt in parsed)
+    cutoff = latest.timestamp() - (window * 24 * 60 * 60)
+    recent = [m for m, dt in parsed if dt.timestamp() >= cutoff]
+    if not recent:
+        recent = [m for m, _ in sorted(parsed, key=lambda item: item[1])[-20:]]
+
+    records: Dict[str, Dict[str, int]] = {}
+    for match in recent:
+        winner = match["winner_name"]
+        loser = match["loser_name"]
+        records.setdefault(winner, {"wins": 0, "losses": 0})["wins"] += 1
+        records.setdefault(loser, {"wins": 0, "losses": 0})["losses"] += 1
+
+    ranked = []
+    for name, record in records.items():
+        total = record["wins"] + record["losses"]
+        if total < 2:
+            continue
+        ranked.append({
+            "player": name,
+            "wins": record["wins"],
+            "losses": record["losses"],
+            "matches": total,
+            "win_rate": round((record["wins"] / total) * 100, 1),
+        })
+    ranked.sort(key=lambda row: (-row["win_rate"], -row["wins"], row["player"].casefold()))
+
+    return {
+        "window_days": window,
+        "active_players": len(records),
+        "match_count": len(recent),
+        "hottest_player": ranked[0] if ranked else None,
+    }
+
+
+def _closest_rivalry(matches: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if match.get("state") != "complete" or not winner or not loser or winner == loser:
+            continue
+        left, right = sorted((winner, loser), key=str.casefold)
+        key = (left, right)
+        row = pairs.setdefault(key, {"player_a": left, "player_b": right, "a_wins": 0, "b_wins": 0})
+        if winner == left:
+            row["a_wins"] += 1
+        else:
+            row["b_wins"] += 1
+
+    rivalries = []
+    for row in pairs.values():
+        total = row["a_wins"] + row["b_wins"]
+        if total < 3:
+            continue
+        diff = abs(row["a_wins"] - row["b_wins"])
+        rivalries.append({
+            **row,
+            "matches": total,
+            "difference": diff,
+            "label": f"{row['player_a']} vs {row['player_b']}",
+        })
+    if not rivalries:
+        return None
+    return sorted(rivalries, key=lambda row: (row["difference"], -row["matches"], row["label"].casefold()))[0]
+
+
 async def _last_sync(conn) -> Optional[Dict[str, Any]]:
     row = (await conn.execute(
         select(T.sync_meta).where(T.sync_meta.c.key == "last")
@@ -358,6 +443,8 @@ async def build_cache() -> Dict[str, Any]:
             }
 
         sync_status = last_sync or {"status": "never_synced"}
+        recent_activity = _recent_activity_summary(matches)
+        closest_rivalry = _closest_rivalry(matches)
         stats = {
             "total_tournaments": len(tournaments),
             "total_matches": completed_match_count,
@@ -392,6 +479,14 @@ async def build_cache() -> Dict[str, Any]:
                 if m.get("winner_name") and m.get("loser_name")
             ][:10],
             "last_synced_at": sync_status.get("last_synced_at"),
+            "dashboard_trends": {
+                "latest_sync": sync_status.get("last_synced_at"),
+                "active_players": recent_activity["active_players"],
+                "activity_match_count": recent_activity["match_count"],
+                "activity_window_days": recent_activity["window_days"],
+                "hottest_player": recent_activity["hottest_player"],
+                "closest_rivalry": closest_rivalry,
+            },
         }
 
         return {
