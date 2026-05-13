@@ -5,6 +5,7 @@ starlette==0.37.2
 pydantic==2.13.4
 pydantic_core==2.46.4
 annotated-types==0.7.0
+email-validator>=2.3.0
 python-multipart==0.0.27
 
 # Database — async SQLAlchemy
