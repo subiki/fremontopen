@@ -62,7 +62,7 @@ export default function PlayerDetail() {
   useEffect(() => {
     (async () => {
       try {
-        const lb = await fetchLeaderboard(500);
+        const lb = await fetchLeaderboard(1000);
         setOrder(lb.map((p) => p.name));
       } catch {
         /* ignore */
@@ -86,6 +86,7 @@ export default function PlayerDetail() {
   const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
   const placements = extras?.placements;
   const topFinishes = placements?.top_finishes || {};
+  const elo = extras?.elo || {};
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
@@ -194,6 +195,20 @@ export default function PlayerDetail() {
               <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" />
               <StatCard label="Total" value={p.wins + p.losses} testid="pd-total" />
               <StatCard label="Win Rate" value={`${p.win_rate}%`} accent="text-[#10B981]" testid="pd-win-rate" />
+              <StatCard
+                label="ELO"
+                value={elo.rating ?? p.elo_rating ?? "—"}
+                accent="text-[#F59E0B]"
+                icon={TrendUp}
+                testid="pd-elo-rating"
+              />
+              <StatCard
+                label="ELO Peak"
+                value={elo.peak ?? p.elo_peak ?? "—"}
+                accent="text-[#F59E0B]"
+                icon={Fire}
+                testid="pd-elo-peak"
+              />
               <StatCard
                 label="Avg Place"
                 value={placements?.average ?? "—"}

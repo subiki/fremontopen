@@ -12,7 +12,7 @@ export default function Leaderboard() {
   const load = async () => {
     setLoading(true);
     try {
-      setList(await fetchLeaderboard(50));
+      setList(await fetchLeaderboard(1000));
     } finally {
       setLoading(false);
     }
@@ -24,6 +24,7 @@ export default function Leaderboard() {
   const sortedList = useMemo(() => {
     const rows = [...list];
     const byNumberDesc = (key) => (a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity);
+    if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
     if (sort === "win_rate") return rows.sort(byNumberDesc("win_rate"));
     if (sort === "average_placement") {
       return rows.sort((a, b) => (a.average_placement ?? Infinity) - (b.average_placement ?? Infinity));
@@ -46,6 +47,7 @@ export default function Leaderboard() {
             className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
           >
             <option value="wins">Sort by wins</option>
+            <option value="elo">Sort by ELO</option>
             <option value="win_rate">Sort by win rate</option>
             <option value="average_placement">Sort by avg place</option>
             <option value="top_4">Sort by top 4s</option>
@@ -65,7 +67,7 @@ export default function Leaderboard() {
                 return (
                   <li
                     key={p.name}
-                    className="min-w-[760px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
+                    className="min-w-[920px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
                     data-testid={`leaderboard-row-${i}`}
                   >
                     <div className="w-7 shrink-0 flex items-center justify-center">
@@ -99,6 +101,14 @@ export default function Leaderboard() {
                       <span className="text-[#6B7280] mx-1">·</span>
                       <span className="text-[#EF4444]">{p.losses}L</span>
                       <span className="text-[#9CA3AF] ml-2">{p.win_rate}%</span>
+                    </div>
+                    <div className="w-44 shrink-0 text-right font-mono text-xs">
+                      <span className="text-[#F59E0B]">
+                        ELO {p.elo_rating ?? "—"}
+                      </span>
+                      <span className="text-[#6B7280] ml-2">
+                        Peak {p.elo_peak ?? "—"}
+                      </span>
                     </div>
                     <div className="w-44 shrink-0 text-right font-mono text-xs">
                       <span className="text-[#F59E0B]">

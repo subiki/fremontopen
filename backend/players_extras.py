@@ -3,6 +3,72 @@ import math
 from typing import Dict, List, Any, Optional
 
 
+def expected_elo_score(rating_a: float, rating_b: float) -> float:
+    return 1.0 / (1.0 + math.pow(10, (rating_b - rating_a) / 400.0))
+
+
+def compute_elo_ratings(
+    matches: List[Dict[str, Any]],
+    initial_rating: int = 1500,
+    k_factor: int = 24,
+) -> Dict[str, Any]:
+    """Compute cross-tournament ELO ratings from completed cached matches."""
+    ratings: Dict[str, float] = {}
+    peaks: Dict[str, float] = {}
+    history: Dict[str, List[Dict[str, Any]]] = {}
+    processed = 0
+
+    ordered_matches = sorted(
+        [
+            m for m in matches
+            if m.get("state") == "complete"
+            and m.get("winner_name")
+            and m.get("loser_name")
+            and m.get("winner_name") != m.get("loser_name")
+        ],
+        key=lambda m: (m.get("completed_at") or "", str(m.get("id") or "")),
+    )
+
+    for match in ordered_matches:
+        winner = match["winner_name"]
+        loser = match["loser_name"]
+        winner_rating = ratings.get(winner, float(initial_rating))
+        loser_rating = ratings.get(loser, float(initial_rating))
+        expected_winner = expected_elo_score(winner_rating, loser_rating)
+        delta = k_factor * (1.0 - expected_winner)
+
+        ratings[winner] = winner_rating + delta
+        ratings[loser] = loser_rating - delta
+        peaks[winner] = max(peaks.get(winner, float(initial_rating)), ratings[winner])
+        peaks[loser] = max(peaks.get(loser, float(initial_rating)), ratings[loser])
+        processed += 1
+
+        for player_name, opponent, won, before, after in (
+            (winner, loser, True, winner_rating, ratings[winner]),
+            (loser, winner, False, loser_rating, ratings[loser]),
+        ):
+            history.setdefault(player_name, []).append({
+                "match_id": match.get("id"),
+                "date": match.get("completed_at"),
+                "opponent": opponent,
+                "won": won,
+                "rating_before": round(before),
+                "rating_after": round(after),
+                "delta": round(after - before, 1),
+                "tournament_id": match.get("tournament_id"),
+                "tournament_name": match.get("tournament_name"),
+            })
+
+    return {
+        "initial_rating": initial_rating,
+        "k_factor": k_factor,
+        "rated_match_count": processed,
+        "ratings": {name: round(value) for name, value in ratings.items()},
+        "peaks": {name: round(value) for name, value in peaks.items()},
+        "history": history,
+    }
+
+
 def _expected_win_rate(rating_a: int, rating_b: int) -> float:
     """Standard logistic expected-win for ELO-style ratings.
     Fargo is a 200-point scale around 500; using the elo 400-spread approximation is close enough for demo.

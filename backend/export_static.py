@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 import database as T
 from database import make_engine
 from players_extras import (
+    compute_elo_ratings,
     compute_perf_vs_fargo,
     compute_streaks,
     compute_tourney_championships,
@@ -173,6 +174,7 @@ async def build_cache() -> Dict[str, Any]:
 
         tournaments_by_id = {str(t["id"]): t for t in tournaments}
         players_by_name = {p["name"]: p for p in players}
+        elo = compute_elo_ratings(matches)
 
         for match in matches:
             tournament = tournaments_by_id.get(str(match.get("tournament_id")))
@@ -271,6 +273,9 @@ async def build_cache() -> Dict[str, Any]:
         player_extras = {}
         for player in players:
             name = player["name"]
+            player["elo_rating"] = elo["ratings"].get(name, elo["initial_rating"])
+            player["elo_peak"] = elo["peaks"].get(name, player["elo_rating"])
+            player["elo_matches"] = len(elo["history"].get(name, []))
             player_matches = [
                 m for m in matches
                 if m.get("winner_name") == name or m.get("loser_name") == name
@@ -332,6 +337,14 @@ async def build_cache() -> Dict[str, Any]:
                 ),
                 "wins_over_time": wins_over_time(player_matches, name),
                 "fargo": player.get("fargo"),
+                "elo": {
+                    "rating": player["elo_rating"],
+                    "peak": player["elo_peak"],
+                    "matches": player["elo_matches"],
+                    "initial_rating": elo["initial_rating"],
+                    "k_factor": elo["k_factor"],
+                    "history": elo["history"].get(name, []),
+                },
                 "placements": {
                     "average": average_placement,
                     "tournaments_counted": len(placement_values),
@@ -350,6 +363,24 @@ async def build_cache() -> Dict[str, Any]:
             "average_tournament_duration_minutes": tournament_analytics["average_duration_minutes"],
             "average_tournament_duration_label": tournament_analytics["average_duration_label"],
             "top_tournament_winners": tournament_analytics["winner_leaderboard"][:4],
+            "top_elo_players": sorted(
+                [
+                    {
+                        "player": player["name"],
+                        "rating": player["elo_rating"],
+                        "peak": player["elo_peak"],
+                        "matches": player["elo_matches"],
+                    }
+                    for player in players
+                    if player.get("elo_matches")
+                ],
+                key=lambda row: (-row["rating"], row["player"].casefold()),
+            )[:10],
+            "elo": {
+                "initial_rating": elo["initial_rating"],
+                "k_factor": elo["k_factor"],
+                "rated_match_count": elo["rated_match_count"],
+            },
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
             "players": players,

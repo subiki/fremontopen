@@ -3,6 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from players_extras import compute_elo_ratings
 from export_static import _duration_minutes, _infer_tournament_placements
 
 
@@ -50,3 +51,17 @@ def test_single_elimination_semifinal_losers_tie_for_third():
     assert placements["Runner Up"] == 2
     assert placements["Third A"] == 3
     assert placements["Third B"] == 3
+
+
+def test_compute_elo_ratings_rewards_winners_and_tracks_history():
+    ratings = compute_elo_ratings([
+        match(1, "A", "B", "2026-05-09T17:00:00-07:00"),
+        match(2, "A", "B", "2026-05-09T18:00:00-07:00"),
+    ])
+
+    assert ratings["rated_match_count"] == 2
+    assert ratings["ratings"]["A"] > 1500
+    assert ratings["ratings"]["B"] < 1500
+    assert ratings["peaks"]["A"] == ratings["ratings"]["A"]
+    assert len(ratings["history"]["A"]) == 2
+    assert ratings["history"]["A"][0]["delta"] > 0
