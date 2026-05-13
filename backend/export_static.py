@@ -612,7 +612,10 @@ async def main() -> None:
     parser.add_argument("--out", default=str(DEFAULT_OUT), help="Output JSON path")
     args = parser.parse_args()
 
-    out = Path(args.out)
+    await write_cache(Path(args.out))
+
+
+async def write_cache(out: Path = DEFAULT_OUT) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     cache = await build_cache()
     out.write_text(

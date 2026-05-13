@@ -81,6 +81,18 @@ Do not run `--replace` casually. It fetches participants and matches for every
 tournament returned by Challonge and can use a large share of the monthly
 free-tier API budget.
 
+To add older events that are not returned by the normal organization sync,
+backfill specific Challonge tournament IDs or slugs:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe backfill_tournaments.py 123456 old-event-slug
+```
+
+Backfill fetches the tournament, participants, and matches for each requested
+event, rebuilds player aggregates, and exports `frontend/public/data/cache.json`
+unless `--no-export` is passed.
+
 ## Local Player Alias Mapping
 
 Use `backend/player_aliases.json` for deliberate player-name merges during the

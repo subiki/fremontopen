@@ -33,6 +33,10 @@ class ChallongeClient:
         data = self._get("/tournaments.json", {"state": state})
         return [t["tournament"] for t in data]
 
+    def get_tournament(self, tournament_id: str | int) -> Dict[str, Any]:
+        data = self._get(f"/tournaments/{tournament_id}.json")
+        return data["tournament"]
+
     def list_matches(self, tournament_id: int) -> List[Dict[str, Any]]:
         data = self._get(f"/tournaments/{tournament_id}/matches.json")
         return [m["match"] for m in data]

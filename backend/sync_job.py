@@ -26,7 +26,7 @@ import argparse
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Iterable, Optional
 
 from dotenv import load_dotenv
 from sqlalchemy import select, insert, update
@@ -260,6 +260,32 @@ async def _clear_public_cache(conn) -> None:
     await conn.execute(T.sync_meta.delete())
 
 
+def _tournament_doc(t: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "id": t.get("id"),
+        "name": t.get("name"),
+        "game": t.get("game_name") or t.get("tournament_type"),
+        "state": t.get("state"),
+        "started_at": t.get("started_at"),
+        "completed_at": t.get("completed_at"),
+        "participants_count": t.get("participants_count", 0),
+        "url": t.get("full_challonge_url") or t.get("url"),
+        "challonge_updated_at": t.get("updated_at") or "",
+    }
+
+
+async def _upsert_tournament(conn, t_doc: Dict[str, Any]) -> None:
+    existing_t = (await conn.execute(
+        select(T.tournaments).where(T.tournaments.c.id == t_doc["id"])
+    )).fetchone()
+    if existing_t:
+        await conn.execute(
+            update(T.tournaments).where(T.tournaments.c.id == t_doc["id"]).values(**t_doc)
+        )
+    else:
+        await conn.execute(insert(T.tournaments).values(**t_doc))
+
+
 async def run_dedupe_only() -> Dict[str, Any]:
     """Canonicalize exact case/spacing duplicate player names without API calls."""
     engine = make_engine()
@@ -320,27 +346,8 @@ async def run_sync(
             if only_tournament and t_id != only_tournament:
                 continue
 
-            t_doc = {
-                "id": t_id,
-                "name": t.get("name"),
-                "game": t.get("game_name") or t.get("tournament_type"),
-                "state": t.get("state"),
-                "started_at": t.get("started_at"),
-                "completed_at": t.get("completed_at"),
-                "participants_count": t.get("participants_count", 0),
-                "url": t.get("full_challonge_url") or t.get("url"),
-                "challonge_updated_at": t.get("updated_at") or "",
-            }
-
-            existing_t = (await conn.execute(
-                select(T.tournaments).where(T.tournaments.c.id == t_id)
-            )).fetchone()
-            if existing_t:
-                await conn.execute(
-                    update(T.tournaments).where(T.tournaments.c.id == t_id).values(**t_doc)
-                )
-            else:
-                await conn.execute(insert(T.tournaments).values(**t_doc))
+            t_doc = _tournament_doc(t)
+            await _upsert_tournament(conn, t_doc)
 
             challonge_updated = t.get("updated_at") or ""
             cached_updated = seen.get(str(t_id))
@@ -386,6 +393,64 @@ async def run_sync(
 
     await engine.dispose()
     log.info(f"Sync complete: {summary}")
+    return summary
+
+
+async def run_backfill_tournaments(tournament_ids: Iterable[str]) -> Dict[str, Any]:
+    """Fetch specific historical tournaments by Challonge id or slug."""
+    requested_ids = [str(t_id).strip() for t_id in tournament_ids if str(t_id).strip()]
+    if not requested_ids:
+        raise ValueError("At least one tournament id or slug is required.")
+
+    engine = make_engine()
+    await init_db(engine)
+    cc = ChallongeClient()
+    started = datetime.now(timezone.utc).isoformat()
+    loop = asyncio.get_event_loop()
+
+    api_calls = 0
+    fetched = 0
+    failed = []
+
+    async with engine.begin() as conn:
+        seen: Dict[str, str] = (await _get_sync_meta(conn, "tournaments_seen")) or {}
+
+        for requested_id in requested_ids:
+            try:
+                t = await loop.run_in_executor(None, cc.get_tournament, requested_id)
+                api_calls += 1
+
+                t_doc = _tournament_doc(t)
+                await _upsert_tournament(conn, t_doc)
+                api_calls += await _refresh_tournament(conn, cc, t, t_doc, loop)
+
+                seen[str(t_doc["id"])] = t_doc["challonge_updated_at"]
+                fetched += 1
+                log.info(f"  backfilled t={t_doc['id']} ({t_doc['name']})")
+            except Exception as e:
+                failed.append({"tournament": requested_id, "error": str(e)})
+                log.warning(f"failed to backfill t={requested_id}: {e}")
+
+        player_count = await _rebuild_players(conn)
+
+        finished = datetime.now(timezone.utc).isoformat()
+        summary = {
+            "last_synced_at": finished,
+            "started_at": started,
+            "status": "ok" if not failed else "partial",
+            "requested": requested_ids,
+            "tournaments_refreshed": fetched,
+            "tournaments_failed": failed,
+            "players": player_count,
+            "challonge_api_calls": api_calls,
+            "backfill": True,
+            "challonge_subdomain": os.environ.get("CHALLONGE_SUBDOMAIN") or None,
+        }
+        await _set_sync_meta(conn, "last", summary)
+        await _set_sync_meta(conn, "tournaments_seen", seen)
+
+    await engine.dispose()
+    log.info(f"Backfill complete: {summary}")
     return summary
 
 
