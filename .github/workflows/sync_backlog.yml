@@ -19,5 +19,5 @@ jobs:
 
       - name: Run backlog sync (create new + close completed)
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/create_github_issues.sh --close-done

@@ -6,6 +6,7 @@
 #
 # Prerequisites:
 #   - gh CLI installed (https://cli.github.com/) and authenticated (`gh auth login`)
+#     or run in GitHub Actions with GH_TOKEN set
 #   - Run from the repo root (or any subdirectory — the script locates the root)
 #   - The target repo must be the one that `gh repo view` resolves to
 #
@@ -153,14 +154,23 @@ create_issue() {
 # Colors are hex without the '#'
 # ---------------------------------------------------------------------------
 declare -a EPIC_SLUGS=(
+  static-deploy
+  data-quality
+  rankings
   tournaments
+  rivalries
+  charts
+  seasons
+  static-ux
+  future-hosted
+)
+
+declare -a LEGACY_EPIC_SLUGS=(
   players
   ai
   community
   admin
-  charts
   mobile-ux
-  seasons
   integrations
   platform
   business
@@ -169,47 +179,41 @@ declare -a EPIC_SLUGS=(
 EPIC_LABEL_COLOR="0075ca"
 
 declare -A EPIC_COLORS=(
+  [static-deploy]="$EPIC_LABEL_COLOR"
+  [data-quality]="$EPIC_LABEL_COLOR"
+  [rankings]="$EPIC_LABEL_COLOR"
   [tournaments]="$EPIC_LABEL_COLOR"
-  [players]="$EPIC_LABEL_COLOR"
-  [ai]="$EPIC_LABEL_COLOR"
-  [community]="$EPIC_LABEL_COLOR"
-  [admin]="$EPIC_LABEL_COLOR"
+  [rivalries]="$EPIC_LABEL_COLOR"
   [charts]="$EPIC_LABEL_COLOR"
-  [mobile-ux]="$EPIC_LABEL_COLOR"
   [seasons]="$EPIC_LABEL_COLOR"
-  [integrations]="$EPIC_LABEL_COLOR"
-  [platform]="$EPIC_LABEL_COLOR"
-  [business]="$EPIC_LABEL_COLOR"
+  [static-ux]="$EPIC_LABEL_COLOR"
+  [future-hosted]="$EPIC_LABEL_COLOR"
 )
 
 declare -A EPIC_DESCS=(
-  [tournaments]="Tournament Visualization & History"
-  [players]="Player Profiles, Ratings & Identity"
-  [ai]="AI Agent Enhancements"
-  [community]="Engagement & Community"
-  [admin]="Admin & Data Quality"
-  [charts]="Visualizations & Charts"
-  [mobile-ux]="Mobile & UX"
-  [seasons]="Series, Seasons & League Standings"
-  [integrations]="Integrations"
-  [platform]="Platform, Scaling & Performance"
-  [business]="Monetization & Smart Business"
+  [static-deploy]="Static Deploy And Data Refresh"
+  [data-quality]="Data Quality Without Admin UI"
+  [rankings]="Player Stats And Rankings"
+  [tournaments]="Tournament Views"
+  [rivalries]="Compare, Rivalries, And Story Views"
+  [charts]="Charts And Visual Polish"
+  [seasons]="Seasons And League Standings"
+  [static-ux]="Static Site UX"
+  [future-hosted]="Future Hosted Features"
 )
 
 # Map EPIC number → slug (1-indexed)
 declare -a EPIC_NUMBER_TO_SLUG=(
   ""             # placeholder so index 1 = first real epic
-  "tournaments"  # EPIC 1
-  "players"      # EPIC 2
-  "ai"           # EPIC 3
-  "community"    # EPIC 4
-  "admin"        # EPIC 5
+  "static-deploy" # EPIC 1
+  "data-quality"  # EPIC 2
+  "rankings"      # EPIC 3
+  "tournaments"   # EPIC 4
+  "rivalries"     # EPIC 5
   "charts"       # EPIC 6
-  "mobile-ux"    # EPIC 7
-  "seasons"      # EPIC 8
-  "integrations" # EPIC 9
-  "platform"     # EPIC 10
-  "business"     # EPIC 11
+  "seasons"      # EPIC 7
+  "static-ux"    # EPIC 8
+  "future-hosted" # EPIC 9
 )
 
 # Priority label colours
@@ -242,6 +246,7 @@ echo "=== Step 2: Priority labels ==="
 for p in P0 P1 P2 P3; do
   create_label "$p" "${PRIORITY_COLORS[$p]}" "${PRIORITY_DESCS[$p]}"
 done
+create_label "enhancement" "a2eeef" "Feature work from BACKLOG.md"
 echo ""
 
 # ---------------------------------------------------------------------------
@@ -296,14 +301,14 @@ while IFS= read -r raw_line; do
   line="${raw_line%$'\r'}"
 
   # Detect the Done section — skip everything inside it
-  if [[ "$line" =~ ^##[[:space:]]+✅[[:space:]]Done ]]; then
+  if [[ "$line" =~ ^##[[:space:]]+(✅[[:space:]]*)?Done ]]; then
     in_done_section=true
     in_table=false
     continue
   fi
 
   # Any new ## heading that is NOT the Done section ends the Done section
-  if [[ "$line" =~ ^##[[:space:]] && ! "$line" =~ ✅ ]]; then
+  if [[ "$line" =~ ^##[[:space:]] && ! "$line" =~ Done ]]; then
     in_done_section=false
   fi
 
@@ -376,7 +381,7 @@ ${current_epic_slug}
 ${desc}
 
 ### Why
-Part of the **${EPIC_DESCS[$current_epic_slug]}** epic (backlog item ${item_num}). Improves the CueStats / Fremont Open experience.
+Part of the **${EPIC_DESCS[$current_epic_slug]}** epic (backlog item ${item_num}). Improves the Fremont Open static stats demo.
 
 ### Acceptance criteria
 - [ ] ${desc}
@@ -419,7 +424,8 @@ if $CLOSE_DONE; then
   # Fetch open issues for each epic label, accumulate unique number→title pairs.
   declare -A seen_issues=()
 
-  for slug in "${EPIC_SLUGS[@]}"; do
+  close_label_slugs=("${EPIC_SLUGS[@]}" "${LEGACY_EPIC_SLUGS[@]}")
+  for slug in "${close_label_slugs[@]}"; do
     while IFS= read -r entry; do
       num="$(echo "$entry" | sed 's/|.*//')"
       ttl="$(echo "$entry" | sed 's/^[^|]*|//')"
