@@ -445,10 +445,19 @@ async def build_cache() -> Dict[str, Any]:
         sync_status = last_sync or {"status": "never_synced"}
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
+        generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),
             "total_matches": completed_match_count,
             "total_players": len(players),
+            "cache_metadata": {
+                "generated_at": generated_at,
+                "last_synced_at": sync_status.get("last_synced_at"),
+                "sync_status": sync_status.get("status"),
+                "tournament_count": len(tournaments),
+                "player_count": len(players),
+                "match_count": completed_match_count,
+            },
             "average_tournament_players": tournament_analytics["average_players"],
             "average_tournament_duration_minutes": tournament_analytics["average_duration_minutes"],
             "average_tournament_duration_label": tournament_analytics["average_duration_label"],
@@ -490,7 +499,7 @@ async def build_cache() -> Dict[str, Any]:
         }
 
         return {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": generated_at,
             "sync_status": sync_status,
             "stats": stats,
             "tournaments": tournaments,

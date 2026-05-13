@@ -60,6 +60,7 @@ export default function Dashboard() {
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
   const dashboardTrends = stats?.dashboard_trends || {};
+  const cacheMetadata = stats?.cache_metadata || {};
 
   return (
     <>
@@ -160,6 +161,28 @@ export default function Dashboard() {
                 : null
             }
           />
+        </section>
+
+        <section
+          className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+          data-testid="cache-metadata-panel"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div>
+              <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                Data Cache
+              </h2>
+              <div className="mt-1 text-sm text-[#9CA3AF]">
+                Static Challonge snapshot for this build
+              </div>
+            </div>
+            <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:min-w-[680px]">
+              <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} />
+              <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} />
+              <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} />
+              <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} />
+            </dl>
+          </div>
         </section>
 
         {following.length > 0 ? (
@@ -402,6 +425,17 @@ const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
 
   return to ? <Link to={to}>{body}</Link> : body;
 };
+
+const MetadataStat = ({ label, value }) => (
+  <div>
+    <dt className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
+      {label}
+    </dt>
+    <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
+      {value}
+    </dd>
+  </div>
+);
 
 const AnalyticsList = ({ title, rows, empty, renderRow }) => (
   <section className="bg-[#141923] border border-[#273041] rounded-lg p-6">
