@@ -29,6 +29,7 @@ export default function Players() {
     const byNumberDesc = (key) => (a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity);
     if (sort === "name") return rows.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
+    if (sort === "tournaments") return rows.sort(byNumberDesc("tournaments_played"));
     if (sort === "win_rate") return rows.sort(byNumberDesc("win_rate"));
     if (sort === "average_placement") {
       return rows.sort((a, b) => (a.average_placement ?? Infinity) - (b.average_placement ?? Infinity));
@@ -63,6 +64,7 @@ export default function Players() {
           >
             <option value="wins">Sort by wins</option>
             <option value="elo">Sort by ELO</option>
+            <option value="tournaments">Sort by tournaments</option>
             <option value="win_rate">Sort by win rate</option>
             <option value="average_placement">Sort by avg place</option>
             <option value="top_4">Sort by top 4s</option>
@@ -79,6 +81,7 @@ export default function Players() {
                 <Th className="text-right">Wins</Th>
                 <Th className="text-right">Losses</Th>
                 <Th className="text-right">ELO</Th>
+                <Th className="text-right">Tourn.</Th>
                 <Th className="text-right">Win Rate</Th>
                 <Th className="text-right">Avg Place</Th>
                 <Th className="text-right">Top 4</Th>
@@ -87,13 +90,13 @@ export default function Players() {
             <tbody>
               {loading && !list.length ? (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-[#6B7280]">
+                  <td colSpan={9} className="py-6 text-center text-[#6B7280]">
                     Loading…
                   </td>
                 </tr>
               ) : sortedList.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-[#6B7280]">
+                  <td colSpan={9} className="py-6 text-center text-[#6B7280]">
                     No players found.
                   </td>
                 </tr>
@@ -118,6 +121,7 @@ export default function Players() {
                     <Td className="text-right font-mono text-[#10B981]">{p.wins}</Td>
                     <Td className="text-right font-mono text-[#EF4444]">{p.losses}</Td>
                     <Td className="text-right font-mono text-[#F59E0B]">{p.elo_rating ?? "—"}</Td>
+                    <Td className="text-right font-mono">{p.tournaments_played ?? 0}</Td>
                     <Td className="text-right font-mono">{p.win_rate}%</Td>
                     <Td className="text-right font-mono">{p.average_placement ?? "—"}</Td>
                     <Td className="text-right font-mono">{p.top_4_finishes ?? 0}</Td>

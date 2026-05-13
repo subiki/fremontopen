@@ -222,6 +222,59 @@ def _closest_rivalry(matches: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     return sorted(rivalries, key=lambda row: (row["difference"], -row["matches"], row["label"].casefold()))[0]
 
 
+def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    ordered_tournaments = sorted(
+        tournaments,
+        key=lambda t: (t.get("started_at") or t.get("completed_at") or "", str(t.get("id") or "")),
+    )
+    participants_by_tournament: Dict[Any, set[str]] = {}
+    for match in matches:
+        tid = match.get("tournament_id")
+        if tid is None:
+            continue
+        names = [match.get("winner_name"), match.get("loser_name")]
+        for name in names:
+            if name:
+                participants_by_tournament.setdefault(tid, set()).add(name)
+
+    all_players = sorted({
+        name
+        for participants in participants_by_tournament.values()
+        for name in participants
+    }, key=str.casefold)
+    stats: Dict[str, Dict[str, Any]] = {}
+    for player_name in all_players:
+        played = []
+        current = 0
+        best = 0
+        running = 0
+        for tournament in ordered_tournaments:
+            participated = player_name in participants_by_tournament.get(tournament.get("id"), set())
+            if participated:
+                running += 1
+                best = max(best, running)
+                played.append({
+                    "tournament_id": tournament.get("id"),
+                    "tournament_name": tournament.get("name"),
+                    "date": tournament.get("started_at") or tournament.get("completed_at"),
+                })
+            else:
+                running = 0
+        for tournament in reversed(ordered_tournaments):
+            if player_name in participants_by_tournament.get(tournament.get("id"), set()):
+                current += 1
+            else:
+                break
+        stats[player_name] = {
+            "tournaments_played": len(played),
+            "current_streak": current,
+            "best_streak": best,
+            "last_played_at": played[-1]["date"] if played else None,
+            "recent_tournaments": played[-5:],
+        }
+    return stats
+
+
 async def _last_sync(conn) -> Optional[Dict[str, Any]]:
     row = (await conn.execute(
         select(T.sync_meta).where(T.sync_meta.c.key == "last")
@@ -260,6 +313,7 @@ async def build_cache() -> Dict[str, Any]:
         tournaments_by_id = {str(t["id"]): t for t in tournaments}
         players_by_name = {p["name"]: p for p in players}
         elo = compute_elo_ratings(matches)
+        attendance = _attendance_stats(tournaments, matches)
 
         for match in matches:
             tournament = tournaments_by_id.get(str(match.get("tournament_id")))
@@ -364,6 +418,16 @@ async def build_cache() -> Dict[str, Any]:
             player["elo_rating"] = elo["ratings"].get(name, elo["initial_rating"])
             player["elo_peak"] = elo["peaks"].get(name, player["elo_rating"])
             player["elo_matches"] = len(elo["history"].get(name, []))
+            player_attendance = attendance.get(name, {
+                "tournaments_played": 0,
+                "current_streak": 0,
+                "best_streak": 0,
+                "last_played_at": None,
+                "recent_tournaments": [],
+            })
+            player["tournaments_played"] = player_attendance["tournaments_played"]
+            player["attendance_streak"] = player_attendance["current_streak"]
+            player["best_attendance_streak"] = player_attendance["best_streak"]
             player_matches = [
                 m for m in matches
                 if m.get("winner_name") == name or m.get("loser_name") == name
@@ -433,6 +497,7 @@ async def build_cache() -> Dict[str, Any]:
                     "k_factor": elo["k_factor"],
                     "history": elo["history"].get(name, []),
                 },
+                "attendance": player_attendance,
                 "placements": {
                     "average": average_placement,
                     "tournaments_counted": len(placement_values),

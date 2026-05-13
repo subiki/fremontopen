@@ -87,6 +87,7 @@ export default function PlayerDetail() {
   const placements = extras?.placements;
   const topFinishes = placements?.top_finishes || {};
   const elo = extras?.elo || {};
+  const attendance = extras?.attendance || {};
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
@@ -195,6 +196,19 @@ export default function PlayerDetail() {
               <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" />
               <StatCard label="Total" value={p.wins + p.losses} testid="pd-total" />
               <StatCard label="Win Rate" value={`${p.win_rate}%`} accent="text-[#10B981]" testid="pd-win-rate" />
+              <StatCard
+                label="Tournaments"
+                value={attendance.tournaments_played ?? p.tournaments_played ?? 0}
+                icon={Trophy}
+                testid="pd-tournaments-played"
+              />
+              <StatCard
+                label="Attend. Streak"
+                value={attendance.current_streak ?? p.attendance_streak ?? 0}
+                accent="text-[#10B981]"
+                icon={Fire}
+                testid="pd-attendance-streak"
+              />
               <StatCard
                 label="ELO"
                 value={elo.rating ?? p.elo_rating ?? "—"}

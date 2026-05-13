@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from players_extras import compute_elo_ratings
 from export_static import (
     _closest_rivalry,
+    _attendance_stats,
     _duration_minutes,
     _infer_tournament_placements,
     _recent_activity_summary,
@@ -98,3 +99,25 @@ def test_closest_rivalry_prefers_tightest_record_then_more_matches():
     assert rivalry["label"] == "C vs D"
     assert rivalry["matches"] == 4
     assert rivalry["difference"] == 0
+
+
+def test_attendance_stats_tracks_played_and_streaks():
+    tournaments = [
+        {"id": 1, "name": "One", "started_at": "2026-05-01T12:00:00-07:00"},
+        {"id": 2, "name": "Two", "started_at": "2026-05-02T12:00:00-07:00"},
+        {"id": 3, "name": "Three", "started_at": "2026-05-03T12:00:00-07:00"},
+        {"id": 4, "name": "Four", "started_at": "2026-05-04T12:00:00-07:00"},
+    ]
+    matches = [
+        {**match(1, "A", "B"), "tournament_id": 1},
+        {**match(1, "C", "D"), "tournament_id": 2},
+        {**match(1, "A", "C"), "tournament_id": 3},
+        {**match(1, "A", "D"), "tournament_id": 4},
+    ]
+
+    stats = _attendance_stats(tournaments, matches)
+
+    assert stats["A"]["tournaments_played"] == 3
+    assert stats["A"]["current_streak"] == 2
+    assert stats["A"]["best_streak"] == 2
+    assert stats["B"]["current_streak"] == 0

@@ -47,6 +47,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Dashboard trend cards for latest sync, active players, hottest player, and closest rivalry
 - [x] Cache metadata panel showing generated time, last sync, tournament count, and player count
 - [x] Refresh-data workflow script for sync, dedupe, validation, export, and static build
+- [x] Attendance streak and tournaments-played stats
 
 ## Removed From Demo Scope
 
@@ -79,7 +80,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 3.4 | P1 | S | **Attendance streak** and tournaments-played stats |
 | 3.5 | P1 | S | **Leaderboard streak chips** - current streak, best streak, titles |
 | 3.6 | P1 | M | **Rating history chart** per player |
 | 3.7 | P2 | M | **Strength of schedule** using opponent win rate / rating |
@@ -153,16 +153,16 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **3.4 Attendance streak** - show consistency across events.
-2. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
-3. **3.6 Rating history chart** - track player rating changes once ratings are available.
-4. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
-5. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
-6. **6.2 Season standings chart** - start shaping season-style league views.
-7. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-8. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-9. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
-10. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
+1. **3.5 Leaderboard streak chips** - expose current streak, best streak, and titles in ranking views.
+2. **3.6 Rating history chart** - track player rating changes once ratings are available.
+3. **2.5 Historical tournament backfill** - make older Challonge events easy to add.
+4. **4.3 Tournament filter** - make 8-ball and 9-ball browsing faster.
+5. **6.2 Season standings chart** - start shaping season-style league views.
+6. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+7. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+8. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
+9. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
+10. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
 
 ---
 
