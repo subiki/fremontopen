@@ -28,6 +28,7 @@ function App() {
             <Route path="/players" element={<Players />} />
             <Route path="/players/:name" element={<PlayerDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
