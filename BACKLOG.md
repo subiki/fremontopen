@@ -66,6 +66,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Monthly Fargo refresh wiring for an authorized source URL
 - [x] Case-insensitive player profile URLs
 - [x] 404 and unknown player/tournament fallback polish
+- [x] Rivalry index ranked by matches, closeness, and streak swings
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -114,7 +115,6 @@ All current static deploy and refresh items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 5.2 | P1 | M | **Rivalry index** - rank pairs by matches played, closeness, and streak swings |
 | 5.4 | P2 | M | **H2H heatmap matrix** across all players |
 | 5.5 | P2 | S | **Upset tracker** - rating underdog wins after ELO lands |
 | 5.6 | P2 | S | **Anniversary stats** - notable matches from one year ago / last season |
@@ -160,13 +160,11 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-2. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with reports.
-3. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
-4. **6.3 Player form chart** - show rolling last-10 match win rate.
-5. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-6. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-7. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
+2. **6.3 Player form chart** - show rolling last-10 match win rate.
+3. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+4. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+5. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 

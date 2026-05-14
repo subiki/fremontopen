@@ -15,6 +15,7 @@ from export_static import (
     _match_elo_odds,
     _normalized_duration_minutes,
     _recent_activity_summary,
+    _rivalry_index,
     _season_standings,
     _tournament_prize_payouts,
 )
@@ -229,6 +230,24 @@ def test_closest_rivalry_prefers_tightest_record_then_more_matches():
     assert rivalry["label"] == "C vs D"
     assert rivalry["matches"] == 4
     assert rivalry["difference"] == 0
+
+
+def test_rivalry_index_scores_volume_closeness_and_swings():
+    rows = _rivalry_index([
+        match(1, "A", "B", "2026-05-01T12:00:00-07:00"),
+        match(2, "B", "A", "2026-05-02T12:00:00-07:00"),
+        match(3, "A", "B", "2026-05-03T12:00:00-07:00"),
+        match(4, "B", "A", "2026-05-04T12:00:00-07:00"),
+        match(5, "C", "D", "2026-05-01T12:00:00-07:00"),
+        match(6, "C", "D", "2026-05-02T12:00:00-07:00"),
+        match(7, "C", "D", "2026-05-03T12:00:00-07:00"),
+    ])
+
+    assert rows[0]["label"] == "A vs B"
+    assert rows[0]["matches"] == 4
+    assert rows[0]["difference"] == 0
+    assert rows[0]["streak_swings"] == 3
+    assert rows[0]["score"] > rows[1]["score"]
 
 
 def test_attendance_stats_tracks_played_and_streaks():

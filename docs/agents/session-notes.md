@@ -31,3 +31,9 @@
 - Continued to open P1 issue #50.
 - Replaced the wildcard home redirect with a static 404 page.
 - Added useful missing-player and missing-tournament states with links back to directory/search entry points.
+
+## 2026-05-14 - P1 rivalry index
+
+- Started open P1 issue #30.
+- Added static export rivalry ranking based on match volume, record closeness, and winner streak swings.
+- Surfaced the top rivalry index rows on the dashboard with links to compare pages.

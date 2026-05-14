@@ -58,6 +58,7 @@ export default function Dashboard() {
   const topPlayers = (stats?.players || []).slice(0, 5);
   const recent = stats?.recent_matches || [];
   const topTournamentWinners = stats?.top_tournament_winners || [];
+  const rivalryIndex = stats?.rivalry_index || [];
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
@@ -302,7 +303,7 @@ export default function Dashboard() {
           </section>
         ) : null}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
           <AnalyticsList
             title="Tournament Winners"
             rows={topTournamentWinners}
@@ -321,6 +322,24 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 <span className="font-mono text-sm text-[#F59E0B]">{row.wins} titles</span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title="Rivalry Index"
+            rows={rivalryIndex.slice(0, 6)}
+            empty="No rivalry index yet."
+            renderRow={(row) => (
+              <>
+                <Link
+                  to={`/compare/${encodeURIComponent(row.player_a)}/${encodeURIComponent(row.player_b)}`}
+                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                >
+                  {row.label}
+                </Link>
+                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
+                  {row.matches} / {row.a_wins}-{row.b_wins}
+                </span>
               </>
             )}
           />

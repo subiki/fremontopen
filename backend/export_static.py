@@ -415,6 +415,76 @@ def _closest_rivalry(matches: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     return sorted(rivalries, key=lambda row: (row["difference"], -row["matches"], row["label"].casefold()))[0]
 
 
+def _rivalry_index(matches: List[Dict[str, Any]], limit: int = 20) -> List[Dict[str, Any]]:
+    pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if match.get("state") != "complete" or not winner or not loser or winner == loser:
+            continue
+        left, right = sorted((winner, loser), key=str.casefold)
+        row = pairs.setdefault(
+            (left, right),
+            {
+                "player_a": left,
+                "player_b": right,
+                "a_wins": 0,
+                "b_wins": 0,
+                "outcomes": [],
+            },
+        )
+        winner_key = "a" if winner == left else "b"
+        row[f"{winner_key}_wins"] += 1
+        row["outcomes"].append({
+            "winner_key": winner_key,
+            "completed_at": match.get("completed_at") or "",
+            "id": str(match.get("id") or ""),
+        })
+
+    rows = []
+    for row in pairs.values():
+        total = row["a_wins"] + row["b_wins"]
+        if total < 3:
+            continue
+        ordered = sorted(row["outcomes"], key=lambda item: (item["completed_at"], item["id"]))
+        streak_swings = 0
+        current_key = None
+        current_streak = 0
+        longest_streak = 0
+        for outcome in ordered:
+            winner_key = outcome["winner_key"]
+            if winner_key != current_key:
+                if current_key is not None:
+                    streak_swings += 1
+                current_key = winner_key
+                current_streak = 1
+            else:
+                current_streak += 1
+            longest_streak = max(longest_streak, current_streak)
+
+        difference = abs(row["a_wins"] - row["b_wins"])
+        closeness = round(1 - (difference / total), 3)
+        score = round((total * 2) + (closeness * 10) + (streak_swings * 3), 1)
+        rows.append({
+            "player_a": row["player_a"],
+            "player_b": row["player_b"],
+            "label": f"{row['player_a']} vs {row['player_b']}",
+            "a_wins": row["a_wins"],
+            "b_wins": row["b_wins"],
+            "matches": total,
+            "difference": difference,
+            "closeness": closeness,
+            "streak_swings": streak_swings,
+            "longest_streak": longest_streak,
+            "score": score,
+        })
+
+    return sorted(
+        rows,
+        key=lambda row: (-row["score"], -row["matches"], row["difference"], row["label"].casefold()),
+    )[:limit]
+
+
 def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     ordered_tournaments = sorted(
         tournaments,
@@ -883,6 +953,7 @@ async def build_cache() -> Dict[str, Any]:
         sync_status = last_sync or {"status": "never_synced"}
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
+        rivalry_index = _rivalry_index(matches)
         season_standings = _season_standings(tournaments, matches, season_points)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
@@ -930,6 +1001,7 @@ async def build_cache() -> Dict[str, Any]:
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
             "season_standings": season_standings[:6],
+            "rivalry_index": rivalry_index,
             "players": players,
             "recent_matches": [
                 m for m in matches
