@@ -47,6 +47,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Dashboard trend cards for latest sync, active players, hottest player, and closest rivalry
 - [x] Cache metadata panel showing generated time, last sync, tournament count, and player count
 - [x] Refresh-data workflow script for sync, dedupe, validation, export, and static build
+- [x] Tuesday GitHub Actions static data refresh and DreamHost deploy
 - [x] Attendance streak and tournaments-played stats
 - [x] Leaderboard streak chips for current streak, best streak, and titles
 - [x] Rating history chart per player
@@ -81,9 +82,7 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 ## EPIC 1 - Static Deploy And Data Refresh
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 1.6 | P2 | M | **GitHub Actions data refresh** - optional scheduled workflow if secrets and runtime are suitable |
+All current static deploy and refresh items are complete.
 
 ## EPIC 2 - Data Quality Without Admin UI
 

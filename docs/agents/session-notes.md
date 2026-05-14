@@ -7,3 +7,9 @@
 - Added static export timing baselines for shortest/longest normal-duration tournaments overall and by game plus player count.
 - Surfaced timing baselines on the dashboard and tournament detail pages.
 - Kept the implementation static-first: no runtime backend, no browser Challonge calls, and no auth/admin/chat work.
+
+## 2026-05-14 - JFL Tuesday refresh
+
+- Continued down live JFL issues after #71 and selected #67, "auto refresh".
+- Added a scheduled Tuesday GitHub Actions workflow that refreshes local SQLite/cache data, builds the static frontend, commits changed data, and deploys the DreamHost static build.
+- The workflow uses only the Challonge API from CI tooling and keeps the production site static.

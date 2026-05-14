@@ -54,3 +54,8 @@ by game type and player count.
 Pushes to `main` trigger `.github/workflows/deploy.yml`. The workflow builds the
 frontend with `REACT_APP_STATIC_DATA=true`, then rsyncs `frontend/build/` to the
 configured DreamHost web root.
+
+`.github/workflows/data-refresh.yml` runs on Tuesday or by manual dispatch. It
+updates the tracked SQLite/cache data, verifies the static frontend build,
+commits changed data files, and deploys the refreshed static build in the same
+workflow.

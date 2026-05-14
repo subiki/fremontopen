@@ -240,6 +240,27 @@ ssh -i $HOME\.ssh\fremontopen_deploy dh_vykniy@iad1-shared-b8-43.dreamhost.com '
 The workflow preflights secrets, SSH login, webroot existence, and webroot
 write permissions before running `rsync`.
 
+## Tuesday Data Refresh
+
+The scheduled refresh workflow is:
+
+```text
+.github/workflows/data-refresh.yml
+```
+
+It runs Tuesdays at 18:30 UTC and can also be started manually. The workflow
+syncs Challonge into the tracked SQLite cache, runs conservative dedupe and the
+validation report, exports `frontend/public/data/cache.json`, verifies the
+static frontend build, commits changed data files, and deploys the built static
+site to DreamHost.
+
+Additional required secrets:
+
+| Secret | Example |
+|---|---|
+| `CHALLONGE_API_KEY` | Challonge API key |
+| `CHALLONGE_SUBDOMAIN` | `fremontopen` |
+
 ## Manual Upload
 
 If GitHub Actions is blocked, build locally and upload the contents of
