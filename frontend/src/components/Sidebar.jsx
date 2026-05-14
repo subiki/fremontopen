@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   ChartLineUp,
+  CalendarBlank,
   Trophy,
   Users,
   Ranking,
@@ -14,6 +15,7 @@ const baseLinks = [
   { to: "/tournaments", label: "Tournaments", icon: Trophy, testid: "nav-tournaments" },
   { to: "/players", label: "Players", icon: Users, testid: "nav-players" },
   { to: "/leaderboard", label: "Leaderboard", icon: Ranking, testid: "nav-leaderboard" },
+  { to: "/seasons", label: "Seasons", icon: CalendarBlank, testid: "nav-seasons" },
   { to: "/compare", label: "Compare", icon: Scales, testid: "nav-compare" },
   { to: "/info", label: "Info", icon: Info, testid: "nav-info" },
 ];
@@ -65,7 +67,7 @@ export const Sidebar = () => {
         className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-[#273041] bg-[#0B0E14]/95 backdrop-blur-xl px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
         data-testid="mobile-bottom-nav"
       >
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-7 gap-1">
         {baseLinks.map((l) => (
           <NavLink
             key={l.to}

@@ -37,3 +37,9 @@
 - Started open P1 issue #30.
 - Added static export rivalry ranking based on match volume, record closeness, and winner streak swings.
 - Surfaced the top rivalry index rows on the dashboard with links to compare pages.
+
+## 2026-05-14 - P1 season groupings
+
+- Continued to open P1 issue #41.
+- Added a dedicated `/seasons` static page with spring/summer/fall/winter groups and cumulative standings.
+- Widened static season export to include full season player standings instead of dashboard-only slices.

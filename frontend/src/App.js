@@ -12,6 +12,7 @@ import Players from "./pages/Players";
 import PlayerDetail from "./pages/PlayerDetail";
 import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
+import Seasons from "./pages/Seasons";
 import StatRankings from "./pages/StatRankings";
 import Info from "./pages/Info";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ function App() {
             <Route path="/players" element={<Players />} />
             <Route path="/players/:name" element={<PlayerDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/seasons" element={<Seasons />} />
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />

@@ -624,7 +624,7 @@ def _season_standings(
             "_sort": bucket["sort"],
             "matches": bucket["matches"],
             "tournaments": len(bucket["tournament_ids"]),
-            "players": players[:8],
+            "players": players,
         })
 
     sorted_rows = sorted(rows, key=lambda row: row["_sort"], reverse=True)
@@ -1000,7 +1000,7 @@ async def build_cache() -> Dict[str, Any]:
             },
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
-            "season_standings": season_standings[:6],
+            "season_standings": season_standings,
             "rivalry_index": rivalry_index,
             "players": players,
             "recent_matches": [

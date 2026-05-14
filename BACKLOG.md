@@ -67,6 +67,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Case-insensitive player profile URLs
 - [x] 404 and unknown player/tournament fallback polish
 - [x] Rivalry index ranked by matches, closeness, and streak swings
+- [x] Season groupings page with cumulative standings
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -132,7 +133,6 @@ All current static deploy and refresh items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 7.1 | P1 | M | **Season groupings** like "2026 Spring" with cumulative standings |
 | 7.3 | P2 | S | **Attendance tracker** by season |
 | 7.4 | P2 | S | **Prize pool tracking** from local overrides/import file |
 | 7.5 | P3 | M | **Multi-event support** for other tournaments beyond Fremont Open |
@@ -160,11 +160,10 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
-2. **6.3 Player form chart** - show rolling last-10 match win rate.
-3. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-4. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-5. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **6.3 Player form chart** - show rolling last-10 match win rate.
+2. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+3. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+4. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 
