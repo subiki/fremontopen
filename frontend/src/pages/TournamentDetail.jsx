@@ -25,6 +25,7 @@ export default function TournamentDetail() {
   const analytics = data?.analytics || {};
   const placements = analytics.placements || [];
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
+  const baseline = analytics.duration_baseline;
 
   return (
     <>
@@ -51,6 +52,42 @@ export default function TournamentDetail() {
               <Info label="Duration" value={analytics.duration_label || t.duration_label || "-"} />
               <Info label="Started" value={t.started_at ? new Date(t.started_at).toLocaleDateString() : "-"} />
             </div>
+
+            {baseline ? (
+              <section
+                className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6"
+                data-testid="tournament-duration-baseline"
+              >
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                      Timing Baseline
+                    </h2>
+                    <div className="mt-1 text-sm text-[#9CA3AF]">
+                      {baseline.game} with {baseline.player_count} players, excluding timing outliers
+                    </div>
+                  </div>
+                  <span className="font-mono text-xs text-[#6B7280]">
+                    {baseline.sample_count} baseline event{baseline.sample_count === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <BaselineStat label="Average" value={baseline.average_label} />
+                  <BaselineStat
+                    label="Shortest"
+                    value={baseline.shortest?.duration_label}
+                    to={baseline.shortest?.tournament_id}
+                    title={baseline.shortest?.tournament_name}
+                  />
+                  <BaselineStat
+                    label="Longest"
+                    value={baseline.longest?.duration_label}
+                    to={baseline.longest?.tournament_id}
+                    title={baseline.longest?.tournament_name}
+                  />
+                </div>
+              </section>
+            ) : null}
 
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -160,6 +197,22 @@ const Info = ({ label, value }) => (
     <div className="mt-1 font-mono text-[#F3F4F6]">{value}</div>
   </div>
 );
+
+const BaselineStat = ({ label, value, to, title }) => {
+  const body = (
+    <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
+      <div className="mt-1 font-mono text-[#F3F4F6]">{value || "-"}</div>
+      {title ? <div className="mt-1 text-xs text-[#9CA3AF] truncate">{title}</div> : null}
+    </div>
+  );
+
+  return to ? (
+    <Link to={`/tournaments/${to}`} className="block hover:border-[#10B981]">
+      {body}
+    </Link>
+  ) : body;
+};
 
 const PlacementCard = ({ row, payout }) => (
   <li className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3">

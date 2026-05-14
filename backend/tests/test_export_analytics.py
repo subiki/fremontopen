@@ -7,6 +7,7 @@ from players_extras import compute_elo_ratings
 from export_static import (
     _closest_rivalry,
     _attendance_stats,
+    _duration_baselines,
     _duration_minutes,
     _infer_tournament_placements,
     _is_qualified_player,
@@ -41,6 +42,70 @@ def test_normalized_duration_excludes_likely_left_open_tournaments():
     assert _normalized_duration_minutes(719) == 719
     assert _normalized_duration_minutes(721) is None
     assert _normalized_duration_minutes(None) is None
+
+
+def test_duration_baselines_group_by_game_and_player_count():
+    baselines = _duration_baselines([
+        {
+            "tournament_id": 1,
+            "tournament_name": "Fast 8",
+            "game": "8 Ball",
+            "player_count": 12,
+            "duration_minutes": 180,
+            "date": "2026-05-01T12:00:00-07:00",
+        },
+        {
+            "tournament_id": 2,
+            "tournament_name": "Slow 8",
+            "game": "8 Ball",
+            "player_count": 12,
+            "duration_minutes": 240,
+            "date": "2026-05-08T12:00:00-07:00",
+        },
+        {
+            "tournament_id": 3,
+            "tournament_name": "Left Open",
+            "game": "8 Ball",
+            "player_count": 12,
+            "duration_minutes": 900,
+            "date": "2026-05-15T12:00:00-07:00",
+        },
+        {
+            "tournament_id": 5,
+            "tournament_name": "Bad Clock",
+            "game": "8 Ball",
+            "player_count": 12,
+            "duration_minutes": 2,
+            "date": "2026-05-16T12:00:00-07:00",
+        },
+        {
+            "tournament_id": 6,
+            "tournament_name": "Long Cleanup",
+            "game": "8 Ball",
+            "player_count": 12,
+            "duration_minutes": 620,
+            "date": "2026-05-17T12:00:00-07:00",
+        },
+        {
+            "tournament_id": 4,
+            "tournament_name": "Fast 9",
+            "game": "9 Ball",
+            "player_count": 16,
+            "duration_minutes": 210,
+            "date": "2026-05-22T12:00:00-07:00",
+        },
+    ])
+
+    assert baselines["overall"]["shortest"]["tournament_id"] == 1
+    assert baselines["overall"]["longest"]["tournament_id"] == 2
+    assert baselines["overall"]["sample_count"] == 3
+
+    group = baselines["by_key"]["8 Ball|12"]
+    assert group["sample_count"] == 2
+    assert group["excluded_outlier_count"] == 2
+    assert group["average_label"] == "3h 30m"
+    assert group["shortest"]["duration_label"] == "3h"
+    assert group["longest"]["duration_label"] == "4h"
 
 
 def test_qualified_player_requires_minimum_matches():

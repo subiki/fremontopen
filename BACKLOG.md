@@ -60,6 +60,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Info page with latest bracket, GitHub, Discord, schedule, and tournament details
 - [x] Fargo monthly refresh plan for authorized sources, overrides, and review reports
 - [x] Manual player overrides file for Fargo ratings, Fargo IDs, nicknames, and notes
+- [x] Tourney timing min/max baselines by game and player count
 - [x] Rivalry of the week dashboard card from the closest high-volume matchup
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`

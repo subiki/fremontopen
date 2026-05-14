@@ -97,6 +97,80 @@ def _format_duration(minutes: Optional[int]) -> Optional[str]:
     return f"{mins}m"
 
 
+def _duration_baselines(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    usable = [
+        row for row in rows
+        if isinstance(row.get("duration_minutes"), int)
+        and row.get("duration_minutes") >= 0
+        and _normalized_duration_minutes(row.get("duration_minutes")) is not None
+    ]
+    groups: Dict[tuple[str, int], List[Dict[str, Any]]] = {}
+    for row in usable:
+        game = row.get("game") or "Unknown"
+        player_count = int(row.get("player_count") or 0)
+        groups.setdefault((game, player_count), []).append(row)
+
+    def trimmed_rows(group_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if len(group_rows) < 4:
+            return group_rows
+        values = sorted(row["duration_minutes"] for row in group_rows)
+        midpoint = len(values) // 2
+        median = (
+            values[midpoint]
+            if len(values) % 2
+            else (values[midpoint - 1] + values[midpoint]) / 2
+        )
+        low = max(45, median * 0.4)
+        high = min(MAX_NORMAL_TOURNAMENT_DURATION_MINUTES, median * 1.8)
+        filtered = [row for row in group_rows if low <= row["duration_minutes"] <= high]
+        return filtered or group_rows
+
+    def summarize(group_rows: List[Dict[str, Any]], include_group: bool = False) -> Dict[str, Any]:
+        baseline_rows = trimmed_rows(group_rows)
+        ordered = sorted(baseline_rows, key=lambda row: (row["duration_minutes"], row.get("date") or ""))
+        shortest = ordered[0]
+        longest = ordered[-1]
+        avg = round(sum(row["duration_minutes"] for row in ordered) / len(ordered))
+        out = {
+            "sample_count": len(ordered),
+            "excluded_outlier_count": len(group_rows) - len(ordered),
+            "average_minutes": avg,
+            "average_label": _format_duration(avg),
+            "shortest": {
+                "tournament_id": shortest.get("tournament_id"),
+                "tournament_name": shortest.get("tournament_name"),
+                "date": shortest.get("date"),
+                "duration_minutes": shortest["duration_minutes"],
+                "duration_label": _format_duration(shortest["duration_minutes"]),
+            },
+            "longest": {
+                "tournament_id": longest.get("tournament_id"),
+                "tournament_name": longest.get("tournament_name"),
+                "date": longest.get("date"),
+                "duration_minutes": longest["duration_minutes"],
+                "duration_label": _format_duration(longest["duration_minutes"]),
+            },
+        }
+        if include_group:
+            out["game"] = group_rows[0].get("game") or "Unknown"
+            out["player_count"] = int(group_rows[0].get("player_count") or 0)
+        return out
+
+    by_key = {
+        f"{game}|{player_count}": summarize(group_rows, include_group=True)
+        for (game, player_count), group_rows in groups.items()
+    }
+    group_rows = sorted(
+        by_key.values(),
+        key=lambda row: (-row["sample_count"], row["game"].casefold(), row["player_count"]),
+    )
+    return {
+        "overall": summarize(usable) if usable else None,
+        "by_game_and_player_count": group_rows,
+        "by_key": by_key,
+    }
+
+
 def _round_to_nearest_five(value: float) -> int:
     return int(math.floor((value / 5) + 0.5) * 5)
 
@@ -548,6 +622,8 @@ async def build_cache() -> Dict[str, Any]:
             "average_duration_label": None,
             "player_count_trend": [],
             "duration_trend": [],
+            "duration_extremes": None,
+            "duration_groups": [],
             "winner_leaderboard": [],
             "total_with_duration": 0,
         }
@@ -562,6 +638,7 @@ async def build_cache() -> Dict[str, Any]:
         all_placements: Dict[str, Dict[str, int]] = {}
         all_cash_winnings: Dict[str, Dict[str, Any]] = {}
         duration_values: List[int] = []
+        duration_rows: List[Dict[str, Any]] = []
         duration_outlier_count = 0
 
         for tournament in tournaments:
@@ -590,6 +667,15 @@ async def build_cache() -> Dict[str, Any]:
                 for name in (match.get("winner_name"), match.get("loser_name"))
                 if name
             })
+            if normalized_duration is not None:
+                duration_rows.append({
+                    "tournament_id": tid,
+                    "tournament_name": tournament.get("name"),
+                    "date": tournament.get("started_at") or tournament.get("completed_at"),
+                    "game": tournament.get("game"),
+                    "player_count": player_count,
+                    "duration_minutes": normalized_duration,
+                })
             prize_pool = _tournament_prize_payouts(player_count, placements)
             for payout in prize_pool["payouts"]:
                 players_in_place = payout.get("players") or []
@@ -659,6 +745,21 @@ async def build_cache() -> Dict[str, Any]:
         tournament_analytics["total_with_duration"] = len(duration_values)
         tournament_analytics["duration_outlier_count"] = duration_outlier_count
         tournament_analytics["duration_outlier_threshold_minutes"] = MAX_NORMAL_TOURNAMENT_DURATION_MINUTES
+        duration_baselines = _duration_baselines(duration_rows)
+        tournament_analytics["duration_extremes"] = duration_baselines["overall"]
+        tournament_analytics["duration_groups"] = duration_baselines["by_game_and_player_count"]
+        for row in duration_rows:
+            key = f"{row.get('game') or 'Unknown'}|{int(row.get('player_count') or 0)}"
+            baseline = duration_baselines["by_key"].get(key)
+            if not baseline:
+                continue
+            tid = row["tournament_id"]
+            tournament = tournaments_by_id.get(str(tid))
+            if tournament is not None:
+                tournament["duration_baseline"] = baseline
+            detail = tournament_details.get(str(tid))
+            if detail is not None:
+                detail["analytics"]["duration_baseline"] = baseline
         if duration_values:
             avg_duration = round(sum(duration_values) / len(duration_values))
             tournament_analytics["average_duration_minutes"] = avg_duration
@@ -801,6 +902,8 @@ async def build_cache() -> Dict[str, Any]:
             "average_tournament_duration_label": tournament_analytics["average_duration_label"],
             "duration_outlier_count": duration_outlier_count,
             "duration_outlier_threshold_minutes": MAX_NORMAL_TOURNAMENT_DURATION_MINUTES,
+            "tournament_duration_extremes": tournament_analytics["duration_extremes"],
+            "tournament_duration_groups": tournament_analytics["duration_groups"][:8],
             "entry_fee": ENTRY_FEE_DOLLARS,
             "total_prize_pool": sum(t.get("prize_pool") or 0 for t in tournaments),
             "top_tournament_winners": tournament_analytics["winner_leaderboard"][:4],

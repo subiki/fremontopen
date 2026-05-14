@@ -60,6 +60,8 @@ export default function Dashboard() {
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
+  const durationExtremes = stats?.tournament_duration_extremes;
+  const durationGroups = stats?.tournament_duration_groups || [];
   const dashboardTrends = stats?.dashboard_trends || {};
   const cacheMetadata = stats?.cache_metadata || {};
   const seasonStandings = stats?.season_standings || [];
@@ -177,6 +179,29 @@ export default function Dashboard() {
                 : null
             }
           />
+        </section>
+
+        <section
+          className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+          data-testid="tournament-timing-panel"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+            <div className="lg:w-72 shrink-0">
+              <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                Tourney Timing
+              </h2>
+              <div className="mt-1 text-sm text-[#9CA3AF]">
+                Shortest and longest baseline events by game and field size
+              </div>
+            </div>
+            <div className="min-w-0 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              <TimingExtremeCard label="Fastest Overall" row={durationExtremes?.shortest} />
+              <TimingExtremeCard label="Slowest Overall" row={durationExtremes?.longest} />
+              {durationGroups.slice(0, 2).map((group) => (
+                <TimingGroupCard key={`${group.game}-${group.player_count}`} group={group} />
+              ))}
+            </div>
+          </div>
         </section>
 
         <section
@@ -487,6 +512,36 @@ const MetadataStat = ({ label, value }) => (
     <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
       {value}
     </dd>
+  </div>
+);
+
+const TimingExtremeCard = ({ label, row }) => {
+  const body = (
+    <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
+      <div className="mt-2 font-mono text-lg text-[#F3F4F6]">
+        {row?.duration_label || "-"}
+      </div>
+      <div className="mt-1 text-xs text-[#9CA3AF] truncate">
+        {row?.tournament_name || "No timing data"}
+      </div>
+    </div>
+  );
+
+  return row?.tournament_id ? <Link to={`/tournaments/${row.tournament_id}`}>{body}</Link> : body;
+};
+
+const TimingGroupCard = ({ group }) => (
+  <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
+    <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+      {group.game} / {group.player_count} players
+    </div>
+    <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
+      {group.shortest?.duration_label || "-"} - {group.longest?.duration_label || "-"}
+    </div>
+    <div className="mt-1 text-xs text-[#9CA3AF]">
+      Avg {group.average_label || "-"} across {group.sample_count} event{group.sample_count === 1 ? "" : "s"}
+    </div>
   </div>
 );
 

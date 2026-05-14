@@ -42,6 +42,13 @@ Manual correction inputs live in JSON files:
 - `backend/player_overrides.json` for Fargo, nicknames, and notes
 - `backend/season_points.json` for standings scoring
 
+## Analytics Export
+
+`backend/export_static.py` computes tournament and player analytics before the
+frontend build. Tournament timing baselines use cached start/end timestamps,
+discard likely left-open events, and group shortest/longest duration summaries
+by game type and player count.
+
 ## Deploy
 
 Pushes to `main` trigger `.github/workflows/deploy.yml`. The workflow builds the
