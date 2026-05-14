@@ -85,6 +85,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
 - [x] H2H heatmap matrix across top active players
+- [x] Tournament title totals unified with placement-based first-place logic
 
 ## Removed From Demo Scope
 

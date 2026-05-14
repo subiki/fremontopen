@@ -25,6 +25,7 @@ from export_static import (
     _strength_of_schedule,
     _tournament_difficulty,
     _tournament_prize_payouts,
+    _titles_from_placements,
     _upset_tracker,
 )
 
@@ -350,6 +351,36 @@ def test_single_elimination_semifinal_losers_tie_for_third():
     assert placements["Runner Up"] == 2
     assert placements["Third A"] == 3
     assert placements["Third B"] == 3
+
+
+def test_titles_from_placements_match_first_place_counts():
+    tournaments = [
+        {
+            "id": 1,
+            "name": "Eight Ball Open",
+            "game": "8 Ball",
+            "completed_at": "2026-05-01T20:00:00-07:00",
+        },
+        {
+            "id": 2,
+            "name": "Nine Ball Open",
+            "game": "9 Ball",
+            "completed_at": "2026-05-02T20:00:00-07:00",
+        },
+    ]
+
+    titles = _titles_from_placements(tournaments, {"1": 1, "2": 2})
+
+    assert titles["total"] == 1
+    assert titles["by_game"] == {"8-ball": 1}
+    assert titles["titles"] == [
+        {
+            "tournament_id": 1,
+            "tournament_name": "Eight Ball Open",
+            "game": "8 Ball",
+            "completed_at": "2026-05-01T20:00:00-07:00",
+        }
+    ]
 
 
 def test_compute_elo_ratings_rewards_winners_and_tracks_history():

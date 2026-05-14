@@ -113,43 +113,6 @@ def compute_streaks(matches: List[Dict[str, Any]], player_name: str) -> Dict[str
     }
 
 
-def compute_tourney_championships(tournaments: List[Dict[str, Any]], matches: List[Dict[str, Any]], player_name: str) -> Dict[str, Any]:
-    """A tournament championship = the player won the highest-round (or "final") match.
-    Heuristic: pick the match in each tournament with the largest `round` value; if winner is the player, they won the tournament.
-    Group by tournament.game (categorize as 8-ball / 9-ball / other).
-    """
-    by_game: Dict[str, int] = {}
-    titles: List[Dict[str, Any]] = []
-    t_by_id = {t["id"]: t for t in tournaments}
-    matches_by_t: Dict[int, List[Dict[str, Any]]] = {}
-    for m in matches:
-        if m.get("round") is None or m.get("state") != "complete":
-            continue
-        matches_by_t.setdefault(m["tournament_id"], []).append(m)
-
-    for t_id, ms in matches_by_t.items():
-        final = max(ms, key=lambda x: x.get("round") or 0)
-        if final.get("winner_name") == player_name:
-            t = t_by_id.get(t_id, {})
-            game_raw = (t.get("game") or "other").lower()
-            if "9" in game_raw:
-                bucket = "9-ball"
-            elif "8" in game_raw:
-                bucket = "8-ball"
-            elif game_raw in ("single elimination", "double elimination", "other"):
-                bucket = "other"
-            else:
-                bucket = game_raw
-            by_game[bucket] = by_game.get(bucket, 0) + 1
-            titles.append({
-                "tournament_id": t_id,
-                "tournament_name": t.get("name"),
-                "game": t.get("game"),
-                "completed_at": t.get("completed_at"),
-            })
-    return {"by_game": by_game, "total": sum(by_game.values()), "titles": titles}
-
-
 def compute_perf_vs_fargo(matches: List[Dict[str, Any]], player_name: str, player_fargo: Optional[int], all_fargos: Dict[str, int]) -> Dict[str, Any]:
     """For each completed match where BOTH players have a Fargo rating,
     compute expected win probability and compare to actual.

@@ -21,7 +21,6 @@ from players_extras import (
     compute_elo_ratings,
     compute_perf_vs_fargo,
     compute_streaks,
-    compute_tourney_championships,
     rolling_match_form,
     wins_over_time,
 )
@@ -503,6 +502,50 @@ def _infer_tournament_placements(matches: List[Dict[str, Any]]) -> Dict[str, int
             placements[loser] = 3
 
     return placements
+
+
+def _game_bucket(game: Optional[str]) -> str:
+    game_raw = (game or "other").lower()
+    if "9" in game_raw:
+        return "9-ball"
+    if "8" in game_raw:
+        return "8-ball"
+    if game_raw in ("single elimination", "double elimination", "other"):
+        return "other"
+    return game_raw
+
+
+def _titles_from_placements(
+    tournaments: List[Dict[str, Any]],
+    placements_by_tournament: Dict[str, int],
+) -> Dict[str, Any]:
+    by_game: Dict[str, int] = {}
+    titles: List[Dict[str, Any]] = []
+    tournaments_by_id = {str(t.get("id")): t for t in tournaments}
+
+    for tournament_id, place in sorted(
+        placements_by_tournament.items(),
+        key=lambda item: (
+            tournaments_by_id.get(str(item[0]), {}).get("completed_at")
+            or tournaments_by_id.get(str(item[0]), {}).get("started_at")
+            or "",
+            str(item[0]),
+        ),
+        reverse=True,
+    ):
+        if place != 1:
+            continue
+        tournament = tournaments_by_id.get(str(tournament_id), {})
+        bucket = _game_bucket(tournament.get("game"))
+        by_game[bucket] = by_game.get(bucket, 0) + 1
+        titles.append({
+            "tournament_id": tournament.get("id", tournament_id),
+            "tournament_name": tournament.get("name"),
+            "game": tournament.get("game"),
+            "completed_at": tournament.get("completed_at"),
+        })
+
+    return {"by_game": by_game, "total": len(titles), "titles": titles}
 
 
 def _ranking_rows(counts: Dict[str, int], limit: int = 10) -> List[Dict[str, Any]]:
@@ -1263,7 +1306,7 @@ async def build_cache() -> Dict[str, Any]:
             }
             player_extras[name] = {
                 "streaks": compute_streaks(player_matches, name),
-                "titles": compute_tourney_championships(tournaments, player_matches, name),
+                "titles": _titles_from_placements(tournaments, placements_by_tournament),
                 "perf_vs_fargo": compute_perf_vs_fargo(
                     player_matches,
                     name,

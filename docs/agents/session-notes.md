@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - JFL placement-derived titles
+
+- Picked up the prepared JFL analytics bug after GitHub issue creation failed due to integration write permissions.
+- Confirmed player profile `titles.total` used a player-only highest-round heuristic while `top_1_finishes` used full tournament placement inference.
+- Replaced title totals with placement-derived title rows from the same inferred placements used for top finish counts.
+- Removed the stale championship heuristic from `players_extras.py` so the export has one title source of truth.
+- Kept the change static-first and regenerated only the exported cache data.
+
 ## 2026-05-14 - P2 H2H heatmap
 
 - Pulled live GitHub issue priority after backlog refresh; no P0 issues were open and the remaining live JFL/P1 items were already represented as completed backlog work.
