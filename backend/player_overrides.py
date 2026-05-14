@@ -54,6 +54,13 @@ def normalize_player_override(name: str, data: Dict[str, Any]) -> Dict[str, Any]
         ("fargo_confidence", "fargo_confidence"),
         ("notes", "notes"),
         ("nickname", "nickname"),
+        ("cue", "cue"),
+        ("playing_cue", "cue"),
+        ("break_cue", "break_cue"),
+        ("shaft", "shaft"),
+        ("tip", "tip"),
+        ("equipment_notes", "equipment_notes"),
+        ("equipment_note", "equipment_notes"),
     ):
         value = _clean_text(data.get(source_key))
         if value is not None:

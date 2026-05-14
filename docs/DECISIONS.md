@@ -21,7 +21,7 @@ DreamHost receives only built static files.
 Because the public app is static, corrections are repo/local files:
 
 - `player_aliases.json` for player-name merges
-- `player_overrides.json` for Fargo and profile metadata
+- `player_overrides.json` for Fargo, equipment, and profile metadata
 - `season_points.json` for standings scoring
 
 After edits, run the export/build workflow.

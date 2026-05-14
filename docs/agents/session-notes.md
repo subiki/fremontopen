@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - P3 equipment overrides
+
+- Re-read backlog, docs, and live GitHub labels after printable tournament detail pages.
+- No non-stale JFL/P0/P1/P2 items remained, so selected the next small P3 player-profile item.
+- Extended `backend/player_overrides.json` support for playing cue, break cue, shaft, tip, and equipment notes.
+- Exported equipment metadata in player extras and surfaced it on player profile pages.
+- Kept the feature static-first and file-based with no runtime backend, server writes, auth, admin, chat, or Challonge browser calls.
+
 ## 2026-05-14 - P3 printable tournament detail
 
 - Re-read backlog, docs, and live GitHub labels after bracket pinch zoom.

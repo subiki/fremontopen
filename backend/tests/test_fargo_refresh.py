@@ -53,6 +53,31 @@ def test_refresh_fargo_overrides_from_html_table(tmp_path):
     assert player["fargo_robustness"] == "301"
 
 
+def test_player_overrides_apply_equipment_metadata(tmp_path):
+    overrides = tmp_path / "player_overrides.json"
+    overrides.write_text(json.dumps({
+        "players": {
+            "Eddie Robinson": {
+                "playing_cue": "Meucci Pro",
+                "break_cue": "BK Rush",
+                "shaft": "Carbon",
+                "tip": "Kamui",
+                "equipment_note": "Prefers soft tip setup",
+            }
+        }
+    }), encoding="utf-8")
+
+    data = load_player_overrides(overrides)
+    player = {"name": "Eddie Robinson", "wins": 1, "losses": 0}
+    apply_player_overrides(player, data)
+
+    assert player["cue"] == "Meucci Pro"
+    assert player["break_cue"] == "BK Rush"
+    assert player["shaft"] == "Carbon"
+    assert player["tip"] == "Kamui"
+    assert player["equipment_notes"] == "Prefers soft tip setup"
+
+
 def test_refresh_fargo_dry_run_does_not_write(tmp_path):
     overrides = tmp_path / "player_overrides.json"
 

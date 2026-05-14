@@ -89,6 +89,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Light mode toggle with persistent local preference
 - [x] Pinch-zoom bracket view for tournament detail pages
 - [x] Printable tournament bracket/detail pages
+- [x] Equipment/custom cue fields from local player overrides
 
 ## Removed From Demo Scope
 
@@ -113,9 +114,7 @@ All current data-quality items are complete.
 
 ## EPIC 3 - Player Stats And Rankings
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 3.9 | P3 | S | **Equipment/custom cue fields** from local overrides file |
+All current player stat/ranking items are complete.
 
 ## EPIC 4 - Tournament Views
 

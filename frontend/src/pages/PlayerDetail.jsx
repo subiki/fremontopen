@@ -25,6 +25,7 @@ import {
   TrendDown,
   Medal,
   MagnifyingGlass,
+  Cube,
 } from "@phosphor-icons/react";
 
 export default function PlayerDetail() {
@@ -95,6 +96,7 @@ export default function PlayerDetail() {
   const attendance = extras?.attendance || {};
   const cash = extras?.cash || {};
   const form = extras?.form || {};
+  const equipment = extras?.equipment || {};
 
   useEffect(() => {
     if (p?.name && p.name !== decoded) {
@@ -336,6 +338,7 @@ export default function PlayerDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
               <StreakCard streaks={extras?.streaks} />
               <TitlesCard titles={extras?.titles} />
+              <EquipmentCard equipment={equipment} />
               <FargoEditor
                 playerName={decoded}
                 currentFargo={extras?.fargo}
@@ -659,6 +662,50 @@ const TitlesCard = ({ titles }) => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+const EquipmentCard = ({ equipment }) => {
+  const rows = [
+    ["Playing cue", equipment?.cue],
+    ["Break cue", equipment?.break_cue],
+    ["Shaft", equipment?.shaft],
+    ["Tip", equipment?.tip],
+  ].filter(([, value]) => value);
+  const hasEquipment = rows.length > 0 || equipment?.notes;
+
+  if (!hasEquipment) {
+    return (
+      <div className="bg-[#141923] border border-[#273041] rounded-lg p-5" data-testid="equipment-card">
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Equipment</div>
+          <Cube size={14} weight="duotone" className="text-[#9CA3AF]" />
+        </div>
+        <div className="mt-2 text-sm text-[#6B7280]">No local cue notes</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#141923] border border-[#273041] rounded-lg p-5" data-testid="equipment-card">
+      <div className="flex items-center justify-between">
+        <div className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Equipment</div>
+        <Cube size={14} weight="duotone" className="text-[#F59E0B]" />
+      </div>
+      <dl className="mt-3 space-y-2">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-start justify-between gap-3 text-sm">
+            <dt className="text-[#6B7280]">{label}</dt>
+            <dd className="min-w-0 text-right font-mono text-[#F3F4F6]">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {equipment?.notes ? (
+        <div className="mt-3 rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2 text-xs leading-5 text-[#9CA3AF]">
+          {equipment.notes}
+        </div>
+      ) : null}
     </div>
   );
 };

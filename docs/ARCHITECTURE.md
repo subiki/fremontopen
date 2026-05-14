@@ -39,7 +39,7 @@ site:
 Manual correction inputs live in JSON files:
 
 - `backend/player_aliases.json` for deliberate dedupe aliases
-- `backend/player_overrides.json` for Fargo, nicknames, and notes
+- `backend/player_overrides.json` for Fargo, nicknames, notes, and equipment metadata
 - `backend/season_points.json` for standings scoring
 
 ## Analytics Export

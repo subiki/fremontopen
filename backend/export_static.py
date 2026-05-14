@@ -1325,6 +1325,13 @@ async def build_cache() -> Dict[str, Any]:
                 "fargo_updated_at": player.get("fargo_updated_at"),
                 "fargo_robustness": player.get("fargo_robustness"),
                 "fargo_id": player.get("fargo_id"),
+                "equipment": {
+                    "cue": player.get("cue"),
+                    "break_cue": player.get("break_cue"),
+                    "shaft": player.get("shaft"),
+                    "tip": player.get("tip"),
+                    "notes": player.get("equipment_notes"),
+                },
                 "elo": {
                     "rating": player["elo_rating"],
                     "peak": player["elo_peak"],
