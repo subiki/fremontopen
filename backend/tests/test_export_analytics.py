@@ -18,6 +18,7 @@ from export_static import (
     _recent_activity_summary,
     _rivalry_index,
     _season_standings,
+    _strength_of_schedule,
     _tournament_prize_payouts,
 )
 
@@ -235,6 +236,26 @@ def test_recent_activity_summary_counts_active_players_and_hottest_player():
     assert summary["active_players"] == 3
     assert summary["match_count"] == 3
     assert summary["hottest_player"]["player"] == "A"
+
+
+def test_strength_of_schedule_weights_opponents_by_matches():
+    rows = [
+        match(1, "A", "B"),
+        match(2, "C", "A"),
+        match(3, "C", "A"),
+    ]
+    players = {
+        "B": {"win_rate": 40.0},
+        "C": {"win_rate": 70.0},
+    }
+    elo = {"initial_rating": 1500, "ratings": {"B": 1450, "C": 1700}}
+
+    schedule = _strength_of_schedule(rows, "A", players, elo)
+
+    assert schedule["match_count"] == 3
+    assert schedule["opponent_count"] == 2
+    assert schedule["average_opponent_win_rate"] == 60.0
+    assert schedule["average_opponent_elo"] == 1617
 
 
 def test_closest_rivalry_prefers_tightest_record_then_more_matches():

@@ -331,6 +331,48 @@ def _ranking_rows(counts: Dict[str, int], limit: int = 10) -> List[Dict[str, Any
     return out
 
 
+def _strength_of_schedule(
+    matches: List[Dict[str, Any]],
+    player_name: str,
+    players_by_name: Dict[str, Dict[str, Any]],
+    elo: Dict[str, Any],
+) -> Dict[str, Any]:
+    opponent_win_rates = []
+    opponent_elos = []
+    opponents = set()
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if winner == player_name:
+            opponent = loser
+        elif loser == player_name:
+            opponent = winner
+        else:
+            continue
+        if not opponent:
+            continue
+        opponents.add(opponent)
+        opponent_row = players_by_name.get(opponent, {})
+        if opponent_row.get("win_rate") is not None:
+            opponent_win_rates.append(float(opponent_row.get("win_rate") or 0))
+        opponent_elos.append(elo["ratings"].get(opponent, elo["initial_rating"]))
+
+    return {
+        "match_count": len(opponent_elos),
+        "opponent_count": len(opponents),
+        "average_opponent_win_rate": (
+            round(sum(opponent_win_rates) / len(opponent_win_rates), 1)
+            if opponent_win_rates
+            else None
+        ),
+        "average_opponent_elo": (
+            round(sum(opponent_elos) / len(opponent_elos))
+            if opponent_elos
+            else None
+        ),
+    }
+
+
 def _recent_activity_summary(matches: List[Dict[str, Any]], window: int = 30) -> Dict[str, Any]:
     completed = [
         m for m in matches
@@ -908,6 +950,10 @@ async def build_cache() -> Dict[str, Any]:
             player["top_4_finishes"] = top_finishes["top_4"]
             player["placements_counted"] = len(placement_values)
             player["cash_won"] = cash_total
+            strength_of_schedule = _strength_of_schedule(player_matches, name, players_by_name, elo)
+            player["strength_of_schedule"] = strength_of_schedule["average_opponent_elo"]
+            player["opponent_win_rate"] = strength_of_schedule["average_opponent_win_rate"]
+            player["opponent_count"] = strength_of_schedule["opponent_count"]
             opponent_fargos = {
                 opponent: players_by_name[opponent].get("fargo")
                 for opponent in h2h.keys()
@@ -955,6 +1001,7 @@ async def build_cache() -> Dict[str, Any]:
                     "by_tournament": cash_winnings["by_tournament"],
                     "note": "Cash is estimated from $10 entries and rounded tournament payout rules.",
                 },
+                "strength_of_schedule": strength_of_schedule,
             }
 
         sync_status = last_sync or {"status": "never_synced"}

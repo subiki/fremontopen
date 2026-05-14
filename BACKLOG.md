@@ -73,6 +73,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Bracket visualization on tournament detail pages
 - [x] Tournament archive search by date range, winner, and format
 - [x] Manual side-match CSV import for matches not tracked in Challonge
+- [x] Strength of schedule from opponent win rate and ELO
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -102,7 +103,6 @@ All current data-quality items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 3.7 | P2 | M | **Strength of schedule** using opponent win rate / rating |
 | 3.8 | P2 | S | **Player nicknames** from local overrides file |
 | 3.9 | P3 | S | **Equipment/custom cue fields** from local overrides file |
 
@@ -160,7 +160,10 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-No active P1/P2 build-order items remain. Re-read issues before choosing the next slice.
+1. **3.8 Player nicknames** - expose local override nicknames on player profiles.
+2. **4.4 Cinderella runs** - show biggest upset paths per tournament.
+3. **5.5 Upset tracker** - rank rating-underdog wins.
+4. **7.3 Attendance tracker** - summarize attendance by season.
 
 ---
 

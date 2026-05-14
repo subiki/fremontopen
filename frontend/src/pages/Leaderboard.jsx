@@ -26,6 +26,7 @@ export default function Leaderboard() {
     const rows = [...list].filter((p) => (p.wins || 0) + (p.losses || 0) >= minMatches);
     const byNumberDesc = (key) => (a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity);
     if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
+    if (sort === "schedule") return rows.sort(byNumberDesc("strength_of_schedule"));
     if (sort === "win_rate") return rows.sort(byNumberDesc("win_rate"));
     if (sort === "average_placement") {
       return rows.sort((a, b) => (a.average_placement ?? Infinity) - (b.average_placement ?? Infinity));
@@ -64,6 +65,7 @@ export default function Leaderboard() {
           >
             <option value="wins">Sort by wins</option>
             <option value="elo">Sort by ELO</option>
+            <option value="schedule">Sort by schedule</option>
             <option value="win_rate">Sort by win rate</option>
             <option value="average_placement">Sort by avg place</option>
             <option value="top_4">Sort by top 4s</option>

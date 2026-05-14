@@ -74,3 +74,9 @@
 - Rechecked open JFL issue #58 after backlog P1/P2 work was clear.
 - Added a mobile drawer menu so the full site navigation can kick out from the bottom bar.
 - Kept the quick bottom navigation for the highest-traffic routes and moved secondary routes into the drawer.
+
+## 2026-05-14 - P2 strength of schedule
+
+- Continued to the next active backlog P2 item after stale JFL/P1 issue review.
+- Added weighted strength-of-schedule stats from opponents' win rates and ELO ratings.
+- Surfaced schedule strength on player profiles, stat rankings, and leaderboard sorting.

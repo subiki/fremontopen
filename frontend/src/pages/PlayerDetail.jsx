@@ -241,6 +241,14 @@ export default function PlayerDetail() {
                 to={rankingPath("elo_peak")}
               />
               <StatCard
+                label="Schedule"
+                value={p.strength_of_schedule ?? "â€”"}
+                accent="text-[#F59E0B]"
+                icon={Scales}
+                testid="pd-strength-of-schedule"
+                to={rankingPath("strength_of_schedule")}
+              />
+              <StatCard
                 label="Avg Place"
                 value={placements?.average ?? "—"}
                 accent="text-[#F59E0B]"
