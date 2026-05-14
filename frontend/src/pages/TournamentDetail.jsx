@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournament } from "../lib/api";
@@ -21,11 +21,12 @@ export default function TournamentDetail() {
   }, [id]);
 
   const t = data?.tournament;
-  const matches = data?.matches || [];
+  const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const analytics = data?.analytics || {};
   const placements = analytics.placements || [];
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
+  const bracketSections = useMemo(() => buildBracketSections(matches), [matches]);
 
   return (
     <>
@@ -118,6 +119,46 @@ export default function TournamentDetail() {
                   {analytics.prize_rules}
                 </div>
               ) : null}
+            </section>
+
+            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="bracket-visualization">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                  Bracket
+                </h2>
+                <span className="text-xs text-[#6B7280]">
+                  Grouped by Challonge round
+                </span>
+              </div>
+              {bracketSections.length === 0 ? (
+                <div className="text-[#6B7280] text-sm">No bracket matches available.</div>
+              ) : (
+                <div className="space-y-6">
+                  {bracketSections.map((section) => (
+                    <div key={section.key}>
+                      <div className="mb-3 text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                        {section.label}
+                      </div>
+                      <div className="overflow-x-auto pb-2">
+                        <div className="flex gap-4 min-w-max">
+                          {section.rounds.map((round) => (
+                            <div key={round.key} className="w-72 shrink-0">
+                              <div className="mb-2 font-mono text-xs text-[#9CA3AF]">
+                                {round.label}
+                              </div>
+                              <div className="space-y-3">
+                                {round.matches.map((match) => (
+                                  <BracketMatch key={match.id} match={match} />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-3">Matches</h2>
@@ -262,6 +303,83 @@ const PlacementCard = ({ row, payout }) => (
     </Link>
   </li>
 );
+
+const BracketMatch = ({ match }) => {
+  const winner = match.winner_name || "TBD";
+  const loser = match.loser_name || "TBD";
+  return (
+    <div className="rounded-md border border-[#273041] bg-[#0B0E14] overflow-hidden" data-testid="bracket-match">
+      <BracketPlayer name={winner} tone="winner" />
+      <BracketPlayer name={loser} tone="loser" />
+      <div className="flex items-center justify-between gap-3 border-t border-[#273041]/60 px-3 py-2 text-[11px] font-mono text-[#6B7280]">
+        <span>{match.scores || "-"}</span>
+        <MatchOdds odds={match.elo_odds} />
+      </div>
+    </div>
+  );
+};
+
+const BracketPlayer = ({ name, tone }) => {
+  const isWinner = tone === "winner";
+  const className = `flex items-center justify-between gap-3 px-3 py-2 text-sm ${
+    isWinner ? "text-[#F3F4F6]" : "text-[#9CA3AF]"
+  }`;
+  return (
+    <div className={className}>
+      {name === "TBD" ? (
+        <span className="truncate text-[#6B7280]">TBD</span>
+      ) : (
+        <Link
+          to={`/players/${encodeURIComponent(name)}`}
+          className={`truncate ${isWinner ? "hover:text-[#10B981] font-medium" : "hover:text-[#F3F4F6]"}`}
+        >
+          {name}
+        </Link>
+      )}
+      <span className={`text-[10px] uppercase tracking-wider ${isWinner ? "text-[#10B981]" : "text-[#6B7280]"}`}>
+        {isWinner ? "W" : "L"}
+      </span>
+    </div>
+  );
+};
+
+const buildBracketSections = (matches) => {
+  const playable = (matches || []).filter((match) => match.round !== null && match.round !== undefined);
+  const winners = playable.filter((match) => Number(match.round) > 0);
+  const losers = playable.filter((match) => Number(match.round) < 0);
+  const other = playable.filter((match) => Number(match.round) === 0 || Number.isNaN(Number(match.round)));
+  return [
+    makeBracketSection("winners", "Winner Bracket", winners, (a, b) => a - b, (round, maxRound) => {
+      if (round === maxRound) return "Final";
+      if (round === maxRound - 1) return "Winners Final";
+      return `Round ${round}`;
+    }),
+    makeBracketSection("losers", "Loser Bracket", losers, (a, b) => b - a, (round, minRound) => {
+      if (round === minRound) return "Losers Final";
+      return `Losers ${Math.abs(round)}`;
+    }),
+    makeBracketSection("other", "Other Matches", other, (a, b) => a - b, (round) => `Round ${round}`),
+  ].filter((section) => section.rounds.length > 0);
+};
+
+const makeBracketSection = (key, label, matches, sortRounds, labelRound) => {
+  const grouped = new Map();
+  matches.forEach((match) => {
+    const round = Number(match.round);
+    grouped.set(round, [...(grouped.get(round) || []), match]);
+  });
+  const roundNumbers = [...grouped.keys()].sort(sortRounds);
+  const edgeRound = key === "losers" ? Math.min(...roundNumbers) : Math.max(...roundNumbers);
+  return {
+    key,
+    label,
+    rounds: roundNumbers.map((round) => ({
+      key: `${key}-${round}`,
+      label: labelRound(round, edgeRound),
+      matches: grouped.get(round).sort((a, b) => String(a.id || "").localeCompare(String(b.id || ""))),
+    })),
+  };
+};
 
 const formatMoney = (value) =>
   typeof value === "number"

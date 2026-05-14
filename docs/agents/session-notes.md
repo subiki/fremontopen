@@ -50,3 +50,9 @@
 - Added rolling last-10 match form analytics to the static player extras export.
 - Surfaced recent form on player detail pages alongside wins-over-time and ELO charts.
 - Kept the implementation static-first with no new runtime backend requirement.
+
+## 2026-05-14 - P1 bracket visualization
+
+- Continued to the next backlog P1, bracket visualization on tournament detail pages.
+- Added a compact static bracket view grouped by Challonge winner/loser rounds above the match table.
+- Kept the table as the detailed source of match state, scores, and ELO odds.
