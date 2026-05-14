@@ -68,3 +68,9 @@
 - Added a local CSV importer for side matches not tracked in Challonge.
 - Wired the static refresh script and scheduled workflow to import `backend/manual_side_matches.csv` when present.
 - Documented the CSV path and kept the importer local/static-first with no admin UI.
+
+## 2026-05-14 - JFL mobile navigation follow-up
+
+- Rechecked open JFL issue #58 after backlog P1/P2 work was clear.
+- Added a mobile drawer menu so the full site navigation can kick out from the bottom bar.
+- Kept the quick bottom navigation for the highest-traffic routes and moved secondary routes into the drawer.

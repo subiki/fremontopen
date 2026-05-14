@@ -33,6 +33,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] DreamHost shared-hosting deployment guide
 - [x] Unique first-name dedupe rule for unambiguous first-name-only Challonge duplicates
 - [x] Mobile navigation polish with bottom nav and tighter mobile spacing
+- [x] Mobile drawer navigation for full site menu access
 - [x] Sort controls for players, tournaments, and leaderboard
 - [x] Game-type labels surfaced in match/stat views
 - [x] Expanded visible stats for placements, top finishes, tournament size, duration, and title leaders
