@@ -122,6 +122,43 @@ cd backend
 The report is written to `backend/alias_suggestions.json` and is not applied
 automatically.
 
+## Local Player Overrides And Fargo Import
+
+Use `backend/player_overrides.json` for manual player metadata such as Fargo
+ratings, Fargo IDs, nicknames, and notes:
+
+```json
+{
+  "players": {
+    "Eddie Robinson": {
+      "fargo": 612,
+      "fargo_id": "example-id",
+      "fargo_source": "manual",
+      "fargo_updated_at": "2026-05-14"
+    }
+  }
+}
+```
+
+After editing overrides, export the static cache:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe export_static.py
+```
+
+To import Fargo ratings from an authorized CSV/JSON export or saved HTML table:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe fargo_refresh.py --source-file .\fargo_export.csv --kind csv
+.venv\Scripts\python.exe export_static.py
+```
+
+Use `--dry-run` first to produce `backend/fargo_refresh_report.json` without
+writing `player_overrides.json`. The importer does not bypass logins, captchas,
+robots.txt, or anti-bot controls; use an export or URL you are allowed to query.
+
 ## Local Validation Report
 
 Generate a local data-quality report before publishing refreshed cache data:

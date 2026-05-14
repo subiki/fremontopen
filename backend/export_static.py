@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 
 import database as T
 from database import make_engine
+from player_overrides import apply_player_overrides, load_player_overrides
 from players_extras import (
     compute_elo_ratings,
     compute_perf_vs_fargo,
@@ -492,8 +493,10 @@ async def build_cache() -> Dict[str, Any]:
         tournaments = [_row_to_dict(r) for r in tournament_rows]
         matches = [_row_to_dict(r) for r in match_rows]
         players = [_row_to_dict(r) for r in player_rows]
+        player_overrides = load_player_overrides()
 
         for p in players:
+            apply_player_overrides(p, player_overrides)
             total = (p.get("wins") or 0) + (p.get("losses") or 0)
             p["win_rate"] = round(((p.get("wins") or 0) / total) * 100, 1) if total else 0.0
 
@@ -721,6 +724,11 @@ async def build_cache() -> Dict[str, Any]:
                 ),
                 "wins_over_time": wins_over_time(player_matches, name),
                 "fargo": player.get("fargo"),
+                "fargo_source": player.get("fargo_source"),
+                "fargo_source_url": player.get("fargo_source_url"),
+                "fargo_updated_at": player.get("fargo_updated_at"),
+                "fargo_robustness": player.get("fargo_robustness"),
+                "fargo_id": player.get("fargo_id"),
                 "elo": {
                     "rating": player["elo_rating"],
                     "peak": player["elo_peak"],

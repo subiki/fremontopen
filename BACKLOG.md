@@ -59,6 +59,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Head-to-head ELO odds promoted into compare payloads and UI
 - [x] Info page with latest bracket, GitHub, Discord, schedule, and tournament details
 - [x] Fargo monthly refresh plan for authorized sources, overrides, and review reports
+- [x] Manual player overrides file for Fargo ratings, Fargo IDs, nicknames, and notes
 
 ## Removed From Demo Scope
 
@@ -84,7 +85,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
-| 2.7 | P1 | S | **Manual overrides file** - local JSON/YAML for Fargo, nicknames, hidden tournaments, and notes |
 | 2.8 | P1 | M | **Monthly Fargo refresh** - authorized source or local override workflow with rate limits, reports, and manual review |
 
 ## EPIC 3 - Player Stats And Rankings

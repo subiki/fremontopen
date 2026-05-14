@@ -316,6 +316,9 @@ export default function PlayerDetail() {
               <FargoEditor
                 playerName={decoded}
                 currentFargo={extras?.fargo}
+                source={extras?.fargo_source}
+                updatedAt={extras?.fargo_updated_at}
+                robustness={extras?.fargo_robustness}
                 onSaved={(newVal) => setExtras((e) => ({ ...(e || {}), fargo: newVal }))}
               />
               <PerfCard perf={extras?.perf_vs_fargo} />
