@@ -717,6 +717,96 @@ def _rivalry_index(matches: List[Dict[str, Any]], limit: int = 20) -> List[Dict[
     )[:limit]
 
 
+def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[str, Any]:
+    pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
+    player_records: Dict[str, Dict[str, int]] = {}
+
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if match.get("state") != "complete" or not winner or not loser or winner == loser:
+            continue
+
+        player_records.setdefault(winner, {"wins": 0, "losses": 0, "matches": 0})
+        player_records.setdefault(loser, {"wins": 0, "losses": 0, "matches": 0})
+        player_records[winner]["wins"] += 1
+        player_records[winner]["matches"] += 1
+        player_records[loser]["losses"] += 1
+        player_records[loser]["matches"] += 1
+
+        left, right = sorted((winner, loser), key=str.casefold)
+        row = pairs.setdefault((left, right), {"player_a": left, "player_b": right, "a_wins": 0, "b_wins": 0})
+        if winner == left:
+            row["a_wins"] += 1
+        else:
+            row["b_wins"] += 1
+
+    players = [
+        {
+            "player": name,
+            "wins": record["wins"],
+            "losses": record["losses"],
+            "matches": record["matches"],
+        }
+        for name, record in player_records.items()
+    ]
+    players.sort(key=lambda row: (-row["matches"], -row["wins"], row["player"].casefold()))
+    selected = [row["player"] for row in players[:player_limit]]
+
+    matrix = []
+    for row_player in selected:
+        cells = []
+        for col_player in selected:
+            if row_player == col_player:
+                cells.append({
+                    "opponent": col_player,
+                    "wins": None,
+                    "losses": None,
+                    "matches": 0,
+                    "win_rate": None,
+                })
+                continue
+
+            left, right = sorted((row_player, col_player), key=str.casefold)
+            pair = pairs.get((left, right), {})
+            if row_player == left:
+                wins = pair.get("a_wins", 0)
+                losses = pair.get("b_wins", 0)
+            else:
+                wins = pair.get("b_wins", 0)
+                losses = pair.get("a_wins", 0)
+            total = wins + losses
+            cells.append({
+                "opponent": col_player,
+                "wins": wins,
+                "losses": losses,
+                "matches": total,
+                "win_rate": round((wins / total) * 100, 1) if total else None,
+            })
+
+        matrix.append({"player": row_player, "cells": cells})
+
+    top_pairs = []
+    for row in pairs.values():
+        total = row["a_wins"] + row["b_wins"]
+        top_pairs.append({
+            "player_a": row["player_a"],
+            "player_b": row["player_b"],
+            "label": f"{row['player_a']} vs {row['player_b']}",
+            "a_wins": row["a_wins"],
+            "b_wins": row["b_wins"],
+            "matches": total,
+        })
+    top_pairs.sort(key=lambda row: (-row["matches"], row["label"].casefold()))
+
+    return {
+        "player_limit": player_limit,
+        "players": players[:player_limit],
+        "matrix": matrix,
+        "top_pairs": top_pairs[:10],
+    }
+
+
 def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     ordered_tournaments = sorted(
         tournaments,
@@ -1220,6 +1310,7 @@ async def build_cache() -> Dict[str, Any]:
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
         rivalry_index = _rivalry_index(matches)
+        h2h_heatmap = _h2h_heatmap(matches)
         upset_tracker = _upset_tracker(matches)
         anniversary = _anniversary_matches(matches)
         season_standings = _season_standings(tournaments, matches, season_points)
@@ -1270,6 +1361,7 @@ async def build_cache() -> Dict[str, Any]:
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
             "season_standings": season_standings,
             "rivalry_index": rivalry_index,
+            "h2h_heatmap": h2h_heatmap,
             "upset_tracker": upset_tracker,
             "anniversary_matches": anniversary,
             "players": players,

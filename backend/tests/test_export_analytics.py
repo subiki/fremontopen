@@ -13,6 +13,7 @@ from export_static import (
     _duration_baselines,
     _duration_minutes,
     _infer_tournament_placements,
+    _h2h_heatmap,
     _load_prize_overrides,
     _is_qualified_player,
     _load_season_points,
@@ -449,6 +450,31 @@ def test_rivalry_index_scores_volume_closeness_and_swings():
     assert rows[0]["difference"] == 0
     assert rows[0]["streak_swings"] == 3
     assert rows[0]["score"] > rows[1]["score"]
+
+
+def test_h2h_heatmap_builds_top_player_matrix():
+    heatmap = _h2h_heatmap([
+        match(1, "A", "B"),
+        match(2, "A", "B"),
+        match(3, "B", "A"),
+        match(4, "A", "C"),
+        match(5, "D", "A"),
+        match(6, "C", "B"),
+    ], player_limit=3)
+
+    assert [row["player"] for row in heatmap["players"]] == ["A", "B", "C"]
+    row_a = heatmap["matrix"][0]
+    assert row_a["player"] == "A"
+    assert row_a["cells"][0]["win_rate"] is None
+    assert row_a["cells"][1] == {
+        "opponent": "B",
+        "wins": 2,
+        "losses": 1,
+        "matches": 3,
+        "win_rate": 66.7,
+    }
+    assert heatmap["top_pairs"][0]["label"] == "A vs B"
+    assert heatmap["top_pairs"][0]["matches"] == 3
 
 
 def test_attendance_stats_tracks_played_and_streaks():

@@ -69,6 +69,7 @@ export default function Dashboard() {
   const cacheMetadata = stats?.cache_metadata || {};
   const seasonStandings = stats?.season_standings || [];
   const latestSeason = seasonStandings[0];
+  const h2hHeatmap = stats?.h2h_heatmap || {};
 
   return (
     <>
@@ -238,6 +239,8 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+
+        <H2HHeatmap heatmap={h2hHeatmap} />
 
         <section
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
@@ -649,6 +652,96 @@ const SeasonStandingsChart = ({ season }) => {
         </BarChart>
       </ResponsiveContainer>
     </div>
+  );
+};
+
+const H2HHeatmap = ({ heatmap }) => {
+  const players = (heatmap?.players || []).map((row) => row.player);
+  const matrix = heatmap?.matrix || [];
+
+  return (
+    <section
+      className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+      data-testid="h2h-heatmap-panel"
+    >
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+        <div className="lg:w-72 shrink-0">
+          <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+            H2H Heatmap
+          </h2>
+          <div className="mt-1 text-sm text-[#9CA3AF]">
+            Top active players by cached head-to-head volume
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          {players.length === 0 ? (
+            <div className="text-[#6B7280] text-sm">No head-to-head matrix yet.</div>
+          ) : (
+            <div className="overflow-x-auto rounded-md border border-[#273041]">
+              <table className="min-w-[720px] w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#0B0E14]">
+                    <th className="sticky left-0 z-10 bg-[#0B0E14] px-3 py-2 text-left font-semibold text-[#9CA3AF]">
+                      Player
+                    </th>
+                    {players.map((player) => (
+                      <th key={player} className="px-2 py-2 text-center font-semibold text-[#9CA3AF]">
+                        <Link to={`/players/${encodeURIComponent(player)}`} className="hover:text-[#10B981]">
+                          {shortName(player)}
+                        </Link>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrix.map((row) => (
+                    <tr key={row.player} className="border-t border-[#273041]/70">
+                      <th className="sticky left-0 z-10 bg-[#141923] px-3 py-2 text-left font-medium text-[#F3F4F6]">
+                        <Link to={`/players/${encodeURIComponent(row.player)}`} className="hover:text-[#10B981]">
+                          {row.player}
+                        </Link>
+                      </th>
+                      {row.cells.map((cell) => (
+                        <HeatmapCell key={`${row.player}-${cell.opponent}`} player={row.player} cell={cell} />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const HeatmapCell = ({ player, cell }) => {
+  if (!cell.matches) {
+    return (
+      <td className="px-2 py-2 text-center font-mono text-[#374151]">
+        -
+      </td>
+    );
+  }
+
+  const tone = cell.win_rate >= 60
+    ? "bg-[#064E3B]/75 text-[#D1FAE5]"
+    : cell.win_rate <= 40
+      ? "bg-[#7F1D1D]/70 text-[#FEE2E2]"
+      : "bg-[#1F2937] text-[#F3F4F6]";
+
+  return (
+    <td className="p-1 text-center">
+      <Link
+        to={`/compare/${encodeURIComponent(player)}/${encodeURIComponent(cell.opponent)}`}
+        className={`block rounded-md px-2 py-2 font-mono transition-colors hover:ring-1 hover:ring-[#10B981]/50 ${tone}`}
+        title={`${player} vs ${cell.opponent}: ${cell.wins}-${cell.losses}`}
+      >
+        <span className="block text-sm">{cell.win_rate}%</span>
+        <span className="block text-[10px] opacity-80">{cell.wins}-{cell.losses}</span>
+      </Link>
+    </td>
   );
 };
 

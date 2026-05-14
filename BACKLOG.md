@@ -84,6 +84,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
+- [x] H2H heatmap matrix across top active players
 
 ## Removed From Demo Scope
 
@@ -120,9 +121,7 @@ All current data-quality items are complete.
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 5.4 | P2 | M | **H2H heatmap matrix** across all players |
+All current compare/rivalry/story items are complete.
 
 ## EPIC 6 - Charts And Visual Polish
 

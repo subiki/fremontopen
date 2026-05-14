@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - P2 H2H heatmap
+
+- Pulled live GitHub issue priority after backlog refresh; no P0 issues were open and the remaining live JFL/P1 items were already represented as completed backlog work.
+- Selected P2 issue #32 as the highest non-stale remaining build item.
+- Added a static H2H heatmap export from completed cached matches, capped to top active players for dashboard usability.
+- Surfaced the matrix on the dashboard with compare-page links for every populated player pairing.
+- Kept the implementation static-first with no runtime backend, browser Challonge calls, auth, admin, or chat systems.
+
 ## 2026-05-14 - JFL timing baseline
 
 - Pulled `main`, read `BACKLOG.md`, docs, and live GitHub issues.
