@@ -87,6 +87,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] H2H heatmap matrix across top active players
 - [x] Tournament title totals unified with placement-based first-place logic
 - [x] Light mode toggle with persistent local preference
+- [x] Pinch-zoom bracket view for tournament detail pages
 
 ## Removed From Demo Scope
 
@@ -139,9 +140,7 @@ All current compare/rivalry/story items are complete.
 
 ## EPIC 8 - Static Site UX
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 8.7 | P3 | S | **Pinch-zoom bracket view** |
+All current static UX items are complete.
 
 ## EPIC 9 - Future Hosted Features
 

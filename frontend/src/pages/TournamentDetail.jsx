@@ -1,13 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournament } from "../lib/api";
-import { CaretLeft, MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowsClockwise, CaretLeft, MagnifyingGlass, Minus, Plus } from "@phosphor-icons/react";
+
+const MIN_BRACKET_ZOOM = 0.65;
+const MAX_BRACKET_ZOOM = 1.45;
+const BRACKET_ZOOM_STEP = 0.1;
+
+const clampBracketZoom = (value) =>
+  Math.min(MAX_BRACKET_ZOOM, Math.max(MIN_BRACKET_ZOOM, Number(value.toFixed(2))));
 
 export default function TournamentDetail() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bracketZoom, setBracketZoom] = useState(1);
+  const pinchDistanceRef = useRef(null);
+
+  const adjustBracketZoom = useCallback((delta) => {
+    setBracketZoom((value) => clampBracketZoom(value + delta));
+  }, []);
+
+  const resetBracketZoom = useCallback(() => {
+    setBracketZoom(1);
+    pinchDistanceRef.current = null;
+  }, []);
+
+  const handleBracketWheel = useCallback((event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    adjustBracketZoom(event.deltaY < 0 ? BRACKET_ZOOM_STEP : -BRACKET_ZOOM_STEP);
+  }, [adjustBracketZoom]);
+
+  const handleBracketTouchStart = useCallback((event) => {
+    if (event.touches.length !== 2) {
+      pinchDistanceRef.current = null;
+      return;
+    }
+    pinchDistanceRef.current = getTouchDistance(event.touches);
+  }, []);
+
+  const handleBracketTouchMove = useCallback((event) => {
+    if (event.touches.length !== 2 || pinchDistanceRef.current === null) return;
+    event.preventDefault();
+    const nextDistance = getTouchDistance(event.touches);
+    const delta = nextDistance - pinchDistanceRef.current;
+    if (Math.abs(delta) >= 12) {
+      adjustBracketZoom(delta > 0 ? BRACKET_ZOOM_STEP : -BRACKET_ZOOM_STEP);
+      pinchDistanceRef.current = nextDistance;
+    }
+  }, [adjustBracketZoom]);
 
   useEffect(() => {
     (async () => {
@@ -140,41 +183,78 @@ export default function TournamentDetail() {
             ) : null}
 
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="bracket-visualization">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
-                  Bracket
-                </h2>
-                <span className="text-xs text-[#6B7280]">
-                  Grouped by Challonge round
-                </span>
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                    Bracket
+                  </h2>
+                  <div className="mt-1 text-xs text-[#6B7280]">
+                    Grouped by Challonge round
+                  </div>
+                </div>
+                {bracketSections.length ? (
+                  <div className="flex items-center gap-2" data-testid="bracket-zoom-controls">
+                    <ZoomButton
+                      label="Zoom out"
+                      icon={Minus}
+                      onClick={() => adjustBracketZoom(-BRACKET_ZOOM_STEP)}
+                      disabled={bracketZoom <= MIN_BRACKET_ZOOM}
+                    />
+                    <div className="min-w-16 rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2 text-center font-mono text-xs text-[#F3F4F6]">
+                      {Math.round(bracketZoom * 100)}%
+                    </div>
+                    <ZoomButton
+                      label="Zoom in"
+                      icon={Plus}
+                      onClick={() => adjustBracketZoom(BRACKET_ZOOM_STEP)}
+                      disabled={bracketZoom >= MAX_BRACKET_ZOOM}
+                    />
+                    <ZoomButton
+                      label="Reset zoom"
+                      icon={ArrowsClockwise}
+                      onClick={resetBracketZoom}
+                      disabled={bracketZoom === 1}
+                    />
+                  </div>
+                ) : null}
               </div>
               {bracketSections.length === 0 ? (
                 <div className="text-[#6B7280] text-sm">No bracket matches available.</div>
               ) : (
-                <div className="space-y-6">
+                <div
+                  className="overflow-auto overscroll-contain rounded-md border border-[#273041] bg-[#0B0E14] p-3"
+                  data-testid="bracket-zoom-viewport"
+                  onWheel={handleBracketWheel}
+                  onTouchStart={handleBracketTouchStart}
+                  onTouchMove={handleBracketTouchMove}
+                  onTouchEnd={() => {
+                    pinchDistanceRef.current = null;
+                  }}
+                  style={{ touchAction: "pan-x pan-y" }}
+                >
+                <div className="space-y-6 min-w-max" style={{ zoom: bracketZoom }}>
                   {bracketSections.map((section) => (
                     <div key={section.key}>
                       <div className="mb-3 text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
                         {section.label}
                       </div>
-                      <div className="overflow-x-auto pb-2">
-                        <div className="flex gap-4 min-w-max">
-                          {section.rounds.map((round) => (
-                            <div key={round.key} className="w-72 shrink-0">
-                              <div className="mb-2 font-mono text-xs text-[#9CA3AF]">
-                                {round.label}
-                              </div>
-                              <div className="space-y-3">
-                                {round.matches.map((match) => (
-                                  <BracketMatch key={match.id} match={match} />
-                                ))}
-                              </div>
+                      <div className="flex gap-4">
+                        {section.rounds.map((round) => (
+                          <div key={round.key} className="w-72 shrink-0">
+                            <div className="mb-2 font-mono text-xs text-[#9CA3AF]">
+                              {round.label}
                             </div>
-                          ))}
-                        </div>
+                            <div className="space-y-3">
+                              {round.matches.map((match) => (
+                                <BracketMatch key={match.id} match={match} />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
+                </div>
                 </div>
               )}
             </section>
@@ -356,6 +436,19 @@ const CinderellaCard = ({ run }) => (
   </div>
 );
 
+const ZoomButton = ({ label, icon: Icon, onClick, disabled }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className="w-10 h-10 rounded-md border border-[#273041] bg-[#0B0E14] text-[#9CA3AF] flex items-center justify-center transition-colors hover:border-[#10B981]/50 hover:text-[#F3F4F6] disabled:cursor-not-allowed disabled:opacity-40"
+    aria-label={label}
+    title={label}
+  >
+    <Icon size={18} weight="duotone" />
+  </button>
+);
+
 const BracketMatch = ({ match }) => {
   const winner = match.winner_name || "TBD";
   const loser = match.loser_name || "TBD";
@@ -393,6 +486,13 @@ const BracketPlayer = ({ name, tone }) => {
       </span>
     </div>
   );
+};
+
+const getTouchDistance = (touches) => {
+  const [first, second] = touches;
+  const deltaX = first.clientX - second.clientX;
+  const deltaY = first.clientY - second.clientY;
+  return Math.hypot(deltaX, deltaY);
 };
 
 const buildBracketSections = (matches) => {

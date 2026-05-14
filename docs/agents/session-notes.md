@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - P2/P3 bracket pinch zoom
+
+- Re-read backlog, docs, and live GitHub issue labels after the light mode slice.
+- Selected open GitHub P2 issue #51, "Pinch-zoom bracket view", matching the backlog static UX bracket item.
+- Added tournament bracket zoom controls for zoom in, zoom out, and reset.
+- Added wheel zoom with Ctrl/Meta and two-finger pinch handling inside the bracket viewport.
+- Kept the change client-only and static-first with no cache, backend, auth, admin, chat, or Challonge browser calls.
+
 ## 2026-05-14 - P2 light mode toggle
 
 - Re-read backlog, docs, and live GitHub issue labels after the JFL title fix.
