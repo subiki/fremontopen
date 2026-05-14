@@ -6,6 +6,7 @@ import {
   Ranking,
   Target,
   Scales,
+  Info,
 } from "@phosphor-icons/react";
 
 const baseLinks = [
@@ -14,6 +15,7 @@ const baseLinks = [
   { to: "/players", label: "Players", icon: Users, testid: "nav-players" },
   { to: "/leaderboard", label: "Leaderboard", icon: Ranking, testid: "nav-leaderboard" },
   { to: "/compare", label: "Compare", icon: Scales, testid: "nav-compare" },
+  { to: "/info", label: "Info", icon: Info, testid: "nav-info" },
 ];
 
 export const Sidebar = () => {
@@ -63,7 +65,7 @@ export const Sidebar = () => {
         className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-[#273041] bg-[#0B0E14]/95 backdrop-blur-xl px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
         data-testid="mobile-bottom-nav"
       >
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-6 gap-1">
         {baseLinks.map((l) => (
           <NavLink
             key={l.to}
@@ -71,7 +73,7 @@ export const Sidebar = () => {
             end={l.to === "/"}
             data-testid={`mobile-${l.testid}`}
             className={({ isActive }) =>
-              `min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-[11px] transition-colors ${
+              `min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-[10px] transition-colors ${
                 isActive
                   ? "bg-[#10B981]/10 text-[#10B981]"
                   : "text-[#9CA3AF] hover:bg-[#141923] hover:text-[#F3F4F6]"

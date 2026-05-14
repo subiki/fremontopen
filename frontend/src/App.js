@@ -12,6 +12,7 @@ import PlayerDetail from "./pages/PlayerDetail";
 import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
 import StatRankings from "./pages/StatRankings";
+import Info from "./pages/Info";
 
 function App() {
   useEffect(() => {
@@ -32,6 +33,7 @@ function App() {
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
+            <Route path="/info" element={<Info />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

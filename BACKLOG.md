@@ -57,6 +57,8 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Season standings chart for latest seasonal player records
 - [x] Tournament cash measurement with $10 entries and rounded prize payouts
 - [x] Head-to-head ELO odds promoted into compare payloads and UI
+- [x] Info page with latest bracket, GitHub, Discord, schedule, and tournament details
+- [x] Fargo monthly refresh plan for authorized sources, overrides, and review reports
 
 ## Removed From Demo Scope
 
@@ -83,6 +85,7 @@ These were intentionally removed for the shared-hosting demo. They can return la
 |---|---|---|---|
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
 | 2.7 | P1 | S | **Manual overrides file** - local JSON/YAML for Fargo, nicknames, hidden tournaments, and notes |
+| 2.8 | P1 | M | **Monthly Fargo refresh** - authorized source or local override workflow with rate limits, reports, and manual review |
 
 ## EPIC 3 - Player Stats And Rankings
 
@@ -161,7 +164,7 @@ These are deferred until the app has a backend again.
 2. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
 3. **3.7 Strength of schedule** - use opponent win rate or rating to contextualize records.
 4. **8.4 Keyboard shortcuts** - add quick navigation for repeated desktop use.
-5. **2.7 Manual overrides file** - centralize Fargo, nicknames, hidden tournaments, and notes.
+5. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with review reports.
 6. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
 7. **6.3 Player form chart** - show rolling last-10 match win rate.
 8. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
