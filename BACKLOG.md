@@ -86,6 +86,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Configurable season points system for weekly standings
 - [x] H2H heatmap matrix across top active players
 - [x] Tournament title totals unified with placement-based first-place logic
+- [x] Light mode toggle with persistent local preference
 
 ## Removed From Demo Scope
 
@@ -128,7 +129,6 @@ All current compare/rivalry/story items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 6.5 | P2 | S | **Light mode toggle** |
 | 6.6 | P3 | M | **Player photo/card art** from local static assets |
 
 ## EPIC 7 - Seasons And League Standings

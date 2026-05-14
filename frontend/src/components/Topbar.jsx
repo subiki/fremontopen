@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
+import { CheckCircle, Moon, Sun, WarningCircle } from "@phosphor-icons/react";
 import { fetchSyncStatus } from "../lib/api";
 import { SearchBar } from "./SearchBar";
+import { getTheme, onThemeChange, toggleTheme } from "../lib/theme";
 
 const formatRelative = (iso) => {
   if (!iso) return "no data yet";
@@ -17,6 +18,7 @@ const formatRelative = (iso) => {
 
 export const Topbar = ({ title, subtitle, actions }) => {
   const [status, setStatus] = useState(null);
+  const [theme, setTheme] = useState(getTheme());
 
   useEffect(() => {
     let alive = true;
@@ -35,6 +37,8 @@ export const Topbar = ({ title, subtitle, actions }) => {
       clearInterval(t);
     };
   }, []);
+
+  useEffect(() => onThemeChange(setTheme), []);
 
   const ok = status?.status === "ok";
   const err = status?.status === "error";
@@ -60,6 +64,16 @@ export const Topbar = ({ title, subtitle, actions }) => {
             <SearchBar />
           </div>
           {actions}
+          <button
+            type="button"
+            onClick={() => setTheme(toggleTheme())}
+            className="w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            data-testid="theme-toggle"
+          >
+            {theme === "dark" ? <Sun size={18} weight="duotone" /> : <Moon size={18} weight="duotone" />}
+          </button>
           <div
             className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-md bg-[#141923] border border-[#273041] text-xs"
             data-testid="sync-status"

@@ -18,6 +18,20 @@
     --loss: #EF4444;
 }
 
+[data-theme="light"] {
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #EEF2F6;
+    --border: #D7DEE8;
+    --primary: #047857;
+    --primary-hover: #065F46;
+    --secondary: #B45309;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #6B7280;
+    --loss: #B91C1C;
+}
+
 html, body, #root {
     background-color: var(--bg);
     color: var(--text-primary);
@@ -62,6 +76,28 @@ h1, h2, h3, h4, h5, h6 {
         --input: 222 22% 20%;
         --ring: 160 84% 39%;
         --radius: 0.5rem;
+    }
+
+    [data-theme="light"] {
+        --background: 210 20% 97%;
+        --foreground: 220 39% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 220 39% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 220 39% 11%;
+        --primary: 158 64% 30%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 214 32% 91%;
+        --secondary-foreground: 220 39% 11%;
+        --muted: 214 32% 91%;
+        --muted-foreground: 220 9% 46%;
+        --accent: 214 32% 91%;
+        --accent-foreground: 220 39% 11%;
+        --destructive: 0 74% 42%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 214 24% 88%;
+        --input: 214 24% 88%;
+        --ring: 158 64% 30%;
     }
 }
 
@@ -109,4 +145,77 @@ h1, h2, h3, h4, h5, h6 {
     background-image:
         radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.04), transparent 40%),
         radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.03), transparent 40%);
+}
+
+[data-theme="light"] .felt-grain {
+    background-image:
+        radial-gradient(circle at 15% 20%, rgba(4, 120, 87, 0.06), transparent 36%),
+        radial-gradient(circle at 85% 75%, rgba(180, 83, 9, 0.05), transparent 34%);
+}
+
+@layer utilities {
+    [data-theme="light"] .bg-\[\#0B0E14\],
+    [data-theme="light"] .bg-\[\#10151F\],
+    [data-theme="light"] .bg-\[\#141923\] {
+        background-color: var(--surface) !important;
+    }
+
+    [data-theme="light"] .bg-\[\#0B0E14\]\/80,
+    [data-theme="light"] .bg-\[\#0B0E14\]\/95 {
+        background-color: rgba(247, 248, 250, 0.92) !important;
+    }
+
+    [data-theme="light"] .bg-\[\#1E2532\],
+    [data-theme="light"] .hover\:bg-\[\#1E2532\]\/50:hover,
+    [data-theme="light"] .hover\:bg-\[\#1E2532\]\/60:hover,
+    [data-theme="light"] .hover\:bg-\[\#141923\]:hover {
+        background-color: var(--surface-2) !important;
+    }
+
+    [data-theme="light"] .border-\[\#273041\],
+    [data-theme="light"] .border-\[\#273041\]\/60,
+    [data-theme="light"] .border-\[\#273041\]\/70 {
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="light"] .divide-\[\#273041\]\/60 > :not([hidden]) ~ :not([hidden]) {
+        border-color: rgba(215, 222, 232, 0.85) !important;
+    }
+
+    [data-theme="light"] .text-\[\#F3F4F6\],
+    [data-theme="light"] .hover\:text-\[\#F3F4F6\]:hover {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="light"] .text-\[\#CBD5E1\],
+    [data-theme="light"] .text-\[\#9CA3AF\],
+    [data-theme="light"] .hover\:text-\[\#9CA3AF\]:hover {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="light"] .text-\[\#6B7280\],
+    [data-theme="light"] .placeholder-\[\#6B7280\]::placeholder {
+        color: var(--text-muted) !important;
+    }
+
+    [data-theme="light"] .text-\[\#10B981\],
+    [data-theme="light"] .hover\:text-\[\#10B981\]:hover {
+        color: var(--primary) !important;
+    }
+
+    [data-theme="light"] .text-\[\#F59E0B\] {
+        color: var(--secondary) !important;
+    }
+
+    [data-theme="light"] .text-\[\#EF4444\] {
+        color: var(--loss) !important;
+    }
+
+    [data-theme="light"] .bg-\[\#273041\] {
+        background-color: var(--border) !important;
+    }
+
+    [data-theme="light"] .bg-black\/60 {
+        background-color: rgba(17, 24, 39, 0.35) !important;
+    }
 }

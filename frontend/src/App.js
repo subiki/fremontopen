@@ -1,10 +1,11 @@
 import "@/App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/Layout";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { initFollowSync } from "./lib/follow";
+import { getTheme, initTheme, onThemeChange } from "./lib/theme";
 import Dashboard from "./pages/Dashboard";
 import Tournaments from "./pages/Tournaments";
 import TournamentDetail from "./pages/TournamentDetail";
@@ -18,8 +19,12 @@ import Info from "./pages/Info";
 import NotFound from "./pages/NotFound";
 
 function App() {
+  const [theme, setTheme] = useState(getTheme());
+
   useEffect(() => {
+    setTheme(initTheme());
     initFollowSync();
+    return onThemeChange(setTheme);
   }, []);
 
   return (
@@ -44,13 +49,13 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster
-        theme="dark"
+        theme={theme}
         position="top-right"
         toastOptions={{
           style: {
-            background: "#141923",
-            border: "1px solid #273041",
-            color: "#F3F4F6",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            color: "var(--text-primary)",
           },
         }}
       />

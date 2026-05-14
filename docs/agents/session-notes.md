@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - P2 light mode toggle
+
+- Re-read backlog, docs, and live GitHub issue labels after the JFL title fix.
+- Confirmed no open P0 issues and selected P2 issue #39, "Light mode toggle", as the next non-stale backlog item.
+- Added a topbar theme toggle with a localStorage-backed preference and document-level theme attribute.
+- Added light-theme CSS variable values and scoped overrides for existing static color utility classes without changing the deployment model.
+- Kept the feature static-first: no runtime backend, server writes, Challonge browser calls, auth, admin, or chat systems.
+
 ## 2026-05-14 - JFL placement-derived titles
 
 - Picked up the prepared JFL analytics bug after GitHub issue creation failed due to integration write permissions.
