@@ -159,6 +159,22 @@ Use `--dry-run` first to produce `backend/fargo_refresh_report.json` without
 writing `player_overrides.json`. The importer does not bypass logins, captchas,
 robots.txt, or anti-bot controls; use an export or URL you are allowed to query.
 
+## Season Points
+
+Season standings use `backend/season_points.json`:
+
+```json
+{
+  "win_points": 3,
+  "loss_points": 1,
+  "title_bonus": 0,
+  "attendance_bonus": 0
+}
+```
+
+After changing the scoring values, run `backend/export_static.py` or
+`scripts/refresh-static-data.ps1 -SkipSync` to rebuild the static cache.
+
 ## Local Validation Report
 
 Generate a local data-quality report before publishing refreshed cache data:

@@ -10,6 +10,7 @@ from export_static import (
     _duration_minutes,
     _infer_tournament_placements,
     _is_qualified_player,
+    _load_season_points,
     _match_elo_odds,
     _normalized_duration_minutes,
     _recent_activity_summary,
@@ -45,6 +46,17 @@ def test_normalized_duration_excludes_likely_left_open_tournaments():
 def test_qualified_player_requires_minimum_matches():
     assert _is_qualified_player({"wins": 6, "losses": 4})
     assert not _is_qualified_player({"wins": 5, "losses": 4})
+
+
+def test_load_season_points_overrides_defaults(tmp_path):
+    path = tmp_path / "season_points.json"
+    path.write_text('{"win_points": 5, "loss_points": 0}', encoding="utf-8")
+
+    config = _load_season_points(path)
+
+    assert config["win_points"] == 5
+    assert config["loss_points"] == 0
+    assert config["title_bonus"] == 0
 
 
 def test_tournament_prize_payouts_round_to_five_and_award_whole_pot():
@@ -187,10 +199,15 @@ def test_season_standings_group_matches_by_tournament_date():
         {**match(1, "B", "A"), "tournament_id": 2},
     ]
 
-    seasons = _season_standings(tournaments, matches)
+    seasons = _season_standings(
+        tournaments,
+        matches,
+        {"win_points": 3, "loss_points": 1, "title_bonus": 0, "attendance_bonus": 0},
+    )
 
     assert [season["season"] for season in seasons] == ["2026 Summer", "2026 Spring"]
     assert seasons[1]["matches"] == 2
     assert seasons[1]["tournaments"] == 1
     assert seasons[1]["players"][0]["player"] == "A"
     assert seasons[1]["players"][0]["wins"] == 2
+    assert seasons[1]["players"][0]["points"] == 6

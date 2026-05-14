@@ -190,7 +190,7 @@ export default function Dashboard() {
               </h2>
               <div className="mt-1 text-sm text-[#9CA3AF]">
                 {latestSeason
-                  ? `${latestSeason.season} - ${latestSeason.matches} matches across ${latestSeason.tournaments} tournaments`
+                  ? `${latestSeason.season} - ${seasonScoringLabel(latestSeason.points_config)}`
                   : "No season data yet"}
               </div>
               <div className="mt-4 space-y-2">
@@ -518,16 +518,22 @@ const SeasonStandingsChart = ({ season }) => {
               color: "#F3F4F6",
             }}
             formatter={(value, name, row) => {
+              if (name === "points") return [`${value} points`, row.payload.player];
               if (name === "wins") return [`${value} wins`, row.payload.player];
               return [`${value} losses`, row.payload.player];
             }}
           />
-          <Bar dataKey="wins" fill="#10B981" radius={[4, 4, 0, 0]} name="wins" />
-          <Bar dataKey="losses" fill="#EF4444" radius={[4, 4, 0, 0]} name="losses" />
+          <Bar dataKey="points" fill="#10B981" radius={[4, 4, 0, 0]} name="points" />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
+};
+
+const seasonScoringLabel = (config = {}) => {
+  const win = config.win_points ?? 3;
+  const loss = config.loss_points ?? 1;
+  return `${win} pts per win, ${loss} per loss`;
 };
 
 const shortName = (value = "") => {

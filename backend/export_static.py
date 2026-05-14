@@ -31,6 +31,12 @@ DEFAULT_OUT = PROJECT_ROOT / "frontend" / "public" / "data" / "cache.json"
 MAX_NORMAL_TOURNAMENT_DURATION_MINUTES = 12 * 60
 DEFAULT_RANKING_MIN_MATCHES = 10
 ENTRY_FEE_DOLLARS = 10
+DEFAULT_SEASON_POINTS = {
+    "win_points": 3,
+    "loss_points": 1,
+    "title_bonus": 0,
+    "attendance_bonus": 0,
+}
 
 
 def _row_to_dict(row) -> Dict[str, Any]:
@@ -41,6 +47,19 @@ def _json_default(value):
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value
+
+
+def _load_season_points(path: Path | None = None) -> Dict[str, int]:
+    config_path = path or (ROOT_DIR / "season_points.json")
+    values = dict(DEFAULT_SEASON_POINTS)
+    if config_path.exists():
+        raw = json.loads(config_path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("season points config must be a JSON object")
+        for key in values:
+            if key in raw:
+                values[key] = int(raw[key])
+    return values
 
 
 def _parse_dt(value: Optional[str]):
@@ -401,7 +420,9 @@ def _season_for_date(value: Optional[str]) -> Optional[Dict[str, Any]]:
 def _season_standings(
     tournaments: List[Dict[str, Any]],
     matches: List[Dict[str, Any]],
+    points_config: Optional[Dict[str, int]] = None,
 ) -> List[Dict[str, Any]]:
+    scoring = points_config or DEFAULT_SEASON_POINTS
     tournament_dates = {
         tournament.get("id"): tournament.get("started_at") or tournament.get("completed_at")
         for tournament in tournaments
@@ -446,11 +467,16 @@ def _season_standings(
                 **player,
                 "matches": total,
                 "win_rate": round((player["wins"] / total) * 100, 1) if total else 0.0,
+                "points": (
+                    player["wins"] * scoring["win_points"]
+                    + player["losses"] * scoring["loss_points"]
+                ),
             })
-        players.sort(key=lambda row: (-row["wins"], -row["win_rate"], row["losses"], row["player"].casefold()))
+        players.sort(key=lambda row: (-row["points"], -row["wins"], -row["win_rate"], row["losses"], row["player"].casefold()))
         rows.append({
             "season": bucket["season"],
             "season_key": bucket["season_key"],
+            "points_config": scoring,
             "_sort": bucket["sort"],
             "matches": bucket["matches"],
             "tournaments": len(bucket["tournament_ids"]),
@@ -494,6 +520,7 @@ async def build_cache() -> Dict[str, Any]:
         matches = [_row_to_dict(r) for r in match_rows]
         players = [_row_to_dict(r) for r in player_rows]
         player_overrides = load_player_overrides()
+        season_points = _load_season_points()
 
         for p in players:
             apply_player_overrides(p, player_overrides)
@@ -755,7 +782,7 @@ async def build_cache() -> Dict[str, Any]:
         sync_status = last_sync or {"status": "never_synced"}
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
-        season_standings = _season_standings(tournaments, matches)
+        season_standings = _season_standings(tournaments, matches, season_points)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),

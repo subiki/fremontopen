@@ -63,6 +63,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Rivalry of the week dashboard card from the closest high-volume matchup
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
+- [x] Configurable season points system for weekly standings
 
 ## Removed From Demo Scope
 
@@ -130,7 +131,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 | # | P | Effort | Item |
 |---|---|---|---|
 | 7.1 | P1 | M | **Season groupings** like "2026 Spring" with cumulative standings |
-| 7.2 | P1 | S | **Configurable points system** for weekly league standings |
 | 7.3 | P2 | S | **Attendance tracker** by season |
 | 7.4 | P2 | S | **Prize pool tracking** from local overrides/import file |
 | 7.5 | P3 | M | **Multi-event support** for other tournaments beyond Fremont Open |
@@ -160,14 +160,13 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **7.2 Configurable points system** - make weekly standings scoring adjustable.
-2. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-3. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with reports.
-4. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
-5. **6.3 Player form chart** - show rolling last-10 match win rate.
-6. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-7. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-8. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+2. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with reports.
+3. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
+4. **6.3 Player form chart** - show rolling last-10 match win rate.
+5. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+6. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+7. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 
