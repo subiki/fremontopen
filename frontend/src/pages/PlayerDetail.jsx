@@ -7,6 +7,7 @@ import { EloRatingChart } from "../components/charts/EloRatingChart";
 import { FargoEditor } from "../components/FargoEditor";
 import { fetchPlayer, fetchLeaderboard, api } from "../lib/api";
 import { isFollowing, toggleFollow, onFollowingChange } from "../lib/follow";
+import { rankingPath } from "./StatRankings";
 import { toast } from "sonner";
 import {
   CaretLeft,
@@ -194,15 +195,16 @@ export default function PlayerDetail() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
-              <StatCard label="Wins" value={p.wins} accent="text-[#10B981]" icon={Trophy} testid="pd-wins" />
-              <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" />
-              <StatCard label="Total" value={p.wins + p.losses} testid="pd-total" />
-              <StatCard label="Win Rate" value={`${p.win_rate}%`} accent="text-[#10B981]" testid="pd-win-rate" />
+              <StatCard label="Wins" value={p.wins} accent="text-[#10B981]" icon={Trophy} testid="pd-wins" to={rankingPath("wins")} />
+              <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" to={rankingPath("losses")} />
+              <StatCard label="Total" value={p.wins + p.losses} testid="pd-total" to={rankingPath("total_matches")} />
+              <StatCard label="Win Rate" value={`${p.win_rate}%`} accent="text-[#10B981]" testid="pd-win-rate" to={rankingPath("win_rate")} />
               <StatCard
                 label="Tournaments"
                 value={attendance.tournaments_played ?? p.tournaments_played ?? 0}
                 icon={Trophy}
                 testid="pd-tournaments-played"
+                to={rankingPath("tournaments_played")}
               />
               <StatCard
                 label="Attend. Streak"
@@ -210,6 +212,7 @@ export default function PlayerDetail() {
                 accent="text-[#10B981]"
                 icon={Fire}
                 testid="pd-attendance-streak"
+                to={rankingPath("attendance_streak")}
               />
               <StatCard
                 label="ELO"
@@ -217,6 +220,7 @@ export default function PlayerDetail() {
                 accent="text-[#F59E0B]"
                 icon={TrendUp}
                 testid="pd-elo-rating"
+                to={rankingPath("elo_rating")}
               />
               <StatCard
                 label="ELO Peak"
@@ -224,6 +228,7 @@ export default function PlayerDetail() {
                 accent="text-[#F59E0B]"
                 icon={Fire}
                 testid="pd-elo-peak"
+                to={rankingPath("elo_peak")}
               />
               <StatCard
                 label="Avg Place"
@@ -231,6 +236,7 @@ export default function PlayerDetail() {
                 accent="text-[#F59E0B]"
                 icon={Medal}
                 testid="pd-average-placement"
+                to={rankingPath("average_placement")}
               />
               <StatCard
                 label="Cash Won"
@@ -238,6 +244,7 @@ export default function PlayerDetail() {
                 accent="text-[#F59E0B]"
                 icon={Medal}
                 testid="pd-cash-won"
+                to={rankingPath("cash_won")}
               />
               <StatCard
                 label="1st Place"
@@ -245,30 +252,35 @@ export default function PlayerDetail() {
                 accent="text-[#F59E0B]"
                 icon={Trophy}
                 testid="pd-first-place"
+                to={rankingPath("top_1_finishes")}
               />
               <StatCard
                 label="2nd Place"
                 value={topFinishes.second ?? "—"}
                 icon={Medal}
                 testid="pd-second-place"
+                to={rankingPath("second_place_finishes")}
               />
               <StatCard
                 label="3rd Place"
                 value={topFinishes.third ?? "—"}
                 icon={Medal}
                 testid="pd-third-place"
+                to={rankingPath("third_place_finishes")}
               />
               <StatCard
                 label="4th Place"
                 value={topFinishes.fourth ?? "—"}
                 icon={Medal}
                 testid="pd-fourth-place"
+                to={rankingPath("fourth_place_finishes")}
               />
               <StatCard
                 label="Top 4 Total"
                 value={topFinishes.top_4 ?? "—"}
                 icon={Medal}
                 testid="pd-top-four"
+                to={rankingPath("top_4_finishes")}
               />
             </div>
 
@@ -287,12 +299,12 @@ export default function PlayerDetail() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  <PlacementStat label="Avg" value={placements.average} />
-                  <PlacementStat label="1st" value={topFinishes.first} />
-                  <PlacementStat label="2nd" value={topFinishes.second} />
-                  <PlacementStat label="3rd" value={topFinishes.third} />
-                  <PlacementStat label="4th" value={topFinishes.fourth} />
-                  <PlacementStat label="Top 4" value={topFinishes.top_4} />
+                  <PlacementStat label="Avg" value={placements.average} to={rankingPath("average_placement")} />
+                  <PlacementStat label="1st" value={topFinishes.first} to={rankingPath("top_1_finishes")} />
+                  <PlacementStat label="2nd" value={topFinishes.second} to={rankingPath("second_place_finishes")} />
+                  <PlacementStat label="3rd" value={topFinishes.third} to={rankingPath("third_place_finishes")} />
+                  <PlacementStat label="4th" value={topFinishes.fourth} to={rankingPath("fourth_place_finishes")} />
+                  <PlacementStat label="Top 4" value={topFinishes.top_4} to={rankingPath("top_4_finishes")} />
                 </div>
               )}
             </section>
@@ -470,16 +482,26 @@ const RivalryCard = ({
   </section>
 );
 
-const PlacementStat = ({ label, value }) => (
-  <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3">
+const PlacementStat = ({ label, value, to }) => {
+  const content = (
+    <>
     <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
       {label}
     </div>
     <div className="mt-2 font-mono text-2xl font-semibold text-[#F3F4F6]">
       {value ?? "—"}
     </div>
-  </div>
-);
+    </>
+  );
+  const className = "bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 hover:border-[#10B981]/40 transition-colors";
+  return to ? (
+    <Link to={to} className={className} title={`View ${label} rankings`}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>{content}</div>
+  );
+};
 
 const MatchOdds = ({ odds }) => {
   if (!odds) return null;

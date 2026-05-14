@@ -1,9 +1,9 @@
-export const StatCard = ({ label, value, accent, icon: Icon, testid }) => {
-  return (
-    <div
-      className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6 hover:border-[#10B981]/40 transition-all duration-300 hover:-translate-y-0.5"
-      data-testid={testid}
-    >
+import { Link } from "react-router-dom";
+
+export const StatCard = ({ label, value, accent, icon: Icon, testid, to }) => {
+  const className =
+    "bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6 hover:border-[#10B981]/40 transition-all duration-300 hover:-translate-y-0.5";
+  const content = (
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6B7280]">
@@ -23,6 +23,19 @@ export const StatCard = ({ label, value, accent, icon: Icon, testid }) => {
           </div>
         ) : null}
       </div>
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className={`${className} block`} data-testid={testid} title={`View ${label} rankings`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={className} data-testid={testid}>
+      {content}
     </div>
   );
 };
