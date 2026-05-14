@@ -104,3 +104,9 @@
 - Added per-season unique tournament attendance counts for each player.
 - Added season attendance leader rows to the Seasons page.
 - Kept the data derived from cached matches and tournament IDs only.
+
+## 2026-05-14 - P2 anniversary stats
+
+- Added dashboard anniversary stats from cached completed matches.
+- Uses the latest cached match as reference and shows nearby matches from the same week last year.
+- Falls back to recent previous-season matches when no one-year window exists.

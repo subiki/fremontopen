@@ -60,6 +60,7 @@ export default function Dashboard() {
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const rivalryIndex = stats?.rivalry_index || [];
   const upsetTracker = stats?.upset_tracker || [];
+  const anniversary = stats?.anniversary_matches || {};
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
@@ -363,6 +364,29 @@ export default function Dashboard() {
                 </div>
                 <span className="font-mono text-xs text-[#F59E0B] shrink-0">
                   {row.winner_probability}% odds
+                </span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title={anniversary.mode === "previous_season" ? "Previous Season" : "On This Week"}
+            rows={anniversary.matches || []}
+            empty="No anniversary matches yet."
+            renderRow={(row) => (
+              <>
+                <div className="min-w-0">
+                  <Link
+                    to={`/players/${encodeURIComponent(row.winner)}`}
+                    className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                  >
+                    {row.winner}
+                  </Link>
+                  <div className="mt-1 text-[11px] text-[#6B7280] truncate">
+                    def. {row.loser}
+                  </div>
+                </div>
+                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
+                  {formatDateTime(row.date)}
                 </span>
               </>
             )}

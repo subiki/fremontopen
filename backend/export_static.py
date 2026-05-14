@@ -7,7 +7,7 @@ import argparse
 import asyncio
 import json
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -326,6 +326,71 @@ def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[
         })
     rows.sort(key=lambda row: (-row["favorite_probability"], -row["rating_gap"], str(row.get("date") or "")))
     return rows[:limit]
+
+
+def _anniversary_matches(matches: List[Dict[str, Any]], window_days: int = 21, limit: int = 8) -> Dict[str, Any]:
+    completed = []
+    for match in matches:
+        if match.get("state") != "complete" or not match.get("winner_name") or not match.get("loser_name"):
+            continue
+        completed_at = _parse_dt(match.get("completed_at"))
+        if completed_at:
+            completed.append((match, completed_at))
+    if not completed:
+        return {"mode": "empty", "target_date": None, "window_days": window_days, "matches": []}
+
+    latest = max(dt for _, dt in completed)
+    try:
+        target = latest.replace(year=latest.year - 1)
+    except ValueError:
+        target = latest - timedelta(days=365)
+
+    rows = []
+    for match, completed_at in completed:
+        days_from_target = abs((completed_at.date() - target.date()).days)
+        if days_from_target <= window_days:
+            rows.append(_anniversary_match_row(match, completed_at, days_from_target))
+    mode = "anniversary"
+
+    if not rows:
+        current_season = _season_for_date(latest.isoformat())
+        previous = [
+            (match, completed_at)
+            for match, completed_at in completed
+            if _season_for_date(completed_at.isoformat())
+            and current_season
+            and _season_for_date(completed_at.isoformat())["sort"] < current_season["sort"]
+        ]
+        previous.sort(key=lambda item: item[1], reverse=True)
+        rows = [
+            _anniversary_match_row(match, completed_at, None)
+            for match, completed_at in previous[:limit]
+        ]
+        mode = "previous_season"
+    else:
+        rows.sort(key=lambda row: (row["days_from_target"], row["date"] or ""))
+        rows = rows[:limit]
+
+    return {
+        "mode": mode,
+        "target_date": target.date().isoformat(),
+        "window_days": window_days,
+        "matches": rows,
+    }
+
+
+def _anniversary_match_row(match: Dict[str, Any], completed_at: datetime, days_from_target: Optional[int]) -> Dict[str, Any]:
+    return {
+        "match_id": match.get("id"),
+        "tournament_id": match.get("tournament_id"),
+        "tournament_name": match.get("tournament_name"),
+        "date": completed_at.isoformat(),
+        "days_from_target": days_from_target,
+        "winner": match.get("winner_name"),
+        "loser": match.get("loser_name"),
+        "scores": match.get("scores"),
+        "game": match.get("tournament_game"),
+    }
 
 
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
@@ -1093,6 +1158,7 @@ async def build_cache() -> Dict[str, Any]:
         closest_rivalry = _closest_rivalry(matches)
         rivalry_index = _rivalry_index(matches)
         upset_tracker = _upset_tracker(matches)
+        anniversary = _anniversary_matches(matches)
         season_standings = _season_standings(tournaments, matches, season_points)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
@@ -1142,6 +1208,7 @@ async def build_cache() -> Dict[str, Any]:
             "season_standings": season_standings,
             "rivalry_index": rivalry_index,
             "upset_tracker": upset_tracker,
+            "anniversary_matches": anniversary,
             "players": players,
             "recent_matches": [
                 m for m in matches

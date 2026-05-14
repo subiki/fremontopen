@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from players_extras import compute_elo_ratings, rolling_match_form
 from import_side_matches import load_side_match_rows
 from export_static import (
+    _anniversary_matches,
     _closest_rivalry,
     _attendance_stats,
     _cinderella_runs,
@@ -245,6 +246,32 @@ def test_upset_tracker_ranks_biggest_underdog_wins():
     assert [row["winner"] for row in upsets] == ["A", "C"]
     assert upsets[0]["favorite_probability"] == 80.0
     assert upsets[0]["tournament_name"] == "Ten"
+
+
+def test_anniversary_matches_find_prior_year_window():
+    rows = [
+        {**match(1, "A", "B", "2025-05-10T17:00:00-07:00"), "tournament_name": "Last Year"},
+        {**match(2, "C", "D", "2026-05-09T17:00:00-07:00"), "tournament_name": "Latest"},
+    ]
+
+    anniversary = _anniversary_matches(rows, window_days=3)
+
+    assert anniversary["mode"] == "anniversary"
+    assert anniversary["target_date"] == "2025-05-09"
+    assert anniversary["matches"][0]["winner"] == "A"
+    assert anniversary["matches"][0]["days_from_target"] == 1
+
+
+def test_anniversary_matches_fallback_to_previous_season():
+    rows = [
+        {**match(1, "A", "B", "2026-01-10T17:00:00-07:00"), "tournament_name": "Winter"},
+        {**match(2, "C", "D", "2026-05-09T17:00:00-07:00"), "tournament_name": "Spring"},
+    ]
+
+    anniversary = _anniversary_matches(rows, window_days=3)
+
+    assert anniversary["mode"] == "previous_season"
+    assert anniversary["matches"][0]["tournament_name"] == "Winter"
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

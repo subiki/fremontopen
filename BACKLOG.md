@@ -78,6 +78,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Cinderella runs from tournament ELO underdog wins
 - [x] Upset tracker for rating-underdog wins
 - [x] Attendance tracker by season
+- [x] Anniversary stats for matches near this week last year or previous season
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -120,7 +121,6 @@ All current data-quality items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 5.4 | P2 | M | **H2H heatmap matrix** across all players |
-| 5.6 | P2 | S | **Anniversary stats** - notable matches from one year ago / last season |
 
 ## EPIC 6 - Charts And Visual Polish
 
@@ -160,8 +160,7 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **5.6 Anniversary stats** - notable matches from one year ago / last season.
-2. **7.4 Prize pool tracking** - allow local overrides/imports for payout assumptions.
+1. **7.4 Prize pool tracking** - allow local overrides/imports for payout assumptions.
 
 ---
 
