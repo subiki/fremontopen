@@ -8,6 +8,7 @@ from import_side_matches import load_side_match_rows
 from export_static import (
     _closest_rivalry,
     _attendance_stats,
+    _cinderella_runs,
     _duration_baselines,
     _duration_minutes,
     _infer_tournament_placements,
@@ -162,6 +163,45 @@ def test_match_elo_odds_compares_two_players():
     assert odds["loser_rating"] == 1500
     assert odds["favorite"] == "A"
     assert odds["winner_probability"] > 50
+
+
+def test_cinderella_runs_rank_underdog_paths():
+    rows = [
+        {
+            **match(1, "Underdog", "Favorite"),
+            "elo_odds": {
+                "favorite": "Favorite",
+                "winner_probability": 25.0,
+                "loser_probability": 75.0,
+                "rating_gap": -180,
+            },
+        },
+        {
+            **match(2, "Underdog", "Other Favorite"),
+            "elo_odds": {
+                "favorite": "Other Favorite",
+                "winner_probability": 40.0,
+                "loser_probability": 60.0,
+                "rating_gap": -90,
+            },
+        },
+        {
+            **match(3, "Favorite", "Underdog"),
+            "elo_odds": {
+                "favorite": "Favorite",
+                "winner_probability": 70.0,
+                "loser_probability": 30.0,
+                "rating_gap": 140,
+            },
+        },
+    ]
+
+    runs = _cinderella_runs(rows)
+
+    assert runs[0]["player"] == "Underdog"
+    assert runs[0]["upset_count"] == 2
+    assert runs[0]["upset_score"] == 135.0
+    assert runs[0]["biggest_upset"]["opponent"] == "Favorite"
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

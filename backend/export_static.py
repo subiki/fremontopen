@@ -257,6 +257,48 @@ def _match_elo_odds(match: Dict[str, Any], elo: Dict[str, Any]) -> Optional[Dict
     }
 
 
+def _cinderella_runs(matches: List[Dict[str, Any]], limit: int = 3) -> List[Dict[str, Any]]:
+    runs: Dict[str, Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        odds = match.get("elo_odds") or {}
+        if not winner or not loser or odds.get("favorite") == winner:
+            continue
+        winner_probability = odds.get("winner_probability")
+        favorite_probability = odds.get("loser_probability")
+        if winner_probability is None or favorite_probability is None:
+            continue
+        row = runs.setdefault(winner, {
+            "player": winner,
+            "upset_count": 0,
+            "upset_score": 0.0,
+            "biggest_upset": None,
+            "matches": [],
+        })
+        upset = {
+            "match_id": match.get("id"),
+            "round": match.get("round"),
+            "opponent": loser,
+            "scores": match.get("scores"),
+            "winner_probability": winner_probability,
+            "favorite_probability": favorite_probability,
+            "rating_gap": abs(odds.get("rating_gap") or 0),
+        }
+        row["upset_count"] += 1
+        row["upset_score"] = round(row["upset_score"] + favorite_probability, 1)
+        row["matches"].append(upset)
+        if not row["biggest_upset"] or favorite_probability > row["biggest_upset"]["favorite_probability"]:
+            row["biggest_upset"] = upset
+
+    out = []
+    for row in runs.values():
+        row["matches"].sort(key=lambda match: (match.get("round") or 0, str(match.get("match_id") or "")))
+        out.append(row)
+    out.sort(key=lambda row: (-row["upset_score"], -row["upset_count"], row["player"].casefold()))
+    return out[:limit]
+
+
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
     return ((player.get("wins") or 0) + (player.get("losses") or 0)) >= minimum_matches
 
@@ -789,6 +831,7 @@ async def build_cache() -> Dict[str, Any]:
                     "player_count": player_count,
                     "duration_minutes": normalized_duration,
                 })
+            cinderella_runs = _cinderella_runs(tournament_matches)
             prize_pool = _tournament_prize_payouts(player_count, placements)
             for payout in prize_pool["payouts"]:
                 players_in_place = payout.get("players") or []
@@ -829,6 +872,7 @@ async def build_cache() -> Dict[str, Any]:
                     "normalized_duration_label": _format_duration(normalized_duration),
                     "duration_outlier": tournament["duration_outlier"],
                     "winner": winner,
+                    "cinderella_runs": cinderella_runs,
                     "placements": [
                         {"player": name, "place": place}
                         for name, place in sorted(placements.items(), key=lambda item: (item[1], item[0].casefold()))

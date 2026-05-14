@@ -24,6 +24,7 @@ export default function TournamentDetail() {
   const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const analytics = data?.analytics || {};
   const placements = analytics.placements || [];
+  const cinderellaRuns = analytics.cinderella_runs || [];
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
   const bracketSections = useMemo(() => buildBracketSections(matches), [matches]);
@@ -120,6 +121,22 @@ export default function TournamentDetail() {
                 </div>
               ) : null}
             </section>
+
+            {cinderellaRuns.length ? (
+              <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="cinderella-runs-card">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                    Cinderella Runs
+                  </h2>
+                  <span className="text-xs text-[#6B7280]">ELO underdog wins</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {cinderellaRuns.map((run) => (
+                    <CinderellaCard key={run.player} run={run} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="bracket-visualization">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
@@ -302,6 +319,40 @@ const PlacementCard = ({ row, payout }) => (
       {row.player}
     </Link>
   </li>
+);
+
+const CinderellaCard = ({ run }) => (
+  <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3">
+    <div className="flex items-start justify-between gap-3">
+      <Link
+        to={`/players/${encodeURIComponent(run.player)}`}
+        className="min-w-0 truncate font-medium text-[#F3F4F6] hover:text-[#10B981]"
+      >
+        {run.player}
+      </Link>
+      <div className="shrink-0 rounded border border-[#F59E0B]/20 bg-[#F59E0B]/10 px-2 py-1 font-mono text-xs text-[#F59E0B]">
+        {run.upset_count} upset{run.upset_count === 1 ? "" : "s"}
+      </div>
+    </div>
+    <div className="mt-2 font-mono text-2xl font-semibold text-[#F59E0B]">
+      {Number(run.upset_score || 0).toFixed(1)}
+    </div>
+    {run.biggest_upset ? (
+      <div className="mt-1 text-xs text-[#9CA3AF]">
+        Biggest: beat {run.biggest_upset.opponent} at {run.biggest_upset.winner_probability}% odds
+      </div>
+    ) : null}
+    <div className="mt-3 flex flex-wrap gap-1">
+      {(run.matches || []).slice(0, 4).map((match) => (
+        <span
+          key={match.match_id}
+          className="rounded border border-[#273041] bg-[#141923] px-2 py-1 font-mono text-[10px] text-[#9CA3AF]"
+        >
+          R{match.round ?? "-"} {match.winner_probability}%
+        </span>
+      ))}
+    </div>
+  </div>
 );
 
 const BracketMatch = ({ match }) => {

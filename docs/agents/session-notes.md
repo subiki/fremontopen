@@ -86,3 +86,9 @@
 - Confirmed the local player override schema already accepts `nickname`.
 - Added nickname matching to player/global search.
 - Surfaced nicknames in the player directory and on player profile pages.
+
+## 2026-05-14 - P2 Cinderella runs
+
+- Added tournament-level Cinderella run analytics from cached ELO odds.
+- Ranked players by accumulated underdog-win score per tournament.
+- Surfaced the top Cinderella runs on tournament detail pages above the bracket.
