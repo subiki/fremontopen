@@ -156,7 +156,10 @@ const staticGet = async (path, config = {}) => {
   if (path === "/players") {
     const q = (params.q || "").toLowerCase();
     const players = q
-      ? cache.players.filter((p) => p.name.toLowerCase().includes(q))
+      ? cache.players.filter((p) =>
+          p.name.toLowerCase().includes(q)
+          || (p.nickname || "").toLowerCase().includes(q)
+        )
       : cache.players;
     return { data: players };
   }
@@ -183,9 +186,12 @@ const staticGet = async (path, config = {}) => {
     return {
       data: {
         players: cache.players
-          .filter((p) => p.name.toLowerCase().includes(q))
+          .filter((p) =>
+            p.name.toLowerCase().includes(q)
+            || (p.nickname || "").toLowerCase().includes(q)
+          )
           .slice(0, limit)
-          .map(({ name, wins, losses, fargo }) => ({ name, wins, losses, fargo })),
+          .map(({ name, nickname, wins, losses, fargo }) => ({ name, nickname, wins, losses, fargo })),
         tournaments: cache.tournaments
           .filter((t) => (t.name || "").toLowerCase().includes(q))
           .slice(0, limit)

@@ -204,6 +204,11 @@ export default function PlayerDetail() {
           <MissingPlayer name={decoded} />
         ) : (
           <>
+            {p.nickname ? (
+              <div className="mb-5 inline-flex rounded-md border border-[#273041] bg-[#141923] px-4 py-2 text-sm text-[#F59E0B]">
+                {p.nickname}
+              </div>
+            ) : null}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
               <StatCard label="Wins" value={p.wins} accent="text-[#10B981]" icon={Trophy} testid="pd-wins" to={rankingPath("wins")} />
               <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" to={rankingPath("losses")} />

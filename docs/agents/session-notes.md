@@ -80,3 +80,9 @@
 - Continued to the next active backlog P2 item after stale JFL/P1 issue review.
 - Added weighted strength-of-schedule stats from opponents' win rates and ELO ratings.
 - Surfaced schedule strength on player profiles, stat rankings, and leaderboard sorting.
+
+## 2026-05-14 - P2 player nicknames
+
+- Confirmed the local player override schema already accepts `nickname`.
+- Added nickname matching to player/global search.
+- Surfaced nicknames in the player directory and on player profile pages.

@@ -131,6 +131,9 @@ export default function Players() {
                       >
                         {p.name}
                       </Link>
+                      {p.nickname ? (
+                        <div className="mt-1 text-xs text-[#6B7280]">{p.nickname}</div>
+                      ) : null}
                     </Td>
                     <Td className="text-right font-mono text-[#10B981]">{p.wins}</Td>
                     <Td className="text-right font-mono text-[#EF4444]">{p.losses}</Td>
