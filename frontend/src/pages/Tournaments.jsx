@@ -233,8 +233,9 @@ export default function Tournaments() {
                           </span>
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-mono">
-                          <span>{t.game || "-"}</span>
-                          <span>{t.player_count || t.participants_count || 0} players</span>
+                  <span>{t.game || "-"}</span>
+                  <span>{t.difficulty?.label || "Unknown"} field</span>
+                  <span>{t.player_count || t.participants_count || 0} players</span>
                           <span>{t.duration_outlier ? "outlier" : t.normalized_duration_label || "-"}</span>
                         </div>
                       </div>
@@ -281,6 +282,10 @@ export default function Tournaments() {
                 <div className="mt-3 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">{t.game || "-"}</span>
                   <span className="font-mono">{t.player_count || t.participants_count || 0} players</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
+                  <span className="font-mono">Difficulty</span>
+                  <span className="font-mono text-[#F59E0B]">{t.difficulty?.label || "-"}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">Duration</span>

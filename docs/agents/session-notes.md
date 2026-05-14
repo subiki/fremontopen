@@ -116,3 +116,9 @@
 - Added optional `backend/prize_overrides.json` support for default entry fee and tournament-level pot/payout overrides.
 - Added an example override file and README documentation.
 - Kept default payout behavior unchanged when no override file is present.
+
+## 2026-05-14 - P2 tournament difficulty
+
+- Added tournament difficulty labels from the field's average and top ELO.
+- Surfaced difficulty on tournament archive cards, timeline rows, and tournament detail pages.
+- Kept the calculation in the static export using cached ratings only.

@@ -80,6 +80,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Attendance tracker by season
 - [x] Anniversary stats for matches near this week last year or previous season
 - [x] Prize pool tracking from local override file
+- [x] Tournament difficulty indicator from field ELO
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -127,7 +128,6 @@ All current data-quality items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 6.4 | P2 | S | **Tournament difficulty indicator** |
 | 6.5 | P2 | S | **Light mode toggle** |
 | 6.6 | P3 | M | **Player photo/card art** from local static assets |
 

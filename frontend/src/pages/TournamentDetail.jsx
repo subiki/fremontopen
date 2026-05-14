@@ -51,6 +51,7 @@ export default function TournamentDetail() {
               <Info label="Game" value={t.game || "-"} />
               <Info label="Participants" value={analytics.player_count || t.participants_count || "-"} />
               <Info label="Pot" value={formatMoney(analytics.prize_pool)} />
+              <Info label="Difficulty" value={analytics.difficulty?.label || t.difficulty?.label || "-"} />
               <Info label="Duration" value={analytics.duration_label || t.duration_label || "-"} />
               <Info label="Started" value={t.started_at ? new Date(t.started_at).toLocaleDateString() : "-"} />
             </div>

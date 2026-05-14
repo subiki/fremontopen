@@ -417,6 +417,35 @@ def _anniversary_match_row(match: Dict[str, Any], completed_at: datetime, days_f
     }
 
 
+def _tournament_difficulty(matches: List[Dict[str, Any]], elo: Dict[str, Any]) -> Dict[str, Any]:
+    players = sorted({
+        name
+        for match in matches
+        for name in (match.get("winner_name"), match.get("loser_name"))
+        if name
+    }, key=str.casefold)
+    if not players:
+        return {"label": "Unknown", "average_elo": None, "top_elo": None, "field_size": 0}
+
+    ratings = [elo["ratings"].get(player, elo["initial_rating"]) for player in players]
+    average = round(sum(ratings) / len(ratings))
+    top = max(ratings)
+    if average >= 1580 or top >= 1750:
+        label = "Elite"
+    elif average >= 1530 or top >= 1650:
+        label = "Strong"
+    elif average >= 1480:
+        label = "Standard"
+    else:
+        label = "Open"
+    return {
+        "label": label,
+        "average_elo": average,
+        "top_elo": top,
+        "field_size": len(players),
+    }
+
+
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
     return ((player.get("wins") or 0) + (player.get("losses") or 0)) >= minimum_matches
 
@@ -952,6 +981,7 @@ async def build_cache() -> Dict[str, Any]:
                 for name in (match.get("winner_name"), match.get("loser_name"))
                 if name
             })
+            difficulty = _tournament_difficulty(tournament_matches, elo)
             if normalized_duration is not None:
                 duration_rows.append({
                     "tournament_id": tid,
@@ -990,6 +1020,7 @@ async def build_cache() -> Dict[str, Any]:
             tournament["winner"] = winner
             tournament["player_count"] = player_count
             tournament["prize_pool"] = prize_pool["pot"]
+            tournament["difficulty"] = difficulty
             tournament_details[str(tid)] = {
                 "tournament": tournament,
                 "matches": tournament_matches,
@@ -1008,6 +1039,7 @@ async def build_cache() -> Dict[str, Any]:
                     "normalized_duration_label": _format_duration(normalized_duration),
                     "duration_outlier": tournament["duration_outlier"],
                     "winner": winner,
+                    "difficulty": difficulty,
                     "cinderella_runs": cinderella_runs,
                     "placements": [
                         {"player": name, "place": place}

@@ -22,6 +22,7 @@ from export_static import (
     _rivalry_index,
     _season_standings,
     _strength_of_schedule,
+    _tournament_difficulty,
     _tournament_prize_payouts,
     _upset_tracker,
 )
@@ -305,6 +306,21 @@ def test_anniversary_matches_fallback_to_previous_season():
 
     assert anniversary["mode"] == "previous_season"
     assert anniversary["matches"][0]["tournament_name"] == "Winter"
+
+
+def test_tournament_difficulty_uses_field_elo():
+    difficulty = _tournament_difficulty(
+        [
+            match(1, "A", "B"),
+            match(2, "C", "D"),
+        ],
+        {"initial_rating": 1500, "ratings": {"A": 1800, "B": 1600, "C": 1500, "D": 1500}},
+    )
+
+    assert difficulty["label"] == "Elite"
+    assert difficulty["average_elo"] == 1600
+    assert difficulty["top_elo"] == 1800
+    assert difficulty["field_size"] == 4
 
 
 def test_double_elimination_placements_use_late_loser_bracket():
