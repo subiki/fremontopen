@@ -1,8 +1,9 @@
-name: Tuesday static data refresh
+name: Scheduled static data refresh
 
 on:
   schedule:
     - cron: "30 18 * * 2"
+    - cron: "30 19 1 * *"
   workflow_dispatch: {}
 
 concurrency:
@@ -32,7 +33,7 @@ jobs:
           missing=0
           require_secret() {
             if [ -z "${!1}" ]; then
-              echo "::error title=Missing GitHub secret::$1 is required for Tuesday static data refresh"
+              echo "::error title=Missing GitHub secret::$1 is required for scheduled static data refresh"
               missing=1
             fi
           }
@@ -50,7 +51,7 @@ jobs:
           fi
 
           {
-            echo "## Tuesday Static Data Refresh"
+            echo "## Scheduled Static Data Refresh"
             echo "- Preflight secrets: passed"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -76,6 +77,29 @@ jobs:
           python validation_report.py
           python export_static.py
 
+      - name: Monthly Fargo refresh
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 19 1 * *'
+        working-directory: backend
+        env:
+          FARGO_SOURCE_URL: ${{ secrets.FARGO_SOURCE_URL }}
+          FARGO_SOURCE_LABEL: ${{ secrets.FARGO_SOURCE_LABEL }}
+          FARGO_FETCH_DELAY_SECONDS: ${{ secrets.FARGO_FETCH_DELAY_SECONDS }}
+        run: |
+          if [ -z "$FARGO_SOURCE_URL" ]; then
+            echo "::warning title=Fargo source not configured::Set FARGO_SOURCE_URL to enable monthly Fargo refresh"
+            echo "- Fargo refresh: skipped, FARGO_SOURCE_URL is not configured" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          label="${FARGO_SOURCE_LABEL:-monthly-authorized-source}"
+          delay="${FARGO_FETCH_DELAY_SECONDS:-5}"
+          python fargo_refresh.py \
+            --source-url "$FARGO_SOURCE_URL" \
+            --source-label "$label" \
+            --delay "$delay"
+          python export_static.py
+          echo "- Fargo refresh: completed from authorized source" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -96,7 +120,7 @@ jobs:
       - name: Detect data changes
         id: changes
         run: |
-          if git diff --quiet -- backend/cuestats_dev.db frontend/public/data/cache.json; then
+          if git diff --quiet -- backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "- Data changes: none" >> "$GITHUB_STEP_SUMMARY"
           else
@@ -109,7 +133,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backend/cuestats_dev.db frontend/public/data/cache.json
+          git add backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json
           cat > /tmp/refresh-commit-message.txt <<'EOF'
           [JFL][Agent-GitHub-Actions] Refresh static tournament data
 
@@ -128,8 +152,8 @@ jobs:
           - Continue normal static deploy verification.
 
           Agent: GitHub Actions
-          Intent: Scheduled Tuesday static data refresh without a manual code push.
-          Context: #67
+          Intent: Scheduled static data and optional monthly Fargo refresh without a manual code push.
+          Context: #67 #68
           EOF
           git commit -F /tmp/refresh-commit-message.txt
           git push

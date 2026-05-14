@@ -32,8 +32,9 @@ Refresh player Fargo ratings about once per month, store the Fargo number on the
    - Apply conservative rate limiting, request caching, retries, and backoff for any allowed remote source.
 
 4. Run monthly
-   - Add a manual or scheduled GitHub Actions workflow only after the data source and secrets are confirmed.
-   - The workflow should create an artifact/report or pull request, not silently publish rating changes.
+   - `.github/workflows/data-refresh.yml` includes a monthly Fargo pass.
+   - Set `FARGO_SOURCE_URL` to an authorized CSV, JSON, or HTML source URL.
+   - Optional `FARGO_SOURCE_LABEL` and `FARGO_FETCH_DELAY_SECONDS` secrets tune metadata and fetch delay.
    - Stop early on authorization errors, 429s, or unexpected source-shape changes.
 
 5. Surface in the app
@@ -47,6 +48,7 @@ Refresh player Fargo ratings about once per month, store the Fargo number on the
 - Extend export/static cache generation to include `player.fargo`, `player.fargo_source`, and `player.fargo_updated_at`.
 - Display Fargo on player detail pages when present.
 - Produce a dedupe hint report for matching Fargo IDs without auto-merging records.
+- Wire the monthly scheduled workflow to run only against an authorized source URL.
 
 ## Open Questions
 

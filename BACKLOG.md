@@ -63,6 +63,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Manual player overrides file for Fargo ratings, Fargo IDs, nicknames, and notes
 - [x] Tourney timing min/max baselines by game and player count
 - [x] Rivalry of the week dashboard card from the closest high-volume matchup
+- [x] Monthly Fargo refresh wiring for an authorized source URL
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -89,7 +90,6 @@ All current static deploy and refresh items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
-| 2.8 | P1 | M | **Monthly Fargo refresh** - authorized source or local override workflow with rate limits, reports, and manual review |
 
 ## EPIC 3 - Player Stats And Rankings
 
