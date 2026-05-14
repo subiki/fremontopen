@@ -24,6 +24,13 @@ const notFound = (detail = "Not found") => {
 };
 
 const decodePathPart = (value = "") => decodeURIComponent(value.replace(/\+/g, "%20"));
+const nameKey = (value = "") => String(value).trim().toLocaleLowerCase();
+
+const resolvePlayerName = (cache, name) => {
+  if (cache.player_details[name]) return name;
+  const key = nameKey(name);
+  return cache.players.find((player) => nameKey(player.name) === key)?.name || null;
+};
 
 const expectedElo = (ratingA = 1500, ratingB = 1500) =>
   1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
@@ -57,25 +64,27 @@ const parseRackScore = (score = "") => {
 };
 
 const comparePlayers = (cache, a, b) => {
-  const pa = cache.players.find((p) => p.name === a);
-  const pb = cache.players.find((p) => p.name === b);
+  const canonicalA = resolvePlayerName(cache, a);
+  const canonicalB = resolvePlayerName(cache, b);
+  const pa = canonicalA ? cache.players.find((p) => p.name === canonicalA) : null;
+  const pb = canonicalB ? cache.players.find((p) => p.name === canonicalB) : null;
   if (!pa || !pb) notFound("One or both players not found");
 
   const h2hMatches = cache.matches
     .filter(
       (m) =>
-        (m.winner_name === a && m.loser_name === b) ||
-        (m.winner_name === b && m.loser_name === a)
+        (m.winner_name === canonicalA && m.loser_name === canonicalB) ||
+        (m.winner_name === canonicalB && m.loser_name === canonicalA)
     )
     .reverse();
-  const aWins = h2hMatches.filter((m) => m.winner_name === a).length;
-  const bWins = h2hMatches.filter((m) => m.winner_name === b).length;
+  const aWins = h2hMatches.filter((m) => m.winner_name === canonicalA).length;
+  const bWins = h2hMatches.filter((m) => m.winner_name === canonicalB).length;
   const rackStats = h2hMatches.reduce(
     (acc, match) => {
       const parsed = parseRackScore(match.scores);
       if (!parsed) return acc;
       acc.scored_races += 1;
-      if (match.winner_name === a) {
+      if (match.winner_name === canonicalA) {
         acc.a_racks_won += parsed.winner_racks;
         acc.a_racks_lost += parsed.loser_racks;
         acc.b_racks_won += parsed.loser_racks;
@@ -153,14 +162,16 @@ const staticGet = async (path, config = {}) => {
   }
   if (path.startsWith("/players/") && path.endsWith("/extras")) {
     const name = decodePathPart(path.slice("/players/".length, -"/extras".length));
-    return { data: cache.player_extras[name] || notFound("Player not found") };
+    const canonicalName = resolvePlayerName(cache, name);
+    return { data: (canonicalName && cache.player_extras[canonicalName]) || notFound("Player not found") };
   }
   if (path.startsWith("/players/") && path.endsWith("/claim-info")) {
     return { data: { claimed: false } };
   }
   if (path.startsWith("/players/")) {
     const name = decodePathPart(path.slice("/players/".length));
-    return { data: cache.player_details[name] || notFound("Player not found") };
+    const canonicalName = resolvePlayerName(cache, name);
+    return { data: (canonicalName && cache.player_details[canonicalName]) || notFound("Player not found") };
   }
   if (path === "/leaderboard") {
     return { data: cache.players.slice(0, params.limit || 25) };

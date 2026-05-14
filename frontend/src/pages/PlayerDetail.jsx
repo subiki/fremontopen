@@ -84,6 +84,7 @@ export default function PlayerDetail() {
   }, [order, decoded]);
 
   const p = data?.player;
+  const canonicalName = p?.name || decoded;
   const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
   const placements = extras?.placements;
@@ -91,6 +92,12 @@ export default function PlayerDetail() {
   const elo = extras?.elo || {};
   const attendance = extras?.attendance || {};
   const cash = extras?.cash || {};
+
+  useEffect(() => {
+    if (p?.name && p.name !== decoded) {
+      navigate(`/players/${encodeURIComponent(p.name)}`, { replace: true });
+    }
+  }, [p?.name, decoded, navigate]);
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
@@ -102,11 +109,11 @@ export default function PlayerDetail() {
   );
 
   const handleFollow = async () => {
-    const now = await toggleFollow(decoded);
+    const now = await toggleFollow(canonicalName);
     setFollowing(now);
   };
 
-  const sharePath = `${window.location.origin}/players/${encodeURIComponent(decoded)}`;
+  const sharePath = `${window.location.origin}/players/${encodeURIComponent(canonicalName)}`;
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(sharePath);

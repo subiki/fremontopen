@@ -19,3 +19,9 @@
 - Continued to live JFL issue #68, "fargo".
 - Extended the scheduled static refresh workflow with a monthly Fargo pass using `FARGO_SOURCE_URL`.
 - Kept Fargo refresh source-gated: no bypassing logins, captchas, robots.txt, or anti-bot controls.
+
+## 2026-05-14 - P1 case-insensitive player URLs
+
+- Continued to open P1 issue #49 after JFL implementation work.
+- Added static API canonical player-name resolution for player detail, extras, and compare routes.
+- Player detail pages now replace lowercase or mixed-case URLs with the canonical player URL after load.
