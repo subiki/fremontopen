@@ -29,6 +29,10 @@ export default function Tournaments() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("date");
   const [game, setGame] = useState("all");
+  const [winner, setWinner] = useState("all");
+  const [query, setQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [view, setView] = useState("cards");
   const [loading, setLoading] = useState(true);
 
@@ -55,13 +59,39 @@ export default function Tournaments() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [list]);
 
+  const winnerOptions = useMemo(() => {
+    const counts = new Map();
+    list.forEach((t) => {
+      if (!t.winner) return;
+      counts.set(t.winner, (counts.get(t.winner) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [list]);
+
   const sortedList = useMemo(() => {
-    const rows = list.filter((t) => game === "all" || (t.game || "Unknown") === game);
+    const needle = query.trim().toLowerCase();
+    const fromTime = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTime = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null;
+    const rows = list.filter((t) => {
+      const eventDate = new Date(t.started_at || t.completed_at || 0).getTime();
+      const matchesQuery = !needle
+        || (t.name || "").toLowerCase().includes(needle)
+        || (t.winner || "").toLowerCase().includes(needle);
+      return (
+        (game === "all" || (t.game || "Unknown") === game)
+        && (winner === "all" || t.winner === winner)
+        && matchesQuery
+        && (!fromTime || eventDate >= fromTime)
+        && (!toTime || eventDate <= toTime)
+      );
+    });
     if (sort === "name") return rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     if (sort === "players") return rows.sort((a, b) => (b.player_count || b.participants_count || 0) - (a.player_count || a.participants_count || 0));
     if (sort === "duration") return rows.sort((a, b) => (b.normalized_duration_minutes || 0) - (a.normalized_duration_minutes || 0));
     return rows.sort((a, b) => new Date(b.started_at || b.completed_at || 0) - new Date(a.started_at || a.completed_at || 0));
-  }, [list, sort, game]);
+  }, [list, sort, game, winner, query, dateFrom, dateTo]);
 
   const timelineGroups = useMemo(() => {
     const groups = new Map();
@@ -81,7 +111,7 @@ export default function Tournaments() {
         onSyncDone={load}
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournaments-page">
-        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="mb-5 flex flex-col gap-3">
           <div className="inline-flex w-fit rounded-md border border-[#273041] bg-[#0B0E14] p-1">
             <button
               type="button"
@@ -104,7 +134,15 @@ export default function Tournaments() {
               <CalendarDots size={14} /> Timeline
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name or winner"
+              data-testid="tournament-search-input"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] xl:col-span-2"
+            />
             <select
               value={game}
               onChange={(e) => setGame(e.target.value)}
@@ -118,6 +156,35 @@ export default function Tournaments() {
                 </option>
               ))}
             </select>
+            <select
+              value={winner}
+              onChange={(e) => setWinner(e.target.value)}
+              data-testid="tournament-winner-filter-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value="all">All winners</option>
+              {winnerOptions.map((option) => (
+                <option key={option.label} value={option.label}>
+                  {option.label} ({option.count})
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              aria-label="Tournament date from"
+              data-testid="tournament-date-from-input"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              aria-label="Tournament date to"
+              data-testid="tournament-date-to-input"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
@@ -136,7 +203,7 @@ export default function Tournaments() {
         ) : list.length === 0 ? (
           <div className="text-[#6B7280]">No tournaments yet. Try Sync Now.</div>
         ) : sortedList.length === 0 ? (
-          <div className="text-[#6B7280]">No tournaments match the current game filter.</div>
+          <div className="text-[#6B7280]">No tournaments match the current filters.</div>
         ) : view === "timeline" ? (
           <div className="space-y-8" data-testid="tournament-timeline">
             {timelineGroups.map((group) => (

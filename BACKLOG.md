@@ -70,6 +70,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Season groupings page with cumulative standings
 - [x] Player form chart with rolling last-10 match win rate
 - [x] Bracket visualization on tournament detail pages
+- [x] Tournament archive search by date range, winner, and format
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -110,7 +111,6 @@ All current static deploy and refresh items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 4.4 | P2 | S | **Cinderella runs** - biggest upset paths per tournament once ratings exist |
-| 4.5 | P2 | M | **Tournament archive search** by date range, winner, and format |
 | 4.6 | P3 | S | **Printable bracket/detail page** |
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
@@ -160,8 +160,7 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-2. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 

@@ -56,3 +56,9 @@
 - Continued to the next backlog P1, bracket visualization on tournament detail pages.
 - Added a compact static bracket view grouped by Challonge winner/loser rounds above the match table.
 - Kept the table as the detailed source of match state, scores, and ELO odds.
+
+## 2026-05-14 - P2 tournament archive search
+
+- Continued to the next build-order item after active P1 work was clear.
+- Added tournament archive filtering by tournament/winner text, winner, game format, and date range.
+- Reused the existing static tournament list payload and kept cards/timeline views unchanged.
