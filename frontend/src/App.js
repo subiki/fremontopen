@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/Layout";
+import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { initFollowSync } from "./lib/follow";
 import Dashboard from "./pages/Dashboard";
 import Tournaments from "./pages/Tournaments";
@@ -22,6 +23,7 @@ function App() {
   return (
     <div className="App" data-testid="app-root">
       <BrowserRouter>
+        <KeyboardShortcuts />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
