@@ -334,26 +334,30 @@ export default function PlayerDetail() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <RivalryCard
-                title="Biggest Rivals"
-                subtitle="Beat this player the most"
+                title="Toughest Opponents"
+                subtitle={`Players who beat ${p.name} the most`}
                 icon={Sword}
-                accent="text-[#EF4444]"
+                accent="text-[#F59E0B]"
                 rows={rivals}
                 metricKey="losses"
-                metricLabel="L"
-                metricColor="text-[#EF4444]"
+                metricLabel="beat"
+                metricColor="text-[#F59E0B]"
+                playerName={p.name}
+                direction="opponent-beat-player"
                 emptyText="No defeats recorded."
                 testid="rivals-card"
               />
               <RivalryCard
                 title="Most Defeated"
-                subtitle="This player beat them the most"
+                subtitle={`Players ${p.name} beat the most`}
                 icon={Crosshair}
                 accent="text-[#10B981]"
                 rows={victims}
                 metricKey="wins"
-                metricLabel="W"
+                metricLabel="beat"
                 metricColor="text-[#10B981]"
+                playerName={p.name}
+                direction="player-beat-opponent"
                 emptyText="No wins recorded."
                 testid="victims-card"
               />
@@ -430,6 +434,8 @@ const RivalryCard = ({
   metricKey,
   metricLabel,
   metricColor,
+  playerName,
+  direction,
   emptyText,
   testid,
 }) => (
@@ -453,7 +459,7 @@ const RivalryCard = ({
         {rows.slice(0, 10).map((row, i) => (
           <li
             key={row.opponent}
-            className="py-3 flex items-center justify-between"
+            className="py-3 flex items-start justify-between gap-4"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span className="font-mono text-xs text-[#6B7280] w-6 shrink-0">
@@ -466,14 +472,13 @@ const RivalryCard = ({
                 {row.opponent}
               </Link>
             </div>
-            <div className="font-mono text-sm shrink-0">
-              <span className={`${metricColor} font-semibold`}>
-                {row[metricKey]}
-                {metricLabel}
-              </span>
-              <span className="text-[#6B7280] ml-2">
-                ({row.wins}-{row.losses})
-              </span>
+            <div className="font-mono text-sm shrink-0 max-w-[58%]">
+              <div className={`${metricColor} font-semibold text-right`}>
+                {row[metricKey]}x
+              </div>
+              <div className="text-[#6B7280] text-[11px] mt-1 text-right">
+                {formatRivalryRecord(row, playerName, direction, metricLabel)}
+              </div>
             </div>
           </li>
         ))}
@@ -481,6 +486,13 @@ const RivalryCard = ({
     )}
   </section>
 );
+
+const formatRivalryRecord = (row, playerName, direction, verb) => {
+  if (direction === "opponent-beat-player") {
+    return `${row.opponent} ${verb} ${playerName} ${row.losses} times; ${playerName} beat ${row.opponent} ${row.wins} times`;
+  }
+  return `${playerName} ${verb} ${row.opponent} ${row.wins} times; ${row.opponent} beat ${playerName} ${row.losses} times`;
+};
 
 const PlacementStat = ({ label, value, to }) => {
   const content = (
