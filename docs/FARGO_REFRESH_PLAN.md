@@ -18,7 +18,7 @@ Refresh player Fargo ratings about once per month, store the Fargo number on the
 1. Confirm a permitted source
    - Preferred: official FargoRate API, partner export, CSV, or another source we are allowed to query.
    - Fallback: manual local overrides until a permitted automated source exists.
-   - Do not ship a scraper that tries to evade anti-bot controls.
+   - https://fairmatch.fargorate.com/ curl
 
 2. Add a local overrides/source file
    - Track canonical player name, Fargo ID or profile URL, rating, source, confidence, and last checked date.
@@ -50,6 +50,6 @@ Refresh player Fargo ratings about once per month, store the Fargo number on the
 
 ## Open Questions
 
-- Which FargoRate access path is permitted for Fremont Open use?
-- Should Fargo values be public on the static site, or only used internally for dedupe and tournament reporting?
-- Who owns monthly review of unmatched and ambiguous players?
+- Which FargoRate access path is permitted for Fremont Open use? https://fairmatch.fargorate.com/
+- Should Fargo values be public on the static site, or only used internally for dedupe and tournament reporting? public
+- Who owns monthly review of unmatched and ambiguous players? try again next month until a fargo number appears
