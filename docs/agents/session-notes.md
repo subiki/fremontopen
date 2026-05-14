@@ -98,3 +98,9 @@
 - Added a global ELO upset tracker for rating-underdog match wins.
 - Ranked upsets by the favorite's pre-match win probability.
 - Surfaced the top upset rows on the dashboard.
+
+## 2026-05-14 - P2 season attendance tracker
+
+- Added per-season unique tournament attendance counts for each player.
+- Added season attendance leader rows to the Seasons page.
+- Kept the data derived from cached matches and tournament IDs only.

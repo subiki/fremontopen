@@ -77,6 +77,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Player nicknames from local overrides file
 - [x] Cinderella runs from tournament ELO underdog wins
 - [x] Upset tracker for rating-underdog wins
+- [x] Attendance tracker by season
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -133,7 +134,6 @@ All current data-quality items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 7.3 | P2 | S | **Attendance tracker** by season |
 | 7.4 | P2 | S | **Prize pool tracking** from local overrides/import file |
 | 7.5 | P3 | M | **Multi-event support** for other tournaments beyond Fremont Open |
 
@@ -160,8 +160,8 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **7.3 Attendance tracker** - summarize attendance by season.
-2. **5.6 Anniversary stats** - notable matches from one year ago / last season.
+1. **5.6 Anniversary stats** - notable matches from one year ago / last season.
+2. **7.4 Prize pool tracking** - allow local overrides/imports for payout assumptions.
 
 ---
 

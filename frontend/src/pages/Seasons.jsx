@@ -88,8 +88,30 @@ export default function Seasons() {
                 </div>
               </div>
 
+              {selected?.attendance_leaders?.length ? (
+                <div className="border-b border-[#273041] p-5 sm:p-6" data-testid="season-attendance-panel">
+                  <h2 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6] mb-3">
+                    Attendance Leaders
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                    {selected.attendance_leaders.slice(0, 5).map((player) => (
+                      <Link
+                        key={player.player}
+                        to={`/players/${encodeURIComponent(player.player)}`}
+                        className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 hover:border-[#10B981]/40 transition-colors"
+                      >
+                        <div className="truncate font-medium text-[#F3F4F6]">{player.player}</div>
+                        <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                          {player.attendance} event{player.attendance === 1 ? "" : "s"} / {player.matches} matches
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left" data-testid="season-standings-table">
+                <table className="w-full min-w-[840px] text-left" data-testid="season-standings-table">
                   <thead>
                     <tr className="text-xs uppercase tracking-wider text-[#6B7280]">
                       <Th>Rank</Th>
@@ -97,6 +119,7 @@ export default function Seasons() {
                       <Th className="text-right">Points</Th>
                       <Th className="text-right">W-L</Th>
                       <Th className="text-right">Win %</Th>
+                      <Th className="text-right">Attend.</Th>
                       <Th className="text-right">Matches</Th>
                     </tr>
                   </thead>
@@ -120,6 +143,7 @@ export default function Seasons() {
                           <span className="text-[#EF4444]">{player.losses}</span>
                         </Td>
                         <Td className="text-right font-mono text-[#9CA3AF]">{player.win_rate}%</Td>
+                        <Td className="text-right font-mono text-[#9CA3AF]">{player.attendance ?? 0}</Td>
                         <Td className="text-right font-mono text-[#9CA3AF]">{player.matches}</Td>
                       </tr>
                     ))}

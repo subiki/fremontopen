@@ -420,6 +420,8 @@ def test_season_standings_group_matches_by_tournament_date():
     assert seasons[1]["players"][0]["player"] == "A"
     assert seasons[1]["players"][0]["wins"] == 2
     assert seasons[1]["players"][0]["points"] == 6
+    assert seasons[1]["players"][0]["attendance"] == 1
+    assert seasons[1]["attendance_leaders"][0]["player"] == "A"
 
 
 def test_load_side_match_rows_defaults_manual_bucket(tmp_path):

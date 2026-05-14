@@ -713,17 +713,24 @@ def _season_standings(
             bucket["tournament_ids"].add(match.get("tournament_id"))
 
         for player_name, result in ((winner, "wins"), (loser, "losses")):
-            row = bucket["players"].setdefault(player_name, {"player": player_name, "wins": 0, "losses": 0})
+            row = bucket["players"].setdefault(
+                player_name,
+                {"player": player_name, "wins": 0, "losses": 0, "tournament_ids": set()},
+            )
             row[result] += 1
+            if match.get("tournament_id") is not None:
+                row["tournament_ids"].add(match.get("tournament_id"))
 
     rows = []
     for bucket in seasons.values():
         players = []
         for player in bucket["players"].values():
             total = player["wins"] + player["losses"]
+            tournament_ids = player.pop("tournament_ids", set())
             players.append({
                 **player,
                 "matches": total,
+                "attendance": len(tournament_ids),
                 "win_rate": round((player["wins"] / total) * 100, 1) if total else 0.0,
                 "points": (
                     player["wins"] * scoring["win_points"]
@@ -739,6 +746,10 @@ def _season_standings(
             "matches": bucket["matches"],
             "tournaments": len(bucket["tournament_ids"]),
             "players": players,
+            "attendance_leaders": sorted(
+                players,
+                key=lambda row: (-row["attendance"], -row["matches"], row["player"].casefold()),
+            )[:10],
         })
 
     sorted_rows = sorted(rows, key=lambda row: row["_sort"], reverse=True)
