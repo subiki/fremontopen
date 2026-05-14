@@ -10,6 +10,7 @@ from export_static import (
     _duration_minutes,
     _infer_tournament_placements,
     _is_qualified_player,
+    _match_elo_odds,
     _normalized_duration_minutes,
     _recent_activity_summary,
     _season_standings,
@@ -69,6 +70,18 @@ def test_tournament_prize_payouts_splits_tied_places():
     assert payouts["awarded"] == 80
     assert third["split"] is True
     assert third["players"] == ["Third A", "Third B"]
+
+
+def test_match_elo_odds_compares_two_players():
+    odds = _match_elo_odds(
+        {"winner_name": "A", "loser_name": "B"},
+        {"ratings": {"A": 1600, "B": 1500}, "initial_rating": 1500},
+    )
+
+    assert odds["winner_rating"] == 1600
+    assert odds["loser_rating"] == 1500
+    assert odds["favorite"] == "A"
+    assert odds["winner_probability"] > 50
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

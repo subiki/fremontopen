@@ -142,6 +142,26 @@ def _tournament_prize_payouts(
     }
 
 
+def _match_elo_odds(match: Dict[str, Any], elo: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    winner = match.get("winner_name")
+    loser = match.get("loser_name")
+    if not winner or not loser:
+        return None
+    winner_rating = elo["ratings"].get(winner, elo["initial_rating"])
+    loser_rating = elo["ratings"].get(loser, elo["initial_rating"])
+    winner_probability = 1.0 / (1.0 + math.pow(10, (loser_rating - winner_rating) / 400.0))
+    loser_probability = 1 - winner_probability
+    return {
+        "winner_rating": winner_rating,
+        "loser_rating": loser_rating,
+        "winner_probability": round(winner_probability * 100, 1),
+        "loser_probability": round(loser_probability * 100, 1),
+        "rating_gap": winner_rating - loser_rating,
+        "favorite": winner if winner_probability >= loser_probability else loser,
+        "basis": "ELO",
+    }
+
+
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
     return ((player.get("wins") or 0) + (player.get("losses") or 0)) >= minimum_matches
 
@@ -485,6 +505,7 @@ async def build_cache() -> Dict[str, Any]:
         for match in matches:
             tournament = tournaments_by_id.get(str(match.get("tournament_id")))
             match["tournament_game"] = (tournament or {}).get("game")
+            match["elo_odds"] = _match_elo_odds(match, elo)
 
         tournament_details = {}
         matches_by_tournament: Dict[Any, List[Dict[str, Any]]] = {}
@@ -509,6 +530,7 @@ async def build_cache() -> Dict[str, Any]:
 
         winner_counts: Dict[str, int] = {}
         all_placements: Dict[str, Dict[str, int]] = {}
+        all_cash_winnings: Dict[str, Dict[str, Any]] = {}
         duration_values: List[int] = []
         duration_outlier_count = 0
 
@@ -539,6 +561,20 @@ async def build_cache() -> Dict[str, Any]:
                 if name
             })
             prize_pool = _tournament_prize_payouts(player_count, placements)
+            for payout in prize_pool["payouts"]:
+                players_in_place = payout.get("players") or []
+                if not players_in_place:
+                    continue
+                player_amount = payout["amount"] / len(players_in_place)
+                for player_name in players_in_place:
+                    cash_row = all_cash_winnings.setdefault(player_name, {"total": 0.0, "by_tournament": []})
+                    cash_row["total"] += player_amount
+                    cash_row["by_tournament"].append({
+                        "tournament_id": tid,
+                        "tournament_name": tournament.get("name"),
+                        "place": payout["place"],
+                        "amount": player_amount,
+                    })
             tournament["duration_minutes"] = duration_minutes
             tournament["duration_label"] = duration_label
             tournament["normalized_duration_minutes"] = normalized_duration
@@ -649,17 +685,26 @@ async def build_cache() -> Dict[str, Any]:
             placement_values = list(placements_by_tournament.values())
             top_finishes = {
                 "first": sum(1 for place in placement_values if place == 1),
+                "second": sum(1 for place in placement_values if place == 2),
+                "third": sum(1 for place in placement_values if place == 3),
+                "fourth": sum(1 for place in placement_values if place == 4),
                 "top_2": sum(1 for place in placement_values if place <= 2),
                 "top_3": sum(1 for place in placement_values if place <= 3),
                 "top_4": sum(1 for place in placement_values if place <= 4),
             }
+            cash_winnings = all_cash_winnings.get(name, {"total": 0.0, "by_tournament": []})
+            cash_total = round(cash_winnings["total"], 2)
             average_placement = round(sum(placement_values) / len(placement_values), 2) if placement_values else None
             player["average_placement"] = average_placement
             player["top_1_finishes"] = top_finishes["first"]
+            player["second_place_finishes"] = top_finishes["second"]
+            player["third_place_finishes"] = top_finishes["third"]
+            player["fourth_place_finishes"] = top_finishes["fourth"]
             player["top_2_finishes"] = top_finishes["top_2"]
             player["top_3_finishes"] = top_finishes["top_3"]
             player["top_4_finishes"] = top_finishes["top_4"]
             player["placements_counted"] = len(placement_values)
+            player["cash_won"] = cash_total
             opponent_fargos = {
                 opponent: players_by_name[opponent].get("fargo")
                 for opponent in h2h.keys()
@@ -691,6 +736,11 @@ async def build_cache() -> Dict[str, Any]:
                     "by_tournament": placements_by_tournament,
                     "top_finishes": top_finishes,
                     "note": "Lower average placement is better. Missing placements are omitted.",
+                },
+                "cash": {
+                    "total": cash_total,
+                    "by_tournament": cash_winnings["by_tournament"],
+                    "note": "Cash is estimated from $10 entries and rounded tournament payout rules.",
                 },
             }
 

@@ -89,6 +89,7 @@ export default function PlayerDetail() {
   const topFinishes = placements?.top_finishes || {};
   const elo = extras?.elo || {};
   const attendance = extras?.attendance || {};
+  const cash = extras?.cash || {};
 
   const rivals = useMemo(
     () => [...h2h].filter((r) => r.losses > 0).sort((a, b) => b.losses - a.losses),
@@ -232,6 +233,13 @@ export default function PlayerDetail() {
                 testid="pd-average-placement"
               />
               <StatCard
+                label="Cash Won"
+                value={formatMoney(cash.total ?? p.cash_won)}
+                accent="text-[#F59E0B]"
+                icon={Medal}
+                testid="pd-cash-won"
+              />
+              <StatCard
                 label="1st Place"
                 value={topFinishes.first ?? "—"}
                 accent="text-[#F59E0B]"
@@ -239,13 +247,25 @@ export default function PlayerDetail() {
                 testid="pd-first-place"
               />
               <StatCard
-                label="Top 3"
-                value={topFinishes.top_3 ?? "—"}
+                label="2nd Place"
+                value={topFinishes.second ?? "—"}
                 icon={Medal}
-                testid="pd-top-three"
+                testid="pd-second-place"
               />
               <StatCard
-                label="Top 4"
+                label="3rd Place"
+                value={topFinishes.third ?? "—"}
+                icon={Medal}
+                testid="pd-third-place"
+              />
+              <StatCard
+                label="4th Place"
+                value={topFinishes.fourth ?? "—"}
+                icon={Medal}
+                testid="pd-fourth-place"
+              />
+              <StatCard
+                label="Top 4 Total"
                 value={topFinishes.top_4 ?? "—"}
                 icon={Medal}
                 testid="pd-top-four"
@@ -266,11 +286,12 @@ export default function PlayerDetail() {
                   Placement data is not available for this player yet.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                   <PlacementStat label="Avg" value={placements.average} />
-                  <PlacementStat label="Top 1" value={topFinishes.first} />
-                  <PlacementStat label="Top 2" value={topFinishes.top_2} />
-                  <PlacementStat label="Top 3" value={topFinishes.top_3} />
+                  <PlacementStat label="1st" value={topFinishes.first} />
+                  <PlacementStat label="2nd" value={topFinishes.second} />
+                  <PlacementStat label="3rd" value={topFinishes.third} />
+                  <PlacementStat label="4th" value={topFinishes.fourth} />
                   <PlacementStat label="Top 4" value={topFinishes.top_4} />
                 </div>
               )}
@@ -371,7 +392,8 @@ export default function PlayerDetail() {
                             </Link>
                           ) : null}
                         </div>
-                        <div className="font-mono text-xs text-[#9CA3AF]">
+                        <div className="flex shrink-0 items-center gap-3 font-mono text-xs text-[#9CA3AF]">
+                          <MatchOdds odds={m.elo_odds} />
                           {m.scores || "—"}
                         </div>
                       </li>
@@ -458,6 +480,20 @@ const PlacementStat = ({ label, value }) => (
     </div>
   </div>
 );
+
+const MatchOdds = ({ odds }) => {
+  if (!odds) return null;
+  return (
+    <span className="hidden md:inline text-[#F59E0B]">
+      {odds.favorite} {Math.max(odds.winner_probability || 0, odds.loser_probability || 0)}% ELO
+    </span>
+  );
+};
+
+const formatMoney = (value) =>
+  typeof value === "number"
+    ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+    : "—";
 
 
 const StreakCard = ({ streaks }) => {

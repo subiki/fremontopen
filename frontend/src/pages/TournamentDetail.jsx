@@ -130,7 +130,12 @@ export default function TournamentDetail() {
                             <span className="text-[#6B7280]">TBD</span>
                           )}
                         </Td>
-                        <Td className="font-mono text-sm">{m.scores || "-"}</Td>
+                        <Td className="font-mono text-sm">
+                          <div className="flex flex-col gap-1">
+                            <span>{m.scores || "-"}</span>
+                            <MatchOdds odds={m.elo_odds} />
+                          </div>
+                        </Td>
                         <Td>
                           <span className="text-[10px] uppercase tracking-wider text-[#9CA3AF]">
                             {m.state || "-"}
@@ -181,6 +186,15 @@ const formatMoney = (value) =>
   typeof value === "number"
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     : "-";
+
+const MatchOdds = ({ odds }) => {
+  if (!odds) return null;
+  return (
+    <span className="text-[10px] uppercase tracking-wider text-[#F59E0B]">
+      {odds.favorite} {Math.max(odds.winner_probability || 0, odds.loser_probability || 0)}% ELO
+    </span>
+  );
+};
 
 const ordinal = (place) => {
   if (place === 1) return "1st";
