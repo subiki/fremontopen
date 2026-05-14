@@ -163,11 +163,11 @@ export default function Dashboard() {
             to={dashboardTrends.hottest_player ? `/players/${encodeURIComponent(dashboardTrends.hottest_player.player)}` : null}
           />
           <TrendCard
-            label="Closest Rivalry"
+            label="Rivalry of the Week"
             value={dashboardTrends.closest_rivalry?.label || "-"}
             detail={
               dashboardTrends.closest_rivalry
-                ? `${dashboardTrends.closest_rivalry.a_wins}-${dashboardTrends.closest_rivalry.b_wins} over ${dashboardTrends.closest_rivalry.matches}`
+                ? `${dashboardTrends.closest_rivalry.matches} matches, split ${dashboardTrends.closest_rivalry.a_wins}-${dashboardTrends.closest_rivalry.b_wins}`
                 : "No rivalry yet"
             }
             icon={Scales}
