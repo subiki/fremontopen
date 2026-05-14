@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-14 - P3 printable tournament detail
+
+- Re-read backlog, docs, and live GitHub labels after bracket pinch zoom.
+- No active non-stale JFL/P0/P1/P2 items remained, so selected the next small static P3 tournament-view item.
+- Added a native print action on tournament detail pages.
+- Added print-only tournament metadata and print CSS that hides navigation/controls, expands the bracket viewport, and keeps match cards/table rows intact.
+- Kept the change static-first with no backend, cache, Challonge browser calls, auth, admin, or chat work.
+
 ## 2026-05-14 - P2/P3 bracket pinch zoom
 
 - Re-read backlog, docs, and live GitHub issue labels after the light mode slice.

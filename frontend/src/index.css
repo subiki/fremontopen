@@ -219,3 +219,88 @@ h1, h2, h3, h4, h5, h6 {
         background-color: rgba(17, 24, 39, 0.35) !important;
     }
 }
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    @page {
+        margin: 0.5in;
+    }
+
+    html,
+    body,
+    #root {
+        background: #ffffff !important;
+        color: #111827 !important;
+    }
+
+    body {
+        font-size: 11px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-hide,
+    [data-testid="app-sidebar"],
+    [data-testid="app-topbar"],
+    [data-testid="mobile-bottom-nav"],
+    [data-testid="mobile-nav-drawer"] {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    [data-testid="app-layout"] {
+        display: block !important;
+        min-height: auto !important;
+        background: #ffffff !important;
+    }
+
+    [data-testid="tournament-detail-page"] {
+        padding: 0 !important;
+    }
+
+    [data-testid="tournament-detail-page"] section,
+    [data-testid="tournament-detail-page"] .bg-\[\#141923\],
+    [data-testid="tournament-detail-page"] .bg-\[\#0B0E14\] {
+        background: #ffffff !important;
+        border-color: #d1d5db !important;
+        color: #111827 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    [data-testid="bracket-zoom-viewport"] {
+        overflow: visible !important;
+        border: 0 !important;
+        padding: 0 !important;
+    }
+
+    [data-testid="bracket-zoom-viewport"] > div {
+        min-width: 0 !important;
+        zoom: 0.75 !important;
+    }
+
+    [data-testid="bracket-match"],
+    [data-testid="matches-table"] tr {
+        break-inside: avoid;
+    }
+
+    [data-testid="tournament-detail-page"] table {
+        font-size: 10px;
+    }
+
+    [data-testid="tournament-detail-page"] a,
+    [data-testid="tournament-detail-page"] .text-\[\#F3F4F6\],
+    [data-testid="tournament-detail-page"] .text-\[\#9CA3AF\],
+    [data-testid="tournament-detail-page"] .text-\[\#6B7280\],
+    [data-testid="tournament-detail-page"] .text-\[\#10B981\],
+    [data-testid="tournament-detail-page"] .text-\[\#F59E0B\],
+    [data-testid="tournament-detail-page"] .text-\[\#EF4444\] {
+        color: #111827 !important;
+    }
+}

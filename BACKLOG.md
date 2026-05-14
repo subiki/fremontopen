@@ -88,6 +88,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Tournament title totals unified with placement-based first-place logic
 - [x] Light mode toggle with persistent local preference
 - [x] Pinch-zoom bracket view for tournament detail pages
+- [x] Printable tournament bracket/detail pages
 
 ## Removed From Demo Scope
 
@@ -118,9 +119,7 @@ All current data-quality items are complete.
 
 ## EPIC 4 - Tournament Views
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 4.6 | P3 | S | **Printable bracket/detail page** |
+All current tournament-view items are complete.
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
 

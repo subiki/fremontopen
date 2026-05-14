@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournament } from "../lib/api";
-import { ArrowsClockwise, CaretLeft, MagnifyingGlass, Minus, Plus } from "@phosphor-icons/react";
+import { ArrowsClockwise, CaretLeft, MagnifyingGlass, Minus, Plus, Printer } from "@phosphor-icons/react";
 
 const MIN_BRACKET_ZOOM = 0.65;
 const MAX_BRACKET_ZOOM = 1.45;
@@ -71,14 +71,15 @@ export default function TournamentDetail() {
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
   const bracketSections = useMemo(() => buildBracketSections(matches), [matches]);
+  const printActions = t ? <PrintButton /> : null;
 
   return (
     <>
-      <Topbar title={t?.name || "Tournament"} subtitle={t?.game || ""} />
+      <Topbar title={t?.name || "Tournament"} subtitle={t?.game || ""} actions={printActions} />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournament-detail-page">
         <Link
           to="/tournaments"
-          className="inline-flex items-center gap-1 text-sm text-[#9CA3AF] hover:text-[#10B981] mb-5"
+          className="print-hide inline-flex items-center gap-1 text-sm text-[#9CA3AF] hover:text-[#10B981] mb-5"
         >
           <CaretLeft size={14} /> Back to tournaments
         </Link>
@@ -89,6 +90,8 @@ export default function TournamentDetail() {
           <MissingTournament id={id} />
         ) : (
           <>
+            <PrintHeader tournament={t} analytics={analytics} />
+
             <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6 grid grid-cols-2 md:grid-cols-6 gap-4">
               <Info label="State" value={t.state || "-"} />
               <Info label="Game" value={t.game || "-"} />
@@ -193,7 +196,7 @@ export default function TournamentDetail() {
                   </div>
                 </div>
                 {bracketSections.length ? (
-                  <div className="flex items-center gap-2" data-testid="bracket-zoom-controls">
+                  <div className="print-hide flex items-center gap-2" data-testid="bracket-zoom-controls">
                     <ZoomButton
                       label="Zoom out"
                       icon={Minus}
@@ -363,6 +366,39 @@ const MissingTournament = ({ id }) => (
       </Link>
     </div>
   </section>
+);
+
+const PrintButton = () => (
+  <button
+    type="button"
+    onClick={() => window.print()}
+    className="print-hide inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#273041] bg-[#141923] px-3 text-sm font-medium text-[#F3F4F6] transition-colors hover:border-[#10B981]/50 hover:text-[#10B981]"
+    data-testid="print-tournament-button"
+  >
+    <Printer size={17} weight="duotone" />
+    <span className="hidden sm:inline">Print</span>
+  </button>
+);
+
+const PrintHeader = ({ tournament, analytics }) => (
+  <section className="print-only mb-6 border-b border-[#273041] pb-4">
+    <h1 className="font-[Outfit] text-3xl font-semibold text-[#F3F4F6]">
+      {tournament.name}
+    </h1>
+    <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+      <PrintMeta label="Game" value={tournament.game || "-"} />
+      <PrintMeta label="State" value={tournament.state || "-"} />
+      <PrintMeta label="Players" value={analytics.player_count || tournament.participants_count || "-"} />
+      <PrintMeta label="Duration" value={analytics.duration_label || tournament.duration_label || "-"} />
+    </dl>
+  </section>
+);
+
+const PrintMeta = ({ label, value }) => (
+  <div>
+    <dt className="font-semibold text-[#6B7280]">{label}</dt>
+    <dd className="font-mono text-[#F3F4F6]">{value}</dd>
+  </div>
 );
 
 const BaselineStat = ({ label, value, to, title }) => {
