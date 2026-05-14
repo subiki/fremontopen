@@ -29,6 +29,7 @@ from players_extras import (
 ROOT_DIR = Path(__file__).parent
 PROJECT_ROOT = ROOT_DIR.parent
 DEFAULT_OUT = PROJECT_ROOT / "frontend" / "public" / "data" / "cache.json"
+DEFAULT_PRIZE_OVERRIDES = ROOT_DIR / "prize_overrides.json"
 MAX_NORMAL_TOURNAMENT_DURATION_MINUTES = 12 * 60
 DEFAULT_RANKING_MIN_MATCHES = 10
 ENTRY_FEE_DOLLARS = 10
@@ -61,6 +62,19 @@ def _load_season_points(path: Path | None = None) -> Dict[str, int]:
             if key in raw:
                 values[key] = int(raw[key])
     return values
+
+
+def _load_prize_overrides(path: Path | None = None) -> Dict[str, Any]:
+    config_path = path or DEFAULT_PRIZE_OVERRIDES
+    if not config_path.exists():
+        return {"default_entry_fee": ENTRY_FEE_DOLLARS, "tournaments": {}}
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("prize overrides must be a JSON object")
+    return {
+        "default_entry_fee": int(raw.get("default_entry_fee") or ENTRY_FEE_DOLLARS),
+        "tournaments": raw.get("tournaments") or {},
+    }
 
 
 def _parse_dt(value: Optional[str]):
@@ -180,8 +194,11 @@ def _tournament_prize_payouts(
     player_count: int,
     placements: Dict[str, int],
     entry_fee: int = ENTRY_FEE_DOLLARS,
+    override: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    pot = max(0, int(player_count or 0) * entry_fee)
+    override = override or {}
+    entry_fee = int(override.get("entry_fee") or entry_fee)
+    pot = int(override.get("pot") or max(0, int(player_count or 0) * entry_fee))
     place_targets = {
         1: pot * 0.5,
         2: pot * 0.5 * 0.6,
@@ -189,6 +206,9 @@ def _tournament_prize_payouts(
         4: pot * 0.5 * 0.1,
     }
     place_payouts = {place: _round_to_nearest_five(amount) for place, amount in place_targets.items()}
+    manual_payouts = override.get("payouts") or {}
+    for place, amount in manual_payouts.items():
+        place_payouts[int(place)] = int(amount)
     delta = pot - sum(place_payouts.values())
     if delta:
         reconcile_place = next(
@@ -233,7 +253,11 @@ def _tournament_prize_payouts(
         "payouts": payout_rows,
         "awarded": awarded,
         "unassigned": pot - awarded,
-        "rules": "Entry is $10 per player. First gets half the pot; the remaining half is split 60/30/10 for second, third, and fourth. Payouts are rounded to the nearest $5 and reconciled to award the full pot.",
+        "source": "override" if override else "calculated",
+        "rules": (
+            override.get("note")
+            or f"Entry is ${entry_fee} per player. First gets half the pot; the remaining half is split 60/30/10 for second, third, and fourth. Payouts are rounded to the nearest $5 and reconciled to award the full pot."
+        ),
     }
 
 
@@ -855,6 +879,7 @@ async def build_cache() -> Dict[str, Any]:
         players = [_row_to_dict(r) for r in player_rows]
         player_overrides = load_player_overrides()
         season_points = _load_season_points()
+        prize_overrides = _load_prize_overrides()
 
         for p in players:
             apply_player_overrides(p, player_overrides)
@@ -937,7 +962,12 @@ async def build_cache() -> Dict[str, Any]:
                     "duration_minutes": normalized_duration,
                 })
             cinderella_runs = _cinderella_runs(tournament_matches)
-            prize_pool = _tournament_prize_payouts(player_count, placements)
+            prize_pool = _tournament_prize_payouts(
+                player_count,
+                placements,
+                prize_overrides["default_entry_fee"],
+                prize_overrides["tournaments"].get(str(tid)),
+            )
             for payout in prize_pool["payouts"]:
                 players_in_place = payout.get("players") or []
                 if not players_in_place:
@@ -971,6 +1001,7 @@ async def build_cache() -> Dict[str, Any]:
                     "prize_awarded": prize_pool["awarded"],
                     "prize_unassigned": prize_pool["unassigned"],
                     "prize_rules": prize_pool["rules"],
+                    "prize_source": prize_pool["source"],
                     "duration_minutes": duration_minutes,
                     "duration_label": duration_label,
                     "normalized_duration_minutes": normalized_duration,

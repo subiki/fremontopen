@@ -172,6 +172,11 @@ cd backend
 The scheduled static refresh also imports `manual_side_matches.csv` when that
 file is present in the repo.
 
+To override prize assumptions for a specific event, create
+`backend/prize_overrides.json` from `backend/prize_overrides.json.example`.
+You can set a different default entry fee, or override a tournament by ID with
+an explicit pot and payout amounts. Re-run `export_static.py` after edits.
+
 ## Season Points
 
 Season standings use `backend/season_points.json`:

@@ -1,0 +1,16 @@
+{
+  "default_entry_fee": 10,
+  "tournaments": {
+    "123456": {
+      "entry_fee": 10,
+      "pot": 160,
+      "payouts": {
+        "1": 80,
+        "2": 50,
+        "3": 20,
+        "4": 10
+      },
+      "note": "Manual payout sheet for this tournament."
+    }
+  }
+}

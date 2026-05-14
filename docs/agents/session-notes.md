@@ -110,3 +110,9 @@
 - Added dashboard anniversary stats from cached completed matches.
 - Uses the latest cached match as reference and shows nearby matches from the same week last year.
 - Falls back to recent previous-season matches when no one-year window exists.
+
+## 2026-05-14 - P2 prize-pool overrides
+
+- Added optional `backend/prize_overrides.json` support for default entry fee and tournament-level pot/payout overrides.
+- Added an example override file and README documentation.
+- Kept default payout behavior unchanged when no override file is present.

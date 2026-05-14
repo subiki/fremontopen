@@ -13,6 +13,7 @@ from export_static import (
     _duration_baselines,
     _duration_minutes,
     _infer_tournament_placements,
+    _load_prize_overrides,
     _is_qualified_player,
     _load_season_points,
     _match_elo_odds,
@@ -153,6 +154,38 @@ def test_tournament_prize_payouts_splits_tied_places():
     assert payouts["awarded"] == 80
     assert third["split"] is True
     assert third["players"] == ["Third A", "Third B"]
+
+
+def test_tournament_prize_payouts_accept_manual_override():
+    payouts = _tournament_prize_payouts(
+        12,
+        {"Winner": 1, "Runner Up": 2, "Third": 3},
+        10,
+        {
+            "pot": 200,
+            "payouts": {"1": 120, "2": 60, "3": 20, "4": 0},
+            "note": "Manual payout sheet",
+        },
+    )
+
+    assert payouts["source"] == "override"
+    assert payouts["pot"] == 200
+    assert payouts["awarded"] == 200
+    assert [row["amount"] for row in payouts["payouts"]] == [120, 60, 20]
+    assert payouts["rules"] == "Manual payout sheet"
+
+
+def test_load_prize_overrides_reads_defaults_and_tournaments(tmp_path):
+    path = tmp_path / "prize_overrides.json"
+    path.write_text(
+        '{"default_entry_fee": 15, "tournaments": {"123": {"pot": 240}}}',
+        encoding="utf-8",
+    )
+
+    overrides = _load_prize_overrides(path)
+
+    assert overrides["default_entry_fee"] == 15
+    assert overrides["tournaments"]["123"]["pot"] == 240
 
 
 def test_match_elo_odds_compares_two_players():
