@@ -75,6 +75,9 @@ jobs:
           python sync_job.py
           python sync_job.py --dedupe-only
           python validation_report.py
+          if [ -f manual_side_matches.csv ]; then
+            python import_side_matches.py --source manual_side_matches.csv
+          fi
           python export_static.py
 
       - name: Monthly Fargo refresh

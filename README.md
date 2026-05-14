@@ -159,6 +159,19 @@ Use `--dry-run` first to produce `backend/fargo_refresh_report.json` without
 writing `player_overrides.json`. The importer does not bypass logins, captchas,
 robots.txt, or anti-bot controls; use an export or URL you are allowed to query.
 
+To include manually tracked side matches that are not in Challonge, create
+`backend/manual_side_matches.csv` from `backend/manual_side_matches.csv.example`
+and run:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe import_side_matches.py --source .\manual_side_matches.csv
+.venv\Scripts\python.exe export_static.py
+```
+
+The scheduled static refresh also imports `manual_side_matches.csv` when that
+file is present in the repo.
+
 ## Season Points
 
 Season standings use `backend/season_points.json`:

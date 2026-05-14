@@ -71,6 +71,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Player form chart with rolling last-10 match win rate
 - [x] Bracket visualization on tournament detail pages
 - [x] Tournament archive search by date range, winner, and format
+- [x] Manual side-match CSV import for matches not tracked in Challonge
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -94,9 +95,7 @@ All current static deploy and refresh items are complete.
 
 ## EPIC 2 - Data Quality Without Admin UI
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 2.6 | P2 | M | **Manual side-match import** - CSV import for matches not tracked in Challonge |
+All current data-quality items are complete.
 
 ## EPIC 3 - Player Stats And Rankings
 
@@ -160,7 +159,7 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+No active P1/P2 build-order items remain. Re-read issues before choosing the next slice.
 
 ---
 

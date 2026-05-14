@@ -62,3 +62,9 @@
 - Continued to the next build-order item after active P1 work was clear.
 - Added tournament archive filtering by tournament/winner text, winner, game format, and date range.
 - Reused the existing static tournament list payload and kept cards/timeline views unchanged.
+
+## 2026-05-14 - P2 manual side-match import
+
+- Added a local CSV importer for side matches not tracked in Challonge.
+- Wired the static refresh script and scheduled workflow to import `backend/manual_side_matches.csv` when present.
+- Documented the CSV path and kept the importer local/static-first with no admin UI.

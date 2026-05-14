@@ -47,6 +47,11 @@ if (-not $SkipValidation) {
     Invoke-BackendPython @("validation_report.py")
 }
 
+$SideMatchCsv = Join-Path $Backend "manual_side_matches.csv"
+if (Test-Path $SideMatchCsv) {
+    Invoke-BackendPython @("import_side_matches.py", "--source", $SideMatchCsv)
+}
+
 Invoke-BackendPython @("export_static.py")
 
 if (-not $SkipBuild) {

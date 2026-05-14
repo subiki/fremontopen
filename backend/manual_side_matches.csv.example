@@ -1,0 +1,2 @@
+winner_name,loser_name,scores,completed_at,game,tournament_name,tournament_id,round,match_id
+Example Winner,Example Loser,5-3,2026-05-14T19:00:00-07:00,8-ball,Manual side matches,-900001,1,example-2026-05-14-001

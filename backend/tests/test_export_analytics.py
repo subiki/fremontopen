@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from players_extras import compute_elo_ratings, rolling_match_form
+from import_side_matches import load_side_match_rows
 from export_static import (
     _closest_rivalry,
     _attendance_stats,
@@ -315,3 +316,20 @@ def test_season_standings_group_matches_by_tournament_date():
     assert seasons[1]["players"][0]["player"] == "A"
     assert seasons[1]["players"][0]["wins"] == 2
     assert seasons[1]["players"][0]["points"] == 6
+
+
+def test_load_side_match_rows_defaults_manual_bucket(tmp_path):
+    path = tmp_path / "side_matches.csv"
+    path.write_text(
+        "winner_name,loser_name,scores,completed_at,game\n"
+        "A,B,5-3,2026-05-14T19:00:00-07:00,8-ball\n",
+        encoding="utf-8",
+    )
+
+    rows = load_side_match_rows(path)
+
+    assert rows[0]["id"].startswith("side:")
+    assert rows[0]["tournament_id"] == -900001
+    assert rows[0]["tournament_name"] == "Manual side matches"
+    assert rows[0]["winner_name"] == "A"
+    assert rows[0]["loser_name"] == "B"
