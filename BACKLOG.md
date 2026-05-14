@@ -62,6 +62,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Manual player overrides file for Fargo ratings, Fargo IDs, nicknames, and notes
 - [x] Rivalry of the week dashboard card from the closest high-volume matchup
 - [x] Keyboard shortcuts for search and quick navigation
+- [x] PWA manifest and offline cache for static shell and `cache.json`
 
 ## Removed From Demo Scope
 
@@ -138,7 +139,6 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 8.1 | P1 | S | **PWA install / offline cache** for static assets and `cache.json` |
 | 8.5 | P2 | S | **Case-insensitive player URLs** |
 | 8.6 | P2 | S | **404/static fallback polish** for unknown players and tournaments |
 | 8.7 | P3 | S | **Pinch-zoom bracket view** |
@@ -160,15 +160,14 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **8.1 PWA install / offline cache** - make the static demo friendlier on phones.
-2. **7.2 Configurable points system** - make weekly standings scoring adjustable.
-3. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
-4. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with reports.
-5. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
-6. **6.3 Player form chart** - show rolling last-10 match win rate.
-7. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-8. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-9. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **7.2 Configurable points system** - make weekly standings scoring adjustable.
+2. **5.2 Rivalry index** - rank meaningful rivalries instead of just individual players.
+3. **2.8 Monthly Fargo refresh** - connect an authorized source or override workflow with reports.
+4. **7.1 Season groupings** - organize stats into spring/summer/fall sessions.
+5. **6.3 Player form chart** - show rolling last-10 match win rate.
+6. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+7. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+8. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 
