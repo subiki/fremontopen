@@ -21,6 +21,7 @@ from export_static import (
     _season_standings,
     _strength_of_schedule,
     _tournament_prize_payouts,
+    _upset_tracker,
 )
 
 
@@ -202,6 +203,48 @@ def test_cinderella_runs_rank_underdog_paths():
     assert runs[0]["upset_count"] == 2
     assert runs[0]["upset_score"] == 135.0
     assert runs[0]["biggest_upset"]["opponent"] == "Favorite"
+
+
+def test_upset_tracker_ranks_biggest_underdog_wins():
+    rows = [
+        {
+            **match(1, "A", "B"),
+            "tournament_id": 10,
+            "tournament_name": "Ten",
+            "elo_odds": {
+                "favorite": "B",
+                "winner_probability": 20.0,
+                "loser_probability": 80.0,
+                "rating_gap": -240,
+            },
+        },
+        {
+            **match(2, "C", "D"),
+            "tournament_id": 11,
+            "tournament_name": "Eleven",
+            "elo_odds": {
+                "favorite": "D",
+                "winner_probability": 35.0,
+                "loser_probability": 65.0,
+                "rating_gap": -130,
+            },
+        },
+        {
+            **match(3, "E", "F"),
+            "elo_odds": {
+                "favorite": "E",
+                "winner_probability": 70.0,
+                "loser_probability": 30.0,
+                "rating_gap": 150,
+            },
+        },
+    ]
+
+    upsets = _upset_tracker(rows)
+
+    assert [row["winner"] for row in upsets] == ["A", "C"]
+    assert upsets[0]["favorite_probability"] == 80.0
+    assert upsets[0]["tournament_name"] == "Ten"
 
 
 def test_double_elimination_placements_use_late_loser_bracket():

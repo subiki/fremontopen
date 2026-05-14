@@ -76,6 +76,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Strength of schedule from opponent win rate and ELO
 - [x] Player nicknames from local overrides file
 - [x] Cinderella runs from tournament ELO underdog wins
+- [x] Upset tracker for rating-underdog wins
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -118,7 +119,6 @@ All current data-quality items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 5.4 | P2 | M | **H2H heatmap matrix** across all players |
-| 5.5 | P2 | S | **Upset tracker** - rating underdog wins after ELO lands |
 | 5.6 | P2 | S | **Anniversary stats** - notable matches from one year ago / last season |
 
 ## EPIC 6 - Charts And Visual Polish
@@ -160,8 +160,8 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **5.5 Upset tracker** - rank rating-underdog wins.
-2. **7.3 Attendance tracker** - summarize attendance by season.
+1. **7.3 Attendance tracker** - summarize attendance by season.
+2. **5.6 Anniversary stats** - notable matches from one year ago / last season.
 
 ---
 

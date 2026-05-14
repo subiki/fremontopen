@@ -59,6 +59,7 @@ export default function Dashboard() {
   const recent = stats?.recent_matches || [];
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const rivalryIndex = stats?.rivalry_index || [];
+  const upsetTracker = stats?.upset_tracker || [];
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
@@ -339,6 +340,29 @@ export default function Dashboard() {
                 </Link>
                 <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                   {row.matches} / {row.a_wins}-{row.b_wins}
+                </span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title="Upset Tracker"
+            rows={upsetTracker.slice(0, 6)}
+            empty="No ELO upsets yet."
+            renderRow={(row) => (
+              <>
+                <div className="min-w-0">
+                  <Link
+                    to={`/players/${encodeURIComponent(row.winner)}`}
+                    className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                  >
+                    {row.winner}
+                  </Link>
+                  <div className="mt-1 text-[11px] text-[#6B7280] truncate">
+                    def. {row.loser}
+                  </div>
+                </div>
+                <span className="font-mono text-xs text-[#F59E0B] shrink-0">
+                  {row.winner_probability}% odds
                 </span>
               </>
             )}

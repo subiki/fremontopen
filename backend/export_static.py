@@ -299,6 +299,35 @@ def _cinderella_runs(matches: List[Dict[str, Any]], limit: int = 3) -> List[Dict
     return out[:limit]
 
 
+def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[str, Any]]:
+    rows = []
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        odds = match.get("elo_odds") or {}
+        if not winner or not loser or odds.get("favorite") == winner:
+            continue
+        winner_probability = odds.get("winner_probability")
+        favorite_probability = odds.get("loser_probability")
+        if winner_probability is None or favorite_probability is None:
+            continue
+        rows.append({
+            "match_id": match.get("id"),
+            "tournament_id": match.get("tournament_id"),
+            "tournament_name": match.get("tournament_name"),
+            "date": match.get("completed_at"),
+            "winner": winner,
+            "loser": loser,
+            "scores": match.get("scores"),
+            "round": match.get("round"),
+            "winner_probability": winner_probability,
+            "favorite_probability": favorite_probability,
+            "rating_gap": abs(odds.get("rating_gap") or 0),
+        })
+    rows.sort(key=lambda row: (-row["favorite_probability"], -row["rating_gap"], str(row.get("date") or "")))
+    return rows[:limit]
+
+
 def _is_qualified_player(player: Dict[str, Any], minimum_matches: int = DEFAULT_RANKING_MIN_MATCHES) -> bool:
     return ((player.get("wins") or 0) + (player.get("losses") or 0)) >= minimum_matches
 
@@ -1052,6 +1081,7 @@ async def build_cache() -> Dict[str, Any]:
         recent_activity = _recent_activity_summary(matches)
         closest_rivalry = _closest_rivalry(matches)
         rivalry_index = _rivalry_index(matches)
+        upset_tracker = _upset_tracker(matches)
         season_standings = _season_standings(tournaments, matches, season_points)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
@@ -1100,6 +1130,7 @@ async def build_cache() -> Dict[str, Any]:
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
             "season_standings": season_standings,
             "rivalry_index": rivalry_index,
+            "upset_tracker": upset_tracker,
             "players": players,
             "recent_matches": [
                 m for m in matches

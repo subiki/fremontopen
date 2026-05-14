@@ -92,3 +92,9 @@
 - Added tournament-level Cinderella run analytics from cached ELO odds.
 - Ranked players by accumulated underdog-win score per tournament.
 - Surfaced the top Cinderella runs on tournament detail pages above the bracket.
+
+## 2026-05-14 - P2 upset tracker
+
+- Added a global ELO upset tracker for rating-underdog match wins.
+- Ranked upsets by the favorite's pre-match win probability.
+- Surfaced the top upset rows on the dashboard.
