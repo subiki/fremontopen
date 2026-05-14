@@ -43,3 +43,10 @@
 - Continued to open P1 issue #41.
 - Added a dedicated `/seasons` static page with spring/summer/fall/winter groups and cumulative standings.
 - Widened static season export to include full season player standings instead of dashboard-only slices.
+
+## 2026-05-14 - P1 player form chart
+
+- Continued by backlog priority after the season standings slice.
+- Added rolling last-10 match form analytics to the static player extras export.
+- Surfaced recent form on player detail pages alongside wins-over-time and ELO charts.
+- Kept the implementation static-first with no new runtime backend requirement.

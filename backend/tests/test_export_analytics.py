@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from players_extras import compute_elo_ratings
+from players_extras import compute_elo_ratings, rolling_match_form
 from export_static import (
     _closest_rivalry,
     _attendance_stats,
@@ -202,6 +202,26 @@ def test_compute_elo_ratings_rewards_winners_and_tracks_history():
     assert ratings["peaks"]["A"] == ratings["ratings"]["A"]
     assert len(ratings["history"]["A"]) == 2
     assert ratings["history"]["A"][0]["delta"] > 0
+
+
+def test_rolling_match_form_tracks_last_ten_win_rate():
+    matches = [
+        match(
+            i,
+            "A" if i in {1, 3, 5, 7, 9, 11} else "B",
+            "B" if i in {1, 3, 5, 7, 9, 11} else "A",
+            f"2026-05-{i:02d}T17:00:00-07:00",
+        )
+        for i in range(1, 13)
+    ]
+
+    form = rolling_match_form(matches, "A", 10)
+
+    assert len(form) == 12
+    assert form[-1]["window"] == 10
+    assert form[-1]["wins"] == 5
+    assert form[-1]["losses"] == 5
+    assert form[-1]["win_rate"] == 50.0
 
 
 def test_recent_activity_summary_counts_active_players_and_hottest_player():

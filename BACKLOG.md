@@ -68,6 +68,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] 404 and unknown player/tournament fallback polish
 - [x] Rivalry index ranked by matches, closeness, and streak swings
 - [x] Season groupings page with cumulative standings
+- [x] Player form chart with rolling last-10 match win rate
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -124,7 +125,6 @@ All current static deploy and refresh items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 6.3 | P1 | M | **Player form chart** - rolling last-10 match win rate |
 | 6.4 | P2 | S | **Tournament difficulty indicator** |
 | 6.5 | P2 | S | **Light mode toggle** |
 | 6.6 | P3 | M | **Player photo/card art** from local static assets |
@@ -160,10 +160,9 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-1. **6.3 Player form chart** - show rolling last-10 match win rate.
-2. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
-3. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
-4. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
+1. **4.1 Bracket visualization** - make tournament detail pages easier to inspect.
+2. **4.5 Tournament archive search** - add date, winner, and format search to the archive.
+3. **2.6 Manual side-match import** - capture matches not tracked in Challonge.
 
 ---
 

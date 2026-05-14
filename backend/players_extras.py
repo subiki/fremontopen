@@ -217,3 +217,46 @@ def wins_over_time(matches: List[Dict[str, Any]], player_name: str) -> List[Dict
             "losses": cum_l,
         })
     return out
+
+
+def rolling_match_form(
+    matches: List[Dict[str, Any]],
+    player_name: str,
+    window: int = 10,
+) -> List[Dict[str, Any]]:
+    """Rolling match win rate for the player's most recent completed matches."""
+    sorted_m = sorted(
+        [
+            m for m in matches
+            if m.get("completed_at")
+            and m.get("state") == "complete"
+            and (
+                m.get("winner_name") == player_name
+                or m.get("loser_name") == player_name
+            )
+        ],
+        key=lambda m: (m.get("completed_at") or "", str(m.get("id") or "")),
+    )
+
+    recent_results: List[bool] = []
+    out = []
+    for m in sorted_m:
+        won = m.get("winner_name") == player_name
+        opponent = m.get("loser_name") if won else m.get("winner_name")
+        recent_results.append(won)
+        recent_results = recent_results[-window:]
+        wins = sum(1 for result in recent_results if result)
+        losses = len(recent_results) - wins
+        out.append({
+            "date": m.get("completed_at"),
+            "match_id": m.get("id"),
+            "opponent": opponent,
+            "won": won,
+            "window": len(recent_results),
+            "wins": wins,
+            "losses": losses,
+            "win_rate": round((wins / len(recent_results)) * 100, 1),
+            "tournament_id": m.get("tournament_id"),
+            "tournament_name": m.get("tournament_name"),
+        })
+    return out

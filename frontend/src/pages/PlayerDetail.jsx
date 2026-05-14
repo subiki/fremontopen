@@ -4,6 +4,7 @@ import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { WinsOverTimeChart } from "../components/charts/WinsOverTimeChart";
 import { EloRatingChart } from "../components/charts/EloRatingChart";
+import { PlayerFormChart } from "../components/charts/PlayerFormChart";
 import { FargoEditor } from "../components/FargoEditor";
 import { fetchPlayer, fetchLeaderboard, api } from "../lib/api";
 import { isFollowing, toggleFollow, onFollowingChange } from "../lib/follow";
@@ -93,6 +94,7 @@ export default function PlayerDetail() {
   const elo = extras?.elo || {};
   const attendance = extras?.attendance || {};
   const cash = extras?.cash || {};
+  const form = extras?.form || {};
 
   useEffect(() => {
     if (p?.name && p.name !== decoded) {
@@ -332,7 +334,7 @@ export default function PlayerDetail() {
               <PerfCard perf={extras?.perf_vs_fargo} />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="chart-card">
                 <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">Wins over time</h2>
                 <WinsOverTimeChart data={extras?.wins_over_time || []} />
@@ -340,6 +342,18 @@ export default function PlayerDetail() {
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="elo-chart-card">
                 <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">ELO rating history</h2>
                 <EloRatingChart data={elo.history || []} />
+              </section>
+              <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="player-form-chart-card">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Last-10 form</h2>
+                  {form.latest ? (
+                    <div className="text-right font-mono text-xs text-[#9CA3AF]">
+                      <div className="text-[#10B981] text-sm font-semibold">{form.latest.win_rate}%</div>
+                      <div>{form.latest.wins}-{form.latest.losses}</div>
+                    </div>
+                  ) : null}
+                </div>
+                <PlayerFormChart data={form.history || []} />
               </section>
             </div>
 

@@ -22,6 +22,7 @@ from players_extras import (
     compute_perf_vs_fargo,
     compute_streaks,
     compute_tourney_championships,
+    rolling_match_form,
     wins_over_time,
 )
 
@@ -895,6 +896,7 @@ async def build_cache() -> Dict[str, Any]:
             }
             cash_winnings = all_cash_winnings.get(name, {"total": 0.0, "by_tournament": []})
             cash_total = round(cash_winnings["total"], 2)
+            form_history = rolling_match_form(player_matches, name, 10)
             average_placement = round(sum(placement_values) / len(placement_values), 2) if placement_values else None
             player["average_placement"] = average_placement
             player["top_1_finishes"] = top_finishes["first"]
@@ -921,6 +923,11 @@ async def build_cache() -> Dict[str, Any]:
                     opponent_fargos,
                 ),
                 "wins_over_time": wins_over_time(player_matches, name),
+                "form": {
+                    "window": 10,
+                    "history": form_history,
+                    "latest": form_history[-1] if form_history else None,
+                },
                 "fargo": player.get("fargo"),
                 "fargo_source": player.get("fargo_source"),
                 "fargo_source_url": player.get("fargo_source_url"),
