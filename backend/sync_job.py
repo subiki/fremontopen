@@ -1,7 +1,7 @@
-"""Standalone Challonge → MySQL/SQLite sync job.
+"""Standalone Challonge to SQLite sync job.
 
-Run via cron:
-    0 23 * * 6 cd /home/USER/cuestats/backend && ./venv/bin/python sync_job.py
+Run locally from backend:
+    .venv\\Scripts\\python.exe sync_job.py
 
 The web app NEVER calls Challonge — only this script does.
 

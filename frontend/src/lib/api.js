@@ -207,7 +207,3 @@ export const fetchPlayer = (name) =>
 export const fetchLeaderboard = (limit = 25) =>
   api.get("/leaderboard", { params: { limit } }).then((r) => r.data);
 export const fetchSyncStatus = () => api.get("/sync/status").then((r) => r.data);
-export const sendChat = (session_id, message) =>
-  api.post("/chat", { session_id, message }).then((r) => r.data);
-export const fetchChatHistory = (session_id) =>
-  api.get(`/chat/history/${session_id}`).then((r) => r.data);

@@ -9,9 +9,7 @@ body:
       options:
         - tournaments
         - players
-        - ai
         - community
-        - admin
         - charts
         - mobile-ux
         - seasons

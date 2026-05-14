@@ -1,166 +1,49 @@
 # Architecture
 
-## High-level diagram
+Fremont Open is a static React stats site backed by a generated JSON cache.
+There is no public backend in the deployed demo.
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                          USER BROWSER                                │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  React 19 SPA · Tailwind · Shadcn UI · recharts · phosphor  │    │
-│  │  Topbar+Search   Sidebar   Pages   AI Chat   Admin   /me    │    │
-│  └────────────────────────────┬────────────────────────────────┘    │
-│                               │ HTTPS                                │
-└───────────────────────────────┼──────────────────────────────────────┘
-                                │
-                ┌───────────────▼─────────────────┐
-                │     DreamHost panel Proxy        │
-                │  /  → static ~/fremontopen.com/  │
-                │  /api → 127.0.0.1:8001 (uvicorn) │
-                └───────────────┬─────────────────┘
-                                │
-                ┌───────────────▼─────────────────┐
-                │    FastAPI (fremontopen.service) │
-                │  Routers:                        │
-                │  - read-only public /api/*       │
-                │  - /api/auth (admin login)       │
-                │  - /api/admin/* (admin JWT)      │
-                │  - /api/auth/{provider} (SSO)    │
-                │  - /api/me/* (user JWT)          │
-                │  - extras (search,OG,compare)    │
-                │  - /api/chat (Claude Sonnet 4.5) │
-                └───┬───────────┬──────────┬───────┘
-                    │           │          │
-        ┌───────────▼──┐   ┌────▼────┐   ┌─▼──────────┐
-        │    MySQL     │   │  Claude │   │ Pillow OG  │
-        │  tournaments │   │ Sonnet  │   │  card PNG  │
-        │  matches     │   │  4.5    │   │ generator  │
-        │  players     │   │  (LLM)  │   └────────────┘
-        │  users       │   └─────────┘
-        │  admins      │
-        │  chat_msgs   │
-        │  audit_log   │
-        │  sync_meta   │
-        └──────────────┘
-                ▲
-                │ (CRON, Saturday 23:00)
-                │
-        ┌───────┴───────────┐
-        │  sync_job.py CLI  │
-        │   (only entity    │
-        │   that calls      │
-        │   Challonge)      │
-        └───────┬───────────┘
-                │ HTTPS (User-Agent header required)
-                │
-        ┌───────▼───────────┐
-        │   Challonge API   │
-        │  ~3 calls / week  │
-        └───────────────────┘
+## Runtime
+
+```text
+Challonge API
+  -> backend/sync_job.py
+  -> backend/cuestats_dev.db
+  -> backend/export_static.py
+  -> frontend/public/data/cache.json
+  -> frontend build
+  -> DreamHost static web root
 ```
 
-## Data model
+The browser reads only static assets and `data/cache.json`. Features that look
+interactive, such as follows, use `localStorage`.
 
-### `tournaments`
-| field | source |
-|---|---|
-| `id` (int) | Challonge id |
-| `name` | Challonge |
-| `game` | Challonge `game_name` |
-| `state` | Challonge — drives sync skip decisions |
-| `started_at`, `completed_at`, `participants_count`, `url` | Challonge |
+## Kept Source Areas
 
-### `matches`
-| field | notes |
-|---|---|
-| `id` (string of Challonge match id) | primary key |
-| `tournament_id`, `tournament_name`, `round`, `state` | from Challonge |
-| `scores` (Challonge `scores_csv`) | string like "5-2,3-5,5-3" |
-| `winner_id`, `loser_id` | Challonge participant ids |
-| `winner_name`, `loser_name` | resolved from participants |
-| `completed_at` | sortable timestamp |
+- `backend/` - local sync, dedupe, validation, Fargo import, and cache export
+- `frontend/` - static React application
+- `scripts/` - repo-level helper scripts
+- `.github/workflows/deploy.yml` - static build and DreamHost rsync deploy
+- `BACKLOG.md` - product priority and GitHub issue sync source
 
-### `players`
-Aggregate, recomputed from `matches` after each sync.
-| field | notes |
-|---|---|
-| `id` (uuid), `name` | name is the join key |
-| `wins`, `losses`, `win_rate` | aggregates |
-| `fargo` | nullable, admin/owner-editable |
+## Data Tables
 
-### `users` (SSO)
-| field | notes |
-|---|---|
-| `id` (uuid) | internal pk |
-| `provider` ∈ {google, discord, facebook}, `provider_user_id` | unique pair |
-| `display_name`, `email`, `avatar_url` | from provider |
-| `claimed_player` (string, nullable) | links account → one player |
-| `followed_players` (array of names) | cross-device follow list |
-| `created_at`, `last_login_at`, `claimed_at` | timestamps |
+The local SQLite cache keeps only the tables needed to regenerate the static
+site:
 
-### `admins`
-Single record. `email`, `password_hash` (bcrypt). Seeded from `.env` on each startup.
+- `tournaments`
+- `matches`
+- `players`
+- `sync_meta`
 
-### `audit_log`
-Every admin mutation: `{action, payload, at}`.
+Manual correction inputs live in JSON files:
 
-### `sync_meta`
-Key/value store (JSON column):
-- `"last"` → last-run summary (when, status, counts)
-- `"tournaments_seen"` → `{tournament_id: updated_at}` for skip-frozen logic
+- `backend/player_aliases.json` for deliberate dedupe aliases
+- `backend/player_overrides.json` for Fargo, nicknames, and notes
+- `backend/season_points.json` for standings scoring
 
-## Auth model
+## Deploy
 
-Two distinct JWT systems sharing `JWT_SECRET`:
-
-| | Admin | User |
-|---|---|---|
-| `sub` | email | user id (uuid) |
-| `role` | `admin` | `user` |
-| `type` | `access` | `session` |
-| TTL | 24h | 30d |
-| Storage | localStorage `fremontopen_admin_token` | localStorage `fremontopen_user_token` |
-| Dependency | `require_admin` | `require_user` / `optional_user` |
-| Cannot impersonate | each other (different role+type) |
-
-## Sync algorithm (cost: ~3 API calls / week)
-
-```
-fetch Challonge tournament list                          [+1 call]
-for each tournament t:
-    upsert tournament row
-    if t.state ∈ {complete, ended} AND seen[t.id]:
-        skip                                              [+0 calls]
-    elif seen[t.id] == t.updated_at:
-        skip                                              [+0 calls]
-    else:
-        fetch participants                                [+1 call]
-        fetch matches                                     [+1 call]
-        upsert; mark seen[t.id] = t.updated_at
-recompute players from matches                            [+0 calls]
-```
-
-Force-mode (`--force`) ignores `seen` and refetches everything. Used after destructive admin operations.
-
-## Privacy boundaries
-
-- The **public API** never exposes user identity (no usernames, emails, providers).
-- `/api/players/{name}/claim-info` returns only `{claimed: bool}` — never WHO.
-- No direct messaging between users. There is no inbox model. There is no "find friends" endpoint.
-- Admin and user auth are isolated. An admin login does not grant user-level access and vice-versa.
-
-## CI/CD flow
-
-```
-git push origin main
-  → GitHub Actions: deploy.yml
-    → checkout
-    → yarn build (with REACT_APP_BACKEND_URL secret)
-    → rsync frontend/build/ → server:DEPLOY_WEBROOT/
-    → rsync backend/ → server:DEPLOY_PATH/backend/    (preserves .env)
-    → ssh: bash deploy/remote_deploy.sh
-      → pip install -r requirements.txt
-      → systemctl --user restart fremontopen
-    → smoke test: curl /api/health
-```
-
-Cron runs weekly (Saturday 11pm) on the server, independent of deploys.
+Pushes to `main` trigger `.github/workflows/deploy.yml`. The workflow builds the
+frontend with `REACT_APP_STATIC_DATA=true`, then rsyncs `frontend/build/` to the
+configured DreamHost web root.

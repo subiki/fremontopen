@@ -269,10 +269,3 @@ scripts/create_github_issues.sh
 
 The sync workflow creates issues from active backlog rows and closes old issues
 when rows are moved out of the active backlog.
-
-## Legacy Hosted Features
-
-FastAPI, MySQL production hosting, login, admin edits, AI chat, OAuth, and
-dynamic server-side features are intentionally out of scope for the shared
-hosting demo. They can return later if the project moves to VPS or serverless
-hosting.

@@ -241,7 +241,7 @@ declare -A EPIC_COLORS=(
 
 declare -A EPIC_DESCS=(
   [static-deploy]="Static Deploy And Data Refresh"
-  [data-quality]="Data Quality Without Admin UI"
+  [data-quality]="Data Quality"
   [rankings]="Player Stats And Rankings"
   [tournaments]="Tournament Views"
   [rivalries]="Compare, Rivalries, And Story Views"

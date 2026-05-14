@@ -39,7 +39,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* shadcn css vars (dark) */
+/* Theme css vars (dark) */
 @layer base {
     :root {
         --background: 222 25% 6%;

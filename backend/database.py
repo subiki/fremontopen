@@ -1,12 +1,12 @@
-"""SQLAlchemy async engine, all table definitions, and schema initialisation.
+"""SQLAlchemy async engine and cache table definitions.
 
-Dev  (Replit):  DATABASE_URL=sqlite+aiosqlite:///./cuestats_dev.db
-Prod (DreamHost MySQL): DATABASE_URL=mysql+aiomysql://user:pass@host/dbname
+Local tooling uses SQLite at ``backend/cuestats_dev.db``. The deployed site is
+static and reads ``frontend/public/data/cache.json`` only.
 """
 import os
 from sqlalchemy import (
     MetaData, Table, Column,
-    Integer, String, Float, Text, JSON,
+    Integer, String, Float, JSON,
 )
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -48,58 +48,6 @@ players = Table(
     Column("losses", Integer, default=0),
     Column("win_rate", Float, default=0.0),
     Column("fargo", Integer, nullable=True),
-)
-
-admins = Table(
-    "admins", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("email", String(500), unique=True),
-    Column("password_hash", String(500)),
-    Column("created_at", String(60)),
-)
-
-login_attempts = Table(
-    "login_attempts", metadata,
-    Column("identifier", String(500), primary_key=True),
-    Column("count", Integer, default=0),
-    Column("last_at", String(60)),
-)
-
-users = Table(
-    "users", metadata,
-    Column("id", String(100), primary_key=True),
-    Column("provider", String(50)),
-    Column("provider_user_id", String(500)),
-    Column("display_name", String(500)),
-    Column("email", String(500)),
-    Column("avatar_url", String(1000)),
-    Column("claimed_player", String(500), nullable=True),
-    Column("claimed_at", String(60), nullable=True),
-    Column("created_at", String(60)),
-    Column("last_login_at", String(60)),
-)
-
-user_follows = Table(
-    "user_follows", metadata,
-    Column("user_id", String(100), primary_key=True),
-    Column("player_name", String(500), primary_key=True),
-)
-
-chat_messages = Table(
-    "chat_messages", metadata,
-    Column("id", String(100), primary_key=True),
-    Column("session_id", String(100), index=True),
-    Column("role", String(50)),
-    Column("content", Text),
-    Column("msg_ts", String(60)),
-)
-
-audit_log = Table(
-    "audit_log", metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("action", String(200)),
-    Column("payload", JSON),
-    Column("at", String(60)),
 )
 
 sync_meta = Table(
