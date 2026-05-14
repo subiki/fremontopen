@@ -65,6 +65,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Rivalry of the week dashboard card from the closest high-volume matchup
 - [x] Monthly Fargo refresh wiring for an authorized source URL
 - [x] Case-insensitive player profile URLs
+- [x] 404 and unknown player/tournament fallback polish
 - [x] Keyboard shortcuts for search and quick navigation
 - [x] PWA manifest and offline cache for static shell and `cache.json`
 - [x] Configurable season points system for weekly standings
@@ -140,7 +141,6 @@ All current static deploy and refresh items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 8.6 | P2 | S | **404/static fallback polish** for unknown players and tournaments |
 | 8.7 | P3 | S | **Pinch-zoom bracket view** |
 
 ## EPIC 9 - Future Hosted Features

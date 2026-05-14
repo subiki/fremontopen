@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournament } from "../lib/api";
-import { CaretLeft } from "@phosphor-icons/react";
+import { CaretLeft, MagnifyingGlass } from "@phosphor-icons/react";
 
 export default function TournamentDetail() {
   const { id } = useParams();
@@ -41,7 +41,7 @@ export default function TournamentDetail() {
         {loading ? (
           <div className="text-[#6B7280]">Loading...</div>
         ) : !t ? (
-          <div className="text-[#EF4444]">Tournament not found.</div>
+          <MissingTournament id={id} />
         ) : (
           <>
             <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6 grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -196,6 +196,34 @@ const Info = ({ label, value }) => (
     <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
     <div className="mt-1 font-mono text-[#F3F4F6]">{value}</div>
   </div>
+);
+
+const MissingTournament = ({ id }) => (
+  <section className="max-w-2xl bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="missing-tournament">
+    <div className="w-12 h-12 rounded-md bg-[#0B0E14] border border-[#273041] flex items-center justify-center">
+      <MagnifyingGlass size={22} weight="duotone" className="text-[#F59E0B]" />
+    </div>
+    <h1 className="mt-5 font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
+      Tournament not found.
+    </h1>
+    <p className="mt-2 text-sm text-[#9CA3AF]">
+      No cached tournament matches `{id}`. Try the tournament archive or global search.
+    </p>
+    <div className="mt-6 flex flex-wrap gap-3">
+      <Link
+        to="/tournaments"
+        className="inline-flex items-center justify-center rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 text-sm font-medium text-[#F3F4F6] hover:border-[#10B981]/50 hover:text-[#10B981] transition-colors"
+      >
+        Browse tournaments
+      </Link>
+      <Link
+        to="/"
+        className="inline-flex items-center justify-center rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 text-sm font-medium text-[#F3F4F6] hover:border-[#10B981]/50 hover:text-[#10B981] transition-colors"
+      >
+        Dashboard search
+      </Link>
+    </div>
+  </section>
 );
 
 const BaselineStat = ({ label, value, to, title }) => {

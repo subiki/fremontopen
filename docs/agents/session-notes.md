@@ -25,3 +25,9 @@
 - Continued to open P1 issue #49 after JFL implementation work.
 - Added static API canonical player-name resolution for player detail, extras, and compare routes.
 - Player detail pages now replace lowercase or mixed-case URLs with the canonical player URL after load.
+
+## 2026-05-14 - P1 static fallback polish
+
+- Continued to open P1 issue #50.
+- Replaced the wildcard home redirect with a static 404 page.
+- Added useful missing-player and missing-tournament states with links back to directory/search entry points.

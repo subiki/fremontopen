@@ -1,6 +1,6 @@
 import "@/App.css";
 import { useEffect } from "react";
-import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/Layout";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
@@ -14,6 +14,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
 import StatRankings from "./pages/StatRankings";
 import Info from "./pages/Info";
+import NotFound from "./pages/NotFound";
 
 function App() {
   useEffect(() => {
@@ -36,7 +37,7 @@ function App() {
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
             <Route path="/info" element={<Info />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </BrowserRouter>

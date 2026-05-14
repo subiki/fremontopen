@@ -23,6 +23,7 @@ import {
   TrendUp,
   TrendDown,
   Medal,
+  MagnifyingGlass,
 } from "@phosphor-icons/react";
 
 export default function PlayerDetail() {
@@ -198,7 +199,7 @@ export default function PlayerDetail() {
         {loading ? (
           <div className="text-[#6B7280]">Loading…</div>
         ) : !p ? (
-          <div className="text-[#EF4444]">Player not found.</div>
+          <MissingPlayer name={decoded} />
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
@@ -539,6 +540,34 @@ const formatMoney = (value) =>
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     : "—";
 
+
+const MissingPlayer = ({ name }) => (
+  <section className="max-w-2xl bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="missing-player">
+    <div className="w-12 h-12 rounded-md bg-[#0B0E14] border border-[#273041] flex items-center justify-center">
+      <MagnifyingGlass size={22} weight="duotone" className="text-[#F59E0B]" />
+    </div>
+    <h1 className="mt-5 font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
+      Player not found.
+    </h1>
+    <p className="mt-2 text-sm text-[#9CA3AF]">
+      No cached player matches `{name}`. Try the player directory or global search.
+    </p>
+    <div className="mt-6 flex flex-wrap gap-3">
+      <Link
+        to="/players"
+        className="inline-flex items-center justify-center rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 text-sm font-medium text-[#F3F4F6] hover:border-[#10B981]/50 hover:text-[#10B981] transition-colors"
+      >
+        Browse players
+      </Link>
+      <Link
+        to="/"
+        className="inline-flex items-center justify-center rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 text-sm font-medium text-[#F3F4F6] hover:border-[#10B981]/50 hover:text-[#10B981] transition-colors"
+      >
+        Dashboard search
+      </Link>
+    </div>
+  </section>
+);
 
 const StreakCard = ({ streaks }) => {
   if (!streaks) {
