@@ -8,6 +8,7 @@ import json
 import pytest
 
 from name_cleaning import clean_player_name, player_name_key, load_alias_map
+from player_entry_classification import classify_player_entry, resolve_player_entry
 
 
 def test_clean_player_name_removes_markers_and_notes():
@@ -15,6 +16,8 @@ def test_clean_player_name_removes_markers_and_notes():
     assert clean_player_name("Chris Moore* (9900004712156)") == "Chris Moore"
     assert clean_player_name("Catt Edgley* 9900007103098") == "Catt Edgley"
     assert clean_player_name("AJ Johnson / AZ Flynn**") == "AJ Johnson / AZ Flynn"
+    assert clean_player_name("Jason Lambert - forfeit") == "Jason Lambert"
+    assert clean_player_name("Jen Barr (forfeit)") == "Jen Barr"
 
 
 def test_clean_player_name_preserves_meaningful_parenthetical_nicknames():
@@ -61,3 +64,31 @@ def test_load_alias_map_rejects_conflicting_aliases(tmp_path):
 
     with pytest.raises(ValueError):
         load_alias_map(path)
+
+
+def test_classify_player_entry_splits_singles_doubles_placeholders_and_unknowns():
+    assert classify_player_entry("Jason Lambert")["entry_type"] == "singles_player"
+
+    doubles = classify_player_entry("Jason Lambert / Camilla Keenan-Koch")
+    assert doubles["entry_type"] == "doubles_team"
+    assert doubles["components"] == ["Jason Lambert", "Camilla Keenan-Koch"]
+
+    assert classify_player_entry("BYE")["entry_type"] == "placeholder"
+
+    shorthand = classify_player_entry("evan chad")
+    assert shorthand["entry_type"] == "unknown"
+    assert shorthand["review_required"] is True
+
+
+def test_resolve_player_entry_applies_aliases_only_to_singles():
+    aliases = {
+        "jason l": "Jason Lambert",
+        "jlb0306": "Jen Barr",
+    }
+
+    assert resolve_player_entry("Jason L", aliases)["canonical_name"] == "Jason Lambert"
+    assert resolve_player_entry("jlb0306", aliases)["canonical_name"] == "Jen Barr"
+
+    doubles = resolve_player_entry("Jason L / Curtis", aliases)
+    assert doubles["entry_type"] == "doubles_team"
+    assert doubles["canonical_name"] == "Jason L / Curtis"

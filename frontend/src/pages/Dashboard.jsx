@@ -356,7 +356,7 @@ export default function Dashboard() {
               <>
                 <div className="min-w-0">
                   <Link
-                    to={`/players/${encodeURIComponent(row.winner)}`}
+                    to={matchDetailPath(row)}
                     className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
                   >
                     {row.winner}
@@ -379,7 +379,7 @@ export default function Dashboard() {
               <>
                 <div className="min-w-0">
                   <Link
-                    to={`/players/${encodeURIComponent(row.winner)}`}
+                    to={matchDetailPath(row)}
                     className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
                   >
                     {row.winner}
@@ -499,19 +499,9 @@ export default function Dashboard() {
                     data-testid={`recent-match-${m.id}`}
                   >
                     <div className="min-w-0 truncate pr-3">
-                      <Link
-                        to={`/players/${encodeURIComponent(m.winner_name)}`}
-                        className="text-[#10B981] hover:underline font-medium"
-                      >
-                        {m.winner_name}
-                      </Link>
+                      <RecentMatchName name={m.winner_name} entryType={m.winner_entry_type} tone="winner" />
                       <span className="text-[#6B7280] mx-2">def.</span>
-                      <Link
-                        to={`/players/${encodeURIComponent(m.loser_name)}`}
-                        className="text-[#9CA3AF] hover:text-[#F3F4F6]"
-                      >
-                        {m.loser_name}
-                      </Link>
+                      <RecentMatchName name={m.loser_name} entryType={m.loser_entry_type} tone="loser" />
                     </div>
                     <div className="font-mono text-xs text-[#9CA3AF] shrink-0">
                       <span className="hidden sm:inline text-[#6B7280] mr-2">
@@ -548,6 +538,30 @@ const formatMoney = (value) =>
   typeof value === "number"
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     : "-";
+
+const matchAnchorId = (matchId) => `match-${encodeURIComponent(String(matchId || ""))}`;
+
+const matchDetailPath = (row) =>
+  row?.tournament_id && row?.match_id
+    ? `/tournaments/${row.tournament_id}#${matchAnchorId(row.match_id)}`
+    : row?.tournament_id
+      ? `/tournaments/${row.tournament_id}`
+      : "#";
+
+const RecentMatchName = ({ name, entryType, tone }) => {
+  const isWinner = tone === "winner";
+  if (entryType !== "singles_player") {
+    return <span className={isWinner ? "text-[#10B981] font-medium" : "text-[#9CA3AF]"}>{name}</span>;
+  }
+  return (
+    <Link
+      to={`/players/${encodeURIComponent(name)}`}
+      className={isWinner ? "text-[#10B981] hover:underline font-medium" : "text-[#9CA3AF] hover:text-[#F3F4F6]"}
+    >
+      {name}
+    </Link>
+  );
+};
 
 const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   const body = (

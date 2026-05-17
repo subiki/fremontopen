@@ -23,7 +23,6 @@ import logging
 import asyncio
 import uuid
 import argparse
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Iterable, Optional
@@ -35,6 +34,7 @@ from database import make_engine, init_db
 import database as T
 from challonge_client import ChallongeClient
 from name_cleaning import clean_player_name, player_name_key, load_alias_map
+from player_entry_classification import resolve_player_entry
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env", override=True)
@@ -64,51 +64,17 @@ def _display_score(name: str) -> tuple:
     return (uppercase, -lowercase, -len(name))
 
 
-def _name_parts(name: str) -> list[str]:
-    return [part for part in re.split(r"[\s-]+", name.strip()) if part]
-
-
-def _apply_unique_first_name_aliases(aliases: Dict[str, Optional[str]]) -> None:
-    names = [name for name in aliases if name and aliases.get(name) == name]
-    by_first_name: Dict[str, list[str]] = {}
-    first_only: list[str] = []
-
-    for name in names:
-        parts = _name_parts(name)
-        if not parts:
-            continue
-        first_key = parts[0].casefold()
-        if len(parts) == 1:
-            first_only.append(name)
-        else:
-            by_first_name.setdefault(first_key, []).append(name)
-
-    for name in first_only:
-        matches = by_first_name.get(name.casefold(), [])
-        if len(matches) == 1:
-            aliases[name] = matches[0]
-
-
-def _apply_alias_overrides(aliases: Dict[str, Optional[str]]) -> None:
-    override_map = load_alias_map()
-    if not override_map:
-        return
-
-    for name in list(aliases.keys()):
-        target = override_map.get(_name_key(name))
-        if target:
-            aliases[name] = target
-
-
 def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
     counts: Dict[str, Dict[str, int]] = {}
     raw_to_clean: Dict[str, Optional[str]] = {}
+    alias_map = load_alias_map()
     for r in match_rows:
         for raw_name in (r.winner_name, r.loser_name):
-            clean_name = _norm(raw_name)
+            entry = resolve_player_entry(raw_name, alias_map)
+            clean_name = entry["canonical_name"]
             if raw_name:
-                raw_to_clean[raw_name] = clean_name or None
-            if not clean_name:
+                raw_to_clean[raw_name] = clean_name
+            if not clean_name or entry["entry_type"] != "singles_player":
                 continue
             key = _name_key(clean_name)
             counts.setdefault(key, {})
@@ -123,8 +89,6 @@ def _canonical_name_map(match_rows) -> Dict[str, Optional[str]]:
         )[0]
         for name in variants:
             aliases[name] = canonical
-    _apply_unique_first_name_aliases(aliases)
-    _apply_alias_overrides(aliases)
     for raw_name, clean_name in raw_to_clean.items():
         aliases[raw_name] = aliases.get(clean_name, clean_name) if clean_name else None
     return aliases
@@ -141,6 +105,7 @@ async def _rebuild_players(conn) -> int:
     )).fetchall()
 
     aliases = _canonical_name_map(rows)
+    alias_map = load_alias_map()
     wins: Dict[str, int] = {}
     losses: Dict[str, int] = {}
     for r in rows:
@@ -156,6 +121,13 @@ async def _rebuild_players(conn) -> int:
             )
         if not winner_name or not loser_name:
             continue
+        winner_entry = resolve_player_entry(winner_name, alias_map)
+        loser_entry = resolve_player_entry(loser_name, alias_map)
+        if (
+            winner_entry["entry_type"] != "singles_player"
+            or loser_entry["entry_type"] != "singles_player"
+        ):
+            continue
         wins[winner_name] = wins.get(winner_name, 0) + 1
         losses[loser_name] = losses.get(loser_name, 0) + 1
 
@@ -169,7 +141,8 @@ async def _rebuild_players(conn) -> int:
     for r in existing_rows:
         if r.fargo is None:
             continue
-        fargo_name = aliases.get(r.name, _norm(r.name) or None)
+        entry = resolve_player_entry(aliases.get(r.name, r.name), alias_map)
+        fargo_name = entry["canonical_name"] if entry["entry_type"] == "singles_player" else None
         if fargo_name:
             existing_fargo[fargo_name] = r.fargo
 

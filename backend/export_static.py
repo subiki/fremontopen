@@ -5,8 +5,10 @@ short-lived shell job, export this cache, then build/upload the React app.
 """
 import argparse
 import asyncio
+import hashlib
 import json
 import math
+import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,6 +18,7 @@ from sqlalchemy import func, select
 
 import database as T
 from database import make_engine
+from player_entry_classification import classify_player_entry
 from player_overrides import apply_player_overrides, load_player_overrides
 from players_extras import (
     compute_elo_ratings,
@@ -44,10 +47,46 @@ def _row_to_dict(row) -> Dict[str, Any]:
     return dict(row._mapping)
 
 
+def _entry_type(name: Optional[str]) -> str:
+    return classify_player_entry(name)["entry_type"]
+
+
+def _is_singles_name(name: Optional[str]) -> bool:
+    return _entry_type(name) == "singles_player"
+
+
+def _annotate_match_entries(match: Dict[str, Any]) -> None:
+    winner_entry = classify_player_entry(match.get("winner_name"))
+    loser_entry = classify_player_entry(match.get("loser_name"))
+    match["winner_entry_type"] = winner_entry["entry_type"]
+    match["loser_entry_type"] = loser_entry["entry_type"]
+    match["winner_normalized_key"] = winner_entry["normalized_key"]
+    match["loser_normalized_key"] = loser_entry["normalized_key"]
+    match["winner_components"] = winner_entry["components"]
+    match["loser_components"] = loser_entry["components"]
+    match["has_review_required_entry"] = (
+        winner_entry["review_required"] or loser_entry["review_required"]
+    )
+
+
+def _is_singles_match(match: Dict[str, Any]) -> bool:
+    if "winner_entry_type" not in match or "loser_entry_type" not in match:
+        return _is_singles_name(match.get("winner_name")) and _is_singles_name(match.get("loser_name"))
+    return (
+        match.get("winner_entry_type") == "singles_player"
+        and match.get("loser_entry_type") == "singles_player"
+    )
+
+
 def _json_default(value):
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value
+
+
+def _detail_file_name(prefix: str, key: str) -> str:
+    digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
+    return f"data/{prefix}/{digest}.json"
 
 
 def _load_season_points(path: Path | None = None) -> Dict[str, int]:
@@ -263,7 +302,7 @@ def _tournament_prize_payouts(
 def _match_elo_odds(match: Dict[str, Any], elo: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     winner = match.get("winner_name")
     loser = match.get("loser_name")
-    if not winner or not loser:
+    if not winner or not loser or not _is_singles_match(match):
         return None
     winner_rating = elo["ratings"].get(winner, elo["initial_rating"])
     loser_rating = elo["ratings"].get(loser, elo["initial_rating"])
@@ -349,6 +388,115 @@ def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[
         })
     rows.sort(key=lambda row: (-row["favorite_probability"], -row["rating_gap"], str(row.get("date") or "")))
     return rows[:limit]
+
+
+def _match_story(match: Dict[str, Any], reason: str, score: float, detail: str) -> Dict[str, Any]:
+    odds = match.get("elo_odds") or {}
+    return {
+        "match_id": match.get("id"),
+        "reason": reason,
+        "score": round(score, 1),
+        "detail": detail,
+        "round": match.get("round"),
+        "state": match.get("state"),
+        "scores": match.get("scores"),
+        "winner": match.get("winner_name"),
+        "loser": match.get("loser_name"),
+        "completed_at": match.get("completed_at"),
+        "winner_probability": odds.get("winner_probability"),
+        "loser_probability": odds.get("loser_probability"),
+        "favorite": odds.get("favorite"),
+        "rating_gap": odds.get("rating_gap"),
+    }
+
+
+def _match_of_tournament(matches: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    completed = [
+        match for match in matches
+        if match.get("state") == "complete"
+        and match.get("winner_name")
+        and match.get("loser_name")
+        and match.get("winner_name") != match.get("loser_name")
+    ]
+    if not completed:
+        return None
+
+    candidates: List[Dict[str, Any]] = []
+    for match in completed:
+        odds = match.get("elo_odds") or {}
+        winner = match.get("winner_name")
+        favorite = odds.get("favorite")
+        favorite_probability = odds.get("loser_probability")
+        if favorite and winner and favorite != winner and favorite_probability is not None:
+            candidates.append(_match_story(
+                match,
+                "upset",
+                float(favorite_probability),
+                f"{winner} beat {favorite} despite {favorite_probability}% ELO favorite odds.",
+            ))
+
+    pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for match in completed:
+        winner = match["winner_name"]
+        loser = match["loser_name"]
+        left, right = sorted((winner, loser), key=str.casefold)
+        row = pairs.setdefault(
+            (left, right),
+            {"player_a": left, "player_b": right, "a_wins": 0, "b_wins": 0, "matches": []},
+        )
+        if winner == left:
+            row["a_wins"] += 1
+        else:
+            row["b_wins"] += 1
+        row["matches"].append(match)
+
+    for row in pairs.values():
+        total = row["a_wins"] + row["b_wins"]
+        if total < 2:
+            continue
+        difference = abs(row["a_wins"] - row["b_wins"])
+        closeness_bonus = max(0, 2 - difference) * 12
+        late_match = sorted(
+            row["matches"],
+            key=lambda match: (
+                match.get("round") or 0,
+                match.get("completed_at") or "",
+                str(match.get("id") or ""),
+            ),
+            reverse=True,
+        )[0]
+        score = 45 + (total * 10) + closeness_bonus
+        candidates.append(_match_story(
+            late_match,
+            "rivalry",
+            score,
+            (
+                f"{row['player_a']} and {row['player_b']} met {total} times in this event, "
+                f"split {row['a_wins']}-{row['b_wins']}."
+            ),
+        ))
+
+    if candidates:
+        return sorted(
+            candidates,
+            key=lambda row: (-row["score"], row["reason"] != "upset", str(row.get("match_id") or "")),
+        )[0]
+
+    final_pool = [match for match in completed if (match.get("round") or 0) > 0] or completed
+    final = max(
+        final_pool,
+        key=lambda match: (
+            match.get("round") or 0,
+            match.get("completed_at") or "",
+            str(match.get("id") or ""),
+        ),
+    )
+    return _match_story(
+        final,
+        "decider",
+        0,
+        "Featured because no upset or repeat rivalry stood out in this event.",
+    )
 
 
 def _anniversary_matches(matches: List[Dict[str, Any]], window_days: int = 21, limit: int = 8) -> Dict[str, Any]:
@@ -1050,12 +1198,25 @@ async def build_cache() -> Dict[str, Any]:
 
         tournaments_by_id = {str(t["id"]): t for t in tournaments}
         players_by_name = {p["name"]: p for p in players}
-        elo = compute_elo_ratings(matches)
-        attendance = _attendance_stats(tournaments, matches)
-
         for match in matches:
+            _annotate_match_entries(match)
             tournament = tournaments_by_id.get(str(match.get("tournament_id")))
             match["tournament_game"] = (tournament or {}).get("game")
+
+        singles_matches = [match for match in matches if _is_singles_match(match)]
+        doubles_match_count = len([
+            match for match in matches
+            if match.get("winner_entry_type") == "doubles_team"
+            or match.get("loser_entry_type") == "doubles_team"
+        ])
+        review_required_match_count = len([
+            match for match in matches
+            if match.get("has_review_required_entry")
+        ])
+        elo = compute_elo_ratings(singles_matches)
+        attendance = _attendance_stats(tournaments, singles_matches)
+
+        for match in matches:
             match["elo_odds"] = _match_elo_odds(match, elo)
 
         tournament_details = {}
@@ -1094,15 +1255,20 @@ async def build_cache() -> Dict[str, Any]:
                 matches_by_tournament.get(tid, []),
                 key=lambda m: (m.get("round") is None, m.get("round") or 0),
             )
+            singles_tournament_matches = [
+                match for match in tournament_matches
+                if _is_singles_match(match)
+            ]
             duration_minutes = _duration_minutes(tournament.get("started_at"), tournament.get("completed_at"))
             duration_label = _format_duration(duration_minutes)
             normalized_duration = _normalized_duration_minutes(duration_minutes)
             placements = _infer_tournament_placements(tournament_matches)
             winner = next((name for name, place in placements.items() if place == 1), None)
-            if winner:
+            if winner and _is_singles_name(winner):
                 winner_counts[winner] = winner_counts.get(winner, 0) + 1
             for player_name, place in placements.items():
-                all_placements.setdefault(player_name, {})[str(tid)] = place
+                if _is_singles_name(player_name):
+                    all_placements.setdefault(player_name, {})[str(tid)] = place
             if normalized_duration is not None:
                 duration_values.append(normalized_duration)
             elif duration_minutes is not None:
@@ -1114,7 +1280,7 @@ async def build_cache() -> Dict[str, Any]:
                 for name in (match.get("winner_name"), match.get("loser_name"))
                 if name
             })
-            difficulty = _tournament_difficulty(tournament_matches, elo)
+            difficulty = _tournament_difficulty(singles_tournament_matches, elo)
             if normalized_duration is not None:
                 duration_rows.append({
                     "tournament_id": tid,
@@ -1154,6 +1320,7 @@ async def build_cache() -> Dict[str, Any]:
             tournament["player_count"] = player_count
             tournament["prize_pool"] = prize_pool["pot"]
             tournament["difficulty"] = difficulty
+            match_of_tournament = _match_of_tournament(singles_tournament_matches)
             tournament_details[str(tid)] = {
                 "tournament": tournament,
                 "matches": tournament_matches,
@@ -1173,6 +1340,7 @@ async def build_cache() -> Dict[str, Any]:
                     "duration_outlier": tournament["duration_outlier"],
                     "winner": winner,
                     "difficulty": difficulty,
+                    "match_of_tournament": match_of_tournament,
                     "cinderella_runs": cinderella_runs,
                     "placements": [
                         {"player": name, "place": place}
@@ -1241,7 +1409,7 @@ async def build_cache() -> Dict[str, Any]:
             player["attendance_streak"] = player_attendance["current_streak"]
             player["best_attendance_streak"] = player_attendance["best_streak"]
             player_matches = [
-                m for m in matches
+                m for m in singles_matches
                 if m.get("winner_name") == name or m.get("loser_name") == name
             ]
 
@@ -1357,17 +1525,20 @@ async def build_cache() -> Dict[str, Any]:
             }
 
         sync_status = last_sync or {"status": "never_synced"}
-        recent_activity = _recent_activity_summary(matches)
-        closest_rivalry = _closest_rivalry(matches)
-        rivalry_index = _rivalry_index(matches)
-        h2h_heatmap = _h2h_heatmap(matches)
-        upset_tracker = _upset_tracker(matches)
-        anniversary = _anniversary_matches(matches)
-        season_standings = _season_standings(tournaments, matches, season_points)
+        recent_activity = _recent_activity_summary(singles_matches)
+        closest_rivalry = _closest_rivalry(singles_matches)
+        rivalry_index = _rivalry_index(singles_matches)
+        h2h_heatmap = _h2h_heatmap(singles_matches)
+        upset_tracker = _upset_tracker(singles_matches)
+        anniversary = _anniversary_matches(singles_matches)
+        season_standings = _season_standings(tournaments, singles_matches, season_points)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),
             "total_matches": completed_match_count,
+            "singles_match_count": len(singles_matches),
+            "doubles_match_count": doubles_match_count,
+            "review_required_match_count": review_required_match_count,
             "total_players": len(players),
             "cache_metadata": {
                 "generated_at": generated_at,
@@ -1376,6 +1547,9 @@ async def build_cache() -> Dict[str, Any]:
                 "tournament_count": len(tournaments),
                 "player_count": len(players),
                 "match_count": completed_match_count,
+                "singles_match_count": len(singles_matches),
+                "doubles_match_count": doubles_match_count,
+                "review_required_match_count": review_required_match_count,
             },
             "average_tournament_players": tournament_analytics["average_players"],
             "average_tournament_duration_minutes": tournament_analytics["average_duration_minutes"],
@@ -1457,11 +1631,54 @@ async def main() -> None:
 async def write_cache(out: Path = DEFAULT_OUT) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     cache = await build_cache()
+    public_root = out.parent.parent
+    tournaments_dir = out.parent / "tournaments"
+    players_dir = out.parent / "players"
+    for detail_dir in (tournaments_dir, players_dir):
+        if detail_dir.exists():
+            shutil.rmtree(detail_dir)
+        detail_dir.mkdir(parents=True, exist_ok=True)
+
+    tournament_details = cache.pop("tournament_details", {})
+    player_details = cache.pop("player_details", {})
+    player_extras = cache.pop("player_extras", {})
+    cache.pop("matches", None)
+
+    tournament_files: Dict[str, str] = {}
+    for tournament_id, detail in tournament_details.items():
+        rel_path = _detail_file_name("tournaments", str(tournament_id))
+        (public_root / rel_path).write_text(
+            json.dumps(detail, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        tournament_files[str(tournament_id)] = rel_path
+
+    player_files: Dict[str, str] = {}
+    for player_name, detail in player_details.items():
+        rel_path = _detail_file_name("players", str(player_name))
+        payload = {
+            "detail": detail,
+            "extras": player_extras.get(player_name, {}),
+        }
+        (public_root / rel_path).write_text(
+            json.dumps(payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        player_files[player_name] = rel_path
+
+    cache["data_files"] = {
+        "tournaments": tournament_files,
+        "players": player_files,
+    }
     out.write_text(
         json.dumps(cache, default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
-    print(f"Wrote static cache: {out} ({len(cache['players'])} players, {len(cache['tournaments'])} tournaments)")
+    print(
+        f"Wrote static cache: {out} "
+        f"({len(cache['players'])} players, {len(cache['tournaments'])} tournaments, "
+        f"{len(player_files)} player files, {len(tournament_files)} tournament files)"
+    )
 
 
 if __name__ == "__main__":

@@ -106,7 +106,9 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 ## EPIC 1 - Static Deploy And Data Refresh
 
-All current static deploy and refresh items are complete.
+| # | P | Effort | Item |
+|---|---|---|---|
+| 1.8 | P0 | M | **Split static cache for faster weak-signal loads** by keeping homepage data small and lazy-loading detail JSON files |
 
 ## EPIC 2 - Data Quality Without Admin UI
 
@@ -114,21 +116,36 @@ All current data-quality items are complete.
 
 ## EPIC 3 - Player Stats And Rankings
 
-All current player stat/ranking items are complete.
+| # | P | Effort | Item |
+|---|---|---|---|
+| 3.8 | P2 | S | **Remove player profile prev/next controls** because they are glitchy and not needed |
+| 3.9 | P2 | S | **Remove player equipment panel** from the player profile |
+| 3.10 | P2 | M | **Player profile core results summary** showing racks won/lost, races won/lost, tournaments played, and rank stats |
+| 3.11 | P2 | M | **Biggest single tournament pot won per player** based on tournament payout data |
+| 3.12 | P2 | M | **Leaderboard filters for tournaments and racks played** |
+| 3.13 | P2 | S | **Clarify leaderboard current and best columns** with labels that explain streak meaning |
 
 ## EPIC 4 - Tournament Views
 
-All current tournament-view items are complete.
+| # | P | Effort | Item |
+|---|---|---|---|
+| 4.10 | P2 | S | **Fix desktop bracket scrolling** on tournament detail pages |
+| 4.11 | P2 | S | **Remove tournament match State column and print button** from single-tournament views |
+| 4.12 | P2 | M | **Numeric tournament difficulty metric** showing average field ELO or comparison to average tournament strength |
+| 4.13 | P2 | S | **Simplify tournament date and state labels** so started/state read as plain tournament date/status |
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
 
-All current compare/rivalry/story items are complete.
+| # | P | Effort | Item |
+|---|---|---|---|
+| 5.5 | P2 | M | **Single-tournament performance above ELO view** showing who beat expected rating most within one event |
 
 ## EPIC 6 - Charts And Visual Polish
 
 | # | P | Effort | Item |
 |---|---|---|---|
 | 6.6 | P3 | M | **Player photo/card art** from local static assets |
+| 6.7 | P2 | M | **Accessibility readability pass** increasing small font sizes and improving gray-on-dark contrast ratios |
 
 ## EPIC 7 - Seasons And League Standings
 
@@ -157,7 +174,18 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-No active P1/P2 build-order items remain. Re-read issues before choosing the next slice.
+| Rank | Backlog | Why next |
+|---|---|---|
+| 1 | 1.8 Split static cache for faster weak-signal loads | Reduces the initial mobile download from the oversized monolithic cache in issue #73 |
+| 2 | 6.7 Accessibility readability pass | Improves every screen and addresses font-size/contrast feedback from issue #72 |
+| 3 | 4.10 Fix desktop bracket scrolling | Removes a blocking interaction bug in the single-tournament view |
+| 4 | 4.11 Remove tournament match State column and print button | Simplifies the highest-traffic tournament page |
+| 5 | 4.12 Numeric tournament difficulty metric | Replaces vague labels with inspectable strength values |
+| 6 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
+| 7 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
+| 8 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
+| 9 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 10 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
 
 ---
 

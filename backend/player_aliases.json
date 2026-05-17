@@ -1,20 +1,13 @@
 {
   "aliases": {
-    "Jason Lambert": ["Jason", "Jason L", "subiki"],
-    "Jackson Monsalve": ["Jackson Monsalbe", "Jackson Mondalve"],
-    "Chad Galera": ["Chad"],
-    "Tim Burbage": ["Tim"],
-    "Glenn Tamura": ["Glenn"],
-    "Vince Frayne": ["Vince Anderson", "Vince"],
-    "Aubrey Durand": ["Aubrey", "Aubrey D"],
-    "Jeff Nguyen": ["Jeff"],
-    "Eddie Robinson": ["Eddie"],
-    "Zak Ross": ["Zak"],
-    "Jorge Gonzalez": ["Jorge"],
-    "Merrill Dazey": ["Merrill"],
-    "Jose Elias": ["Jose E"],
-    "Jose Martinez": ["Jose M"],
-    "Jeff Hudson": ["Hud"],
-    "Jennifer Ackley": ["Jen", "Jen B", "Jen Barr", "jlb0306"]  
-    }
+    "Jason Lambert": ["Jason L"],
+    "Jackson Monsalve": ["Jackson Mondalve", "Jackson Monsalbe"],
+    "Jorge Gonzalez": ["Jorge J Gonzalez", "Jorge G Gonzalez"],
+    "Michael LaFrenier": ["Michael Lafrienne", "Michael Lefrienne"],
+    "Stephanie Tsosie": ["Stefanie Tsosie"],
+    "Jim Catlin": ["Jim", "Jim Catiln"],
+    "Argus Hulin": ["Argus", "Agus"],
+    "Jen Barr": ["jlb0306", "Jen Ackley", "Jennifer Ackley"],
+    "Tim Burbage": ["CptBurbagio"]
+  }
 }

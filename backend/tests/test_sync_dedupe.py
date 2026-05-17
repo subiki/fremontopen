@@ -11,13 +11,13 @@ def row(winner_name, loser_name):
     return SimpleNamespace(winner_name=winner_name, loser_name=loser_name)
 
 
-def test_unique_first_name_alias_merges_to_only_full_name_match():
+def test_first_name_alias_stays_separate_without_explicit_mapping():
     aliases = _canonical_name_map([
         row("John", "Alex Stone"),
         row("John Smith", "Taylor Reed"),
     ])
 
-    assert aliases["John"] == "John Smith"
+    assert aliases["John"] == "John"
 
 
 def test_first_name_alias_stays_separate_when_multiple_full_name_matches():
@@ -42,3 +42,18 @@ def test_alias_override_maps_manual_alias_to_canonical(monkeypatch):
     ])
 
     assert aliases["Jimmy S."] == "James Smith"
+
+
+def test_doubles_team_entries_are_not_merged_into_singles(monkeypatch):
+    monkeypatch.setattr(
+        "sync_job.load_alias_map",
+        lambda: {"jason l": "Jason Lambert"},
+    )
+
+    aliases = _canonical_name_map([
+        row("Jason L", "Alex Stone"),
+        row("Jason L / Curtis", "Taylor Reed"),
+    ])
+
+    assert aliases["Jason L"] == "Jason Lambert"
+    assert aliases["Jason L / Curtis"] == "Jason L / Curtis"

@@ -63,11 +63,19 @@ export default function TournamentDetail() {
     })();
   }, [id]);
 
+  useEffect(() => {
+    if (loading || !data || !window.location.hash) return;
+    const target = document.getElementById(window.location.hash.slice(1));
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [data, loading]);
+
   const t = data?.tournament;
   const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const analytics = data?.analytics || {};
   const placements = analytics.placements || [];
   const cinderellaRuns = analytics.cinderella_runs || [];
+  const matchOfTournament = analytics.match_of_tournament;
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
   const bracketSections = useMemo(() => buildBracketSections(matches), [matches]);
@@ -185,6 +193,10 @@ export default function TournamentDetail() {
               </section>
             ) : null}
 
+            {matchOfTournament ? (
+              <MatchOfTournamentCard match={matchOfTournament} />
+            ) : null}
+
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="bracket-visualization">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                 <div>
@@ -283,28 +295,22 @@ export default function TournamentDetail() {
                     </tr>
                   ) : (
                     matches.map((m) => (
-                      <tr key={m.id} className="border-t border-[#273041]/60">
+                      <tr
+                        id={matchAnchorId(m.id)}
+                        key={m.id}
+                        className="border-t border-[#273041]/60 scroll-mt-28 target:bg-[#0B0E14] target:outline target:outline-1 target:outline-[#F59E0B]/60"
+                      >
                         <Td className="font-mono text-xs text-[#6B7280]">{m.round ?? "-"}</Td>
                         <Td>
                           {m.winner_name ? (
-                            <Link
-                              to={`/players/${encodeURIComponent(m.winner_name)}`}
-                              className="text-[#10B981] hover:underline font-medium"
-                            >
-                              {m.winner_name}
-                            </Link>
+                            <MatchPlayerName name={m.winner_name} entryType={m.winner_entry_type} tone="winner" />
                           ) : (
                             <span className="text-[#6B7280]">TBD</span>
                           )}
                         </Td>
                         <Td>
                           {m.loser_name ? (
-                            <Link
-                              to={`/players/${encodeURIComponent(m.loser_name)}`}
-                              className="text-[#9CA3AF] hover:text-[#F3F4F6]"
-                            >
-                              {m.loser_name}
-                            </Link>
+                            <MatchPlayerName name={m.loser_name} entryType={m.loser_entry_type} tone="loser" />
                           ) : (
                             <span className="text-[#6B7280]">TBD</span>
                           )}
@@ -339,6 +345,8 @@ const Info = ({ label, value }) => (
     <div className="mt-1 font-mono text-[#F3F4F6]">{value}</div>
   </div>
 );
+
+const matchAnchorId = (matchId) => `match-${encodeURIComponent(String(matchId || ""))}`;
 
 const MissingTournament = ({ id }) => (
   <section className="max-w-2xl bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="missing-tournament">
@@ -472,6 +480,63 @@ const CinderellaCard = ({ run }) => (
   </div>
 );
 
+const MatchOfTournamentCard = ({ match }) => {
+  const isUpset = match.reason === "upset";
+  const isRivalry = match.reason === "rivalry";
+  const label = isUpset ? "Biggest upset" : isRivalry ? "Heated rivalry" : "Deciding match";
+  const oddsLine = isUpset && match.favorite
+    ? `${match.favorite} was ${match.loser_probability}% to win by ELO`
+    : match.favorite
+      ? `ELO favorite: ${match.favorite}`
+      : "ELO data unavailable";
+
+  return (
+    <section
+      className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6"
+      data-testid="match-of-tournament-card"
+    >
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F59E0B]">
+            Match of the Tournament
+          </div>
+          <h2 className="mt-2 font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
+            {match.winner} def. {match.loser}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#9CA3AF]">
+            {match.detail}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 lg:w-80">
+          <StoryStat label="Story" value={label} tone="gold" />
+          <StoryStat label="Score" value={match.scores || "-"} />
+          <StoryStat label="Round" value={match.round ?? "-"} />
+          <StoryStat label="Heat" value={Number(match.score || 0).toFixed(1)} />
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded border border-[#273041] bg-[#0B0E14] px-3 py-2 font-mono text-[#9CA3AF]">
+          {oddsLine}
+        </span>
+        {match.rating_gap !== null && match.rating_gap !== undefined ? (
+          <span className="rounded border border-[#273041] bg-[#0B0E14] px-3 py-2 font-mono text-[#9CA3AF]">
+            Rating gap {Math.abs(match.rating_gap)}
+          </span>
+        ) : null}
+      </div>
+    </section>
+  );
+};
+
+const StoryStat = ({ label, value, tone }) => (
+  <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2">
+    <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B7280]">{label}</div>
+    <div className={`mt-1 truncate font-mono text-sm ${tone === "gold" ? "text-[#F59E0B]" : "text-[#F3F4F6]"}`}>
+      {value}
+    </div>
+  </div>
+);
+
 const ZoomButton = ({ label, icon: Icon, onClick, disabled }) => (
   <button
     type="button"
@@ -490,8 +555,8 @@ const BracketMatch = ({ match }) => {
   const loser = match.loser_name || "TBD";
   return (
     <div className="rounded-md border border-[#273041] bg-[#0B0E14] overflow-hidden" data-testid="bracket-match">
-      <BracketPlayer name={winner} tone="winner" />
-      <BracketPlayer name={loser} tone="loser" />
+      <BracketPlayer name={winner} entryType={match.winner_entry_type} tone="winner" />
+      <BracketPlayer name={loser} entryType={match.loser_entry_type} tone="loser" />
       <div className="flex items-center justify-between gap-3 border-t border-[#273041]/60 px-3 py-2 text-[11px] font-mono text-[#6B7280]">
         <span>{match.scores || "-"}</span>
         <MatchOdds odds={match.elo_odds} />
@@ -500,7 +565,22 @@ const BracketMatch = ({ match }) => {
   );
 };
 
-const BracketPlayer = ({ name, tone }) => {
+const MatchPlayerName = ({ name, entryType, tone }) => {
+  const isWinner = tone === "winner";
+  const className = isWinner
+    ? "text-[#10B981] hover:underline font-medium"
+    : "text-[#9CA3AF] hover:text-[#F3F4F6]";
+  if (entryType !== "singles_player") {
+    return <span className={isWinner ? "font-medium text-[#10B981]" : "text-[#9CA3AF]"}>{name}</span>;
+  }
+  return (
+    <Link to={`/players/${encodeURIComponent(name)}`} className={className}>
+      {name}
+    </Link>
+  );
+};
+
+const BracketPlayer = ({ name, entryType, tone }) => {
   const isWinner = tone === "winner";
   const className = `flex items-center justify-between gap-3 px-3 py-2 text-sm ${
     isWinner ? "text-[#F3F4F6]" : "text-[#9CA3AF]"
@@ -509,6 +589,8 @@ const BracketPlayer = ({ name, tone }) => {
     <div className={className}>
       {name === "TBD" ? (
         <span className="truncate text-[#6B7280]">TBD</span>
+      ) : entryType !== "singles_player" ? (
+        <span className={`truncate ${isWinner ? "font-medium" : ""}`}>{name}</span>
       ) : (
         <Link
           to={`/players/${encodeURIComponent(name)}`}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "cuestats-static-v1";
+const CACHE_NAME = "cuestats-static-v2";
 const APP_SHELL = ["/", "/index.html", "/data/cache.json", "/manifest.webmanifest", "/cue-icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname === "/data/cache.json") {
+  if (url.pathname.startsWith("/data/") && url.pathname.endsWith(".json")) {
     event.respondWith(networkFirst(request));
     return;
   }

@@ -5,6 +5,7 @@ const STATIC_DATA = process.env.REACT_APP_STATIC_DATA === "true";
 export const API = STATIC_DATA ? "" : `${BACKEND_URL}/api`;
 
 let cachePromise = null;
+const filePromises = new Map();
 
 const loadCache = () => {
   if (!cachePromise) {
@@ -17,6 +18,21 @@ const loadCache = () => {
   return cachePromise;
 };
 
+const loadDataFile = (path) => {
+  if (!path) return Promise.resolve(null);
+  if (!filePromises.has(path)) {
+    const base = process.env.PUBLIC_URL || "";
+    filePromises.set(
+      path,
+      fetch(`${base}/${path}`, { cache: "no-cache" }).then((response) => {
+        if (!response.ok) throw new Error(`Static data file is missing: ${path}`);
+        return response.json();
+      })
+    );
+  }
+  return filePromises.get(path);
+};
+
 const notFound = (detail = "Not found") => {
   const error = new Error(detail);
   error.response = { status: 404, data: { detail } };
@@ -27,8 +43,8 @@ const decodePathPart = (value = "") => decodeURIComponent(value.replace(/\+/g, "
 const nameKey = (value = "") => String(value).trim().toLocaleLowerCase();
 
 const resolvePlayerName = (cache, name) => {
-  if (cache.player_details[name]) return name;
   const key = nameKey(name);
+  if (cache.player_details?.[name] || cache.data_files?.players?.[name]) return name;
   return cache.players.find((player) => nameKey(player.name) === key)?.name || null;
 };
 
@@ -63,20 +79,45 @@ const parseRackScore = (score = "") => {
   };
 };
 
-const comparePlayers = (cache, a, b) => {
+const loadTournamentDetail = async (cache, id) => {
+  if (cache.tournament_details?.[id]) return cache.tournament_details[id];
+  const file = cache.data_files?.tournaments?.[id];
+  return (file && await loadDataFile(file)) || null;
+};
+
+const loadPlayerBundle = async (cache, name) => {
+  const canonicalName = resolvePlayerName(cache, name);
+  if (!canonicalName) return null;
+  if (cache.player_details?.[canonicalName] || cache.player_extras?.[canonicalName]) {
+    return {
+      detail: cache.player_details?.[canonicalName],
+      extras: cache.player_extras?.[canonicalName],
+    };
+  }
+  const file = cache.data_files?.players?.[canonicalName];
+  return file ? loadDataFile(file) : null;
+};
+
+const comparePlayers = async (cache, a, b) => {
   const canonicalA = resolvePlayerName(cache, a);
   const canonicalB = resolvePlayerName(cache, b);
   const pa = canonicalA ? cache.players.find((p) => p.name === canonicalA) : null;
   const pb = canonicalB ? cache.players.find((p) => p.name === canonicalB) : null;
   if (!pa || !pb) notFound("One or both players not found");
+  const [bundleA, bundleB] = await Promise.all([
+    loadPlayerBundle(cache, canonicalA),
+    loadPlayerBundle(cache, canonicalB),
+  ]);
+  const detailA = bundleA?.detail;
+  const detailB = bundleB?.detail;
+  if (!detailA || !detailB) notFound("One or both players not found");
 
-  const h2hMatches = cache.matches
+  const h2hMatches = (detailA.matches || [])
     .filter(
       (m) =>
         (m.winner_name === canonicalA && m.loser_name === canonicalB) ||
         (m.winner_name === canonicalB && m.loser_name === canonicalA)
-    )
-    .reverse();
+    );
   const aWins = h2hMatches.filter((m) => m.winner_name === canonicalA).length;
   const bWins = h2hMatches.filter((m) => m.winner_name === canonicalB).length;
   const rackStats = h2hMatches.reduce(
@@ -101,9 +142,9 @@ const comparePlayers = (cache, a, b) => {
   );
   const odds = compareOdds(pa, pb);
 
-  const opponentRecord = (name) => {
+  const opponentRecord = (name, detail) => {
     const record = {};
-    (cache.player_details[name]?.matches || []).forEach((match) => {
+    (detail?.matches || []).forEach((match) => {
       const opponent = match.winner_name === name ? match.loser_name : match.winner_name;
       if (!opponent) return;
       record[opponent] ||= { w: 0, l: 0 };
@@ -113,10 +154,10 @@ const comparePlayers = (cache, a, b) => {
     return record;
   };
 
-  const recA = opponentRecord(a);
-  const recB = opponentRecord(b);
+  const recA = opponentRecord(canonicalA, detailA);
+  const recB = opponentRecord(canonicalB, detailB);
   const common = Object.keys(recA)
-    .filter((opponent) => opponent !== a && opponent !== b && recB[opponent])
+    .filter((opponent) => opponent !== canonicalA && opponent !== canonicalB && recB[opponent])
     .sort();
 
   return {
@@ -151,7 +192,7 @@ const staticGet = async (path, config = {}) => {
   if (path === "/tournaments") return { data: cache.tournaments };
   if (path.startsWith("/tournaments/")) {
     const id = decodePathPart(path.split("/")[2]);
-    return { data: cache.tournament_details[id] || notFound("Tournament not found") };
+    return { data: (await loadTournamentDetail(cache, id)) || notFound("Tournament not found") };
   }
   if (path === "/players") {
     const q = (params.q || "").toLowerCase();
@@ -165,16 +206,16 @@ const staticGet = async (path, config = {}) => {
   }
   if (path.startsWith("/players/") && path.endsWith("/extras")) {
     const name = decodePathPart(path.slice("/players/".length, -"/extras".length));
-    const canonicalName = resolvePlayerName(cache, name);
-    return { data: (canonicalName && cache.player_extras[canonicalName]) || notFound("Player not found") };
+    const bundle = await loadPlayerBundle(cache, name);
+    return { data: bundle?.extras || notFound("Player not found") };
   }
   if (path.startsWith("/players/") && path.endsWith("/claim-info")) {
     return { data: { claimed: false } };
   }
   if (path.startsWith("/players/")) {
     const name = decodePathPart(path.slice("/players/".length));
-    const canonicalName = resolvePlayerName(cache, name);
-    return { data: (canonicalName && cache.player_details[canonicalName]) || notFound("Player not found") };
+    const bundle = await loadPlayerBundle(cache, name);
+    return { data: bundle?.detail || notFound("Player not found") };
   }
   if (path === "/leaderboard") {
     return { data: cache.players.slice(0, params.limit || 25) };
@@ -201,7 +242,7 @@ const staticGet = async (path, config = {}) => {
   }
   if (path.startsWith("/compare/")) {
     const [, , a, b] = path.split("/");
-    return { data: comparePlayers(cache, decodePathPart(a), decodePathPart(b)) };
+    return { data: await comparePlayers(cache, decodePathPart(a), decodePathPart(b)) };
   }
   notFound();
 };

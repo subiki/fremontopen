@@ -93,6 +93,12 @@ Backfill fetches the tournament, participants, and matches for each requested
 event, rebuilds player aggregates, and exports `frontend/public/data/cache.json`
 unless `--no-export` is passed.
 
+The static export keeps the first-load cache small. `cache.json` contains the
+dashboard, list, search, and manifest data. Heavy tournament and player payloads
+are written to `frontend/public/data/tournaments/*.json` and
+`frontend/public/data/players/*.json`, then loaded on demand by the static
+frontend.
+
 ## Local Player Alias Mapping
 
 Use `backend/player_aliases.json` for deliberate player-name merges during the
@@ -110,6 +116,13 @@ After editing aliases, run `sync_job.py --dedupe-only` from `backend/`, then run
 `export_static.py` to rebuild `frontend/public/data/cache.json`. Conflicting
 aliases are rejected so one alias cannot silently map to multiple canonical
 players.
+
+The dedupe path classifies cached entries as singles players, doubles teams,
+placeholders, or manual-review unknowns. Doubles-team rows such as
+`Jason / Curtis` remain visible in tournament matches, but they are excluded
+from singles player records, ELO, Fargo, and ranking stats. Generic first-name
+rows are not auto-merged unless they are listed explicitly in
+`backend/player_aliases.json`.
 
 To generate a review-only report of likely duplicates before editing the alias
 file:

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
 from name_cleaning import clean_player_name, player_name_key
+from player_entry_classification import classify_player_entry
 
 ROOT_DIR = Path(__file__).parent
 DEFAULT_DB = ROOT_DIR / "cuestats_dev.db"
@@ -58,7 +59,11 @@ def _canonical_guess(names: Iterable[str]) -> str:
 
 
 def suggest_alias_groups(names: Iterable[str], threshold: float = 0.86) -> List[Dict[str, Any]]:
-    clean_names = sorted({clean_player_name(name) for name in names if clean_player_name(name)})
+    clean_names = sorted({
+        clean_player_name(name)
+        for name in names
+        if classify_player_entry(name)["entry_type"] == "singles_player"
+    })
     parent = {name: name for name in clean_names}
 
     def find(name: str) -> str:
@@ -129,12 +134,24 @@ def main() -> int:
 
     names = load_player_names(Path(args.db))
     suggestions = suggest_alias_groups(names, threshold=args.threshold)
+    review_entries = []
+    for name in names:
+        entry = classify_player_entry(name)
+        if entry["entry_type"] in {"doubles_team", "unknown"}:
+            review_entries.append({
+                "name": entry["display_name"],
+                "entry_type": entry["entry_type"],
+                "review_required": entry["review_required"],
+                "components": entry["components"],
+            })
     report = {
         "generated_from": str(Path(args.db)),
         "player_count": len(names),
         "threshold": args.threshold,
         "suggestion_count": len(suggestions),
         "suggestions": suggestions,
+        "review_entry_count": len(review_entries),
+        "review_entries": sorted(review_entries, key=lambda row: row["name"].casefold()),
     }
 
     out = Path(args.out)

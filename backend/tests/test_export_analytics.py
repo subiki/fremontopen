@@ -18,6 +18,7 @@ from export_static import (
     _is_qualified_player,
     _load_season_points,
     _match_elo_odds,
+    _match_of_tournament,
     _normalized_duration_minutes,
     _recent_activity_summary,
     _rivalry_index,
@@ -282,6 +283,69 @@ def test_upset_tracker_ranks_biggest_underdog_wins():
     assert [row["winner"] for row in upsets] == ["A", "C"]
     assert upsets[0]["favorite_probability"] == 80.0
     assert upsets[0]["tournament_name"] == "Ten"
+
+
+def test_match_of_tournament_prefers_biggest_upset():
+    rows = [
+        {
+            **match(1, "Favorite", "Runner"),
+            "scores": "3-1",
+            "elo_odds": {
+                "favorite": "Favorite",
+                "winner_probability": 72.0,
+                "loser_probability": 28.0,
+                "rating_gap": 160,
+            },
+        },
+        {
+            **match(2, "Underdog", "Heavy Favorite"),
+            "scores": "3-2",
+            "elo_odds": {
+                "favorite": "Heavy Favorite",
+                "winner_probability": 18.0,
+                "loser_probability": 82.0,
+                "rating_gap": -260,
+            },
+        },
+    ]
+
+    featured = _match_of_tournament(rows)
+
+    assert featured["reason"] == "upset"
+    assert featured["match_id"] == rows[1]["id"]
+    assert featured["winner"] == "Underdog"
+    assert featured["favorite"] == "Heavy Favorite"
+
+
+def test_match_of_tournament_can_pick_heated_repeat_rivalry():
+    rows = [
+        {
+            **match(1, "A", "B"),
+            "scores": "3-2",
+            "elo_odds": {
+                "favorite": "A",
+                "winner_probability": 55.0,
+                "loser_probability": 45.0,
+                "rating_gap": 35,
+            },
+        },
+        {
+            **match(2, "B", "A"),
+            "scores": "3-2",
+            "elo_odds": {
+                "favorite": "A",
+                "winner_probability": 47.0,
+                "loser_probability": 53.0,
+                "rating_gap": -20,
+            },
+        },
+    ]
+
+    featured = _match_of_tournament(rows)
+
+    assert featured["reason"] == "rivalry"
+    assert featured["winner"] == "B"
+    assert "met 2 times" in featured["detail"]
 
 
 def test_anniversary_matches_find_prior_year_window():
