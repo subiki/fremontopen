@@ -361,7 +361,7 @@ export default function Dashboard() {
                   >
                     {row.winner}
                   </Link>
-                  <div className="mt-1 text-[11px] text-[#6B7280] truncate">
+                  <div className="mt-1 text-xs text-[#6B7280] truncate">
                     def. {row.loser}
                   </div>
                 </div>
@@ -384,7 +384,7 @@ export default function Dashboard() {
                   >
                     {row.winner}
                   </Link>
-                  <div className="mt-1 text-[11px] text-[#6B7280] truncate">
+                  <div className="mt-1 text-xs text-[#6B7280] truncate">
                     def. {row.loser}
                   </div>
                 </div>
@@ -590,7 +590,7 @@ const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
 
 const MetadataStat = ({ label, value }) => (
   <div>
-    <dt className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
+    <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
       {label}
     </dt>
     <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
@@ -602,7 +602,7 @@ const MetadataStat = ({ label, value }) => (
 const TimingExtremeCard = ({ label, row }) => {
   const body = (
     <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
+      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
       <div className="mt-2 font-mono text-lg text-[#F3F4F6]">
         {row?.duration_label || "-"}
       </div>
@@ -617,7 +617,7 @@ const TimingExtremeCard = ({ label, row }) => {
 
 const TimingGroupCard = ({ group }) => (
   <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
-    <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
       {group.game} / {group.player_count} players
     </div>
     <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
@@ -753,7 +753,7 @@ const HeatmapCell = ({ player, cell }) => {
         title={`${player} vs ${cell.opponent}: ${cell.wins}-${cell.losses}`}
       >
         <span className="block text-sm">{cell.win_rate}%</span>
-        <span className="block text-[10px] opacity-80">{cell.wins}-{cell.losses}</span>
+        <span className="block text-xs opacity-80">{cell.wins}-{cell.losses}</span>
       </Link>
     </td>
   );

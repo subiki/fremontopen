@@ -13,8 +13,8 @@
     --primary-hover: #059669;
     --secondary: #F59E0B;
     --text-primary: #F3F4F6;
-    --text-secondary: #9CA3AF;
-    --text-muted: #6B7280;
+    --text-secondary: #CBD5E1;
+    --text-muted: #A3ADBE;
     --loss: #EF4444;
 }
 
@@ -154,6 +154,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @layer utilities {
+    :root:not([data-theme="light"]) .text-\[\#9CA3AF\],
+    :root:not([data-theme="light"]) .hover\:text-\[\#9CA3AF\]:hover {
+        color: var(--text-secondary) !important;
+    }
+
+    :root:not([data-theme="light"]) .text-\[\#6B7280\],
+    :root:not([data-theme="light"]) .placeholder-\[\#6B7280\]::placeholder {
+        color: var(--text-muted) !important;
+    }
+
     [data-theme="light"] .bg-\[\#0B0E14\],
     [data-theme="light"] .bg-\[\#10151F\],
     [data-theme="light"] .bg-\[\#141923\] {

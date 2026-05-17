@@ -216,9 +216,9 @@ export default function Tournaments() {
                   <div className="h-px flex-1 bg-[#273041]" />
                 </div>
                 <div className="space-y-3">
-                  {group.tournaments.map((t) => (
+                  {group.tournaments.map((t, index) => (
                     <Link
-                      key={t.id}
+                      key={`${t.id}-${t.started_at || t.completed_at || index}`}
                       to={`/tournaments/${t.id}`}
                       className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_auto] gap-3 lg:items-center rounded-lg border border-[#273041] bg-[#141923] px-4 py-3 hover:border-[#10B981]/50 transition-colors"
                       data-testid={`tournament-timeline-row-${t.id}`}
@@ -228,7 +228,7 @@ export default function Tournaments() {
                           <span className="font-[Outfit] font-semibold text-[#F3F4F6] truncate">
                             {t.name}
                           </span>
-                          <span className={`shrink-0 text-[10px] uppercase tracking-wider border px-2 py-0.5 rounded ${stateColor(t.state)}`}>
+                          <span className={`shrink-0 text-xs uppercase tracking-wider border px-2 py-0.5 rounded ${stateColor(t.state)}`}>
                             {t.state || "?"}
                           </span>
                         </div>
@@ -257,9 +257,9 @@ export default function Tournaments() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
             data-testid="tournaments-grid"
           >
-            {sortedList.map((t) => (
+            {sortedList.map((t, index) => (
               <Link
-                key={t.id}
+                key={`${t.id}-${t.started_at || t.completed_at || index}`}
                 to={`/tournaments/${t.id}`}
                 className="bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/50 hover:-translate-y-0.5 transition-all duration-200 group"
                 data-testid={`tournament-card-${t.id}`}
@@ -269,7 +269,7 @@ export default function Tournaments() {
                     <Trophy size={18} weight="duotone" className="text-[#F59E0B]" />
                   </div>
                   <span
-                    className={`text-[10px] uppercase tracking-wider border px-2 py-0.5 rounded ${stateColor(
+                    className={`text-xs uppercase tracking-wider border px-2 py-0.5 rounded ${stateColor(
                       t.state
                     )}`}
                   >
@@ -296,7 +296,7 @@ export default function Tournaments() {
                   <span className="font-mono text-[#F59E0B] truncate">{t.winner || "-"}</span>
                 </div>
                 {t.url ? (
-                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] text-[#9CA3AF] group-hover:text-[#10B981]">
+                  <div className="mt-3 inline-flex items-center gap-1 text-xs text-[#9CA3AF] group-hover:text-[#10B981]">
                     <ArrowSquareOut size={12} /> Challonge
                   </div>
                 ) : null}

@@ -425,7 +425,7 @@ export default function PlayerDetail() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <span
-                            className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${
+                            className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border ${
                               won
                                 ? "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20"
                                 : "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20"
@@ -443,7 +443,7 @@ export default function PlayerDetail() {
                           {m.tournament_name ? (
                             <Link
                               to={`/tournaments/${m.tournament_id}`}
-                              className="hidden sm:inline text-[10px] uppercase tracking-wider text-[#6B7280] hover:text-[#9CA3AF] truncate"
+                              className="hidden sm:inline text-xs uppercase tracking-wider text-[#6B7280] hover:text-[#9CA3AF] truncate"
                             >
                               · {m.tournament_name}
                             </Link>
@@ -517,7 +517,7 @@ const RivalryCard = ({
               <div className={`${metricColor} font-semibold text-right`}>
                 {row[metricKey]}x
               </div>
-              <div className="text-[#6B7280] text-[11px] mt-1 text-right">
+              <div className="text-[#6B7280] text-xs mt-1 text-right">
                 {formatRivalryRecord(row, playerName, direction, metricLabel)}
               </div>
             </div>
@@ -538,7 +538,7 @@ const formatRivalryRecord = (row, playerName, direction, verb) => {
 const PlacementStat = ({ label, value, to }) => {
   const content = (
     <>
-    <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
       {label}
     </div>
     <div className="mt-2 font-mono text-2xl font-semibold text-[#F3F4F6]">
@@ -655,7 +655,7 @@ const TitlesCard = ({ titles }) => {
           {items.map(([game, count]) => (
             <span
               key={game}
-              className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0B0E14] border border-[#273041] text-[#9CA3AF]"
+              className="text-xs font-mono px-2 py-0.5 rounded bg-[#0B0E14] border border-[#273041] text-[#9CA3AF]"
             >
               {game}: {count}
             </span>

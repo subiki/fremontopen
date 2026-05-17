@@ -176,7 +176,7 @@ export default function Compare() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[620px]">
                     <thead>
-                      <tr className="text-[10px] uppercase tracking-wider text-[#6B7280]">
+                      <tr className="text-xs uppercase tracking-wider text-[#6B7280]">
                         <th className="text-left py-2">Opponent</th>
                         <th className="text-right py-2">{A}</th>
                         <th className="text-right py-2">{B}</th>

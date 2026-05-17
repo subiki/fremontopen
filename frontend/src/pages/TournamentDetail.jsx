@@ -250,7 +250,7 @@ export default function TournamentDetail() {
                 <div className="space-y-6 min-w-max" style={{ zoom: bracketZoom }}>
                   {bracketSections.map((section) => (
                     <div key={section.key}>
-                      <div className="mb-3 text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                      <div className="mb-3 text-xs uppercase tracking-[0.16em] text-[#6B7280]">
                         {section.label}
                       </div>
                       <div className="flex gap-4">
@@ -322,7 +322,7 @@ export default function TournamentDetail() {
                           </div>
                         </Td>
                         <Td>
-                          <span className="text-[10px] uppercase tracking-wider text-[#9CA3AF]">
+                          <span className="text-xs uppercase tracking-wider text-[#9CA3AF]">
                             {m.state || "-"}
                           </span>
                         </Td>
@@ -341,7 +341,7 @@ export default function TournamentDetail() {
 
 const Info = ({ label, value }) => (
   <div>
-    <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
     <div className="mt-1 font-mono text-[#F3F4F6]">{value}</div>
   </div>
 );
@@ -412,7 +412,7 @@ const PrintMeta = ({ label, value }) => (
 const BaselineStat = ({ label, value, to, title }) => {
   const body = (
     <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">{label}</div>
+      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
       <div className="mt-1 font-mono text-[#F3F4F6]">{value || "-"}</div>
       {title ? <div className="mt-1 text-xs text-[#9CA3AF] truncate">{title}</div> : null}
     </div>
@@ -428,7 +428,7 @@ const BaselineStat = ({ label, value, to, title }) => {
 const PlacementCard = ({ row, payout }) => (
   <li className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3">
     <div className="flex items-center justify-between gap-3">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
         {ordinal(row.place)}
       </div>
       {payout ? (
@@ -471,7 +471,7 @@ const CinderellaCard = ({ run }) => (
       {(run.matches || []).slice(0, 4).map((match) => (
         <span
           key={match.match_id}
-          className="rounded border border-[#273041] bg-[#141923] px-2 py-1 font-mono text-[10px] text-[#9CA3AF]"
+          className="rounded border border-[#273041] bg-[#141923] px-2 py-1 font-mono text-xs text-[#9CA3AF]"
         >
           R{match.round ?? "-"} {match.winner_probability}%
         </span>
@@ -497,7 +497,7 @@ const MatchOfTournamentCard = ({ match }) => {
     >
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F59E0B]">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#F59E0B]">
             Match of the Tournament
           </div>
           <h2 className="mt-2 font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
@@ -530,7 +530,7 @@ const MatchOfTournamentCard = ({ match }) => {
 
 const StoryStat = ({ label, value, tone }) => (
   <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2">
-    <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B7280]">{label}</div>
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
     <div className={`mt-1 truncate font-mono text-sm ${tone === "gold" ? "text-[#F59E0B]" : "text-[#F3F4F6]"}`}>
       {value}
     </div>
@@ -557,7 +557,7 @@ const BracketMatch = ({ match }) => {
     <div className="rounded-md border border-[#273041] bg-[#0B0E14] overflow-hidden" data-testid="bracket-match">
       <BracketPlayer name={winner} entryType={match.winner_entry_type} tone="winner" />
       <BracketPlayer name={loser} entryType={match.loser_entry_type} tone="loser" />
-      <div className="flex items-center justify-between gap-3 border-t border-[#273041]/60 px-3 py-2 text-[11px] font-mono text-[#6B7280]">
+      <div className="flex items-center justify-between gap-3 border-t border-[#273041]/60 px-3 py-2 text-xs font-mono text-[#6B7280]">
         <span>{match.scores || "-"}</span>
         <MatchOdds odds={match.elo_odds} />
       </div>
@@ -599,7 +599,7 @@ const BracketPlayer = ({ name, entryType, tone }) => {
           {name}
         </Link>
       )}
-      <span className={`text-[10px] uppercase tracking-wider ${isWinner ? "text-[#10B981]" : "text-[#6B7280]"}`}>
+      <span className={`text-xs uppercase tracking-wider ${isWinner ? "text-[#10B981]" : "text-[#6B7280]"}`}>
         {isWinner ? "W" : "L"}
       </span>
     </div>
@@ -659,7 +659,7 @@ const formatMoney = (value) =>
 const MatchOdds = ({ odds }) => {
   if (!odds) return null;
   return (
-    <span className="text-[10px] uppercase tracking-wider text-[#F59E0B]">
+    <span className="text-xs uppercase tracking-wider text-[#F59E0B]">
       {odds.favorite} {Math.max(odds.winner_probability || 0, odds.loser_probability || 0)}% ELO
     </span>
   );

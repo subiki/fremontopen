@@ -39,7 +39,7 @@ export const Sidebar = () => {
           </div>
           <div>
             <div className="font-[Outfit] font-bold text-[#F3F4F6] text-lg leading-none">CueStats</div>
-            <div className="text-[10px] tracking-[0.2em] uppercase text-[#6B7280] mt-1">Billiards Intel</div>
+            <div className="text-xs tracking-[0.16em] uppercase text-[#6B7280] mt-1">Billiards Intel</div>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export const Sidebar = () => {
           ))}
         </nav>
 
-        <div className="px-6 py-4 border-t border-[#273041] text-[11px] leading-5 text-[#6B7280]">
+        <div className="px-6 py-4 border-t border-[#273041] text-xs leading-5 text-[#6B7280]">
           Static demo cache. Refresh data by exporting a new Challonge snapshot.
         </div>
       </aside>
@@ -85,7 +85,7 @@ export const Sidebar = () => {
                 </div>
                 <div>
                   <div className="font-[Outfit] font-bold text-[#F3F4F6] text-lg leading-none">CueStats</div>
-                  <div className="text-[10px] tracking-[0.2em] uppercase text-[#6B7280] mt-1">Menu</div>
+                  <div className="text-xs tracking-[0.16em] uppercase text-[#6B7280] mt-1">Menu</div>
                 </div>
               </div>
               <button
@@ -135,7 +135,7 @@ export const Sidebar = () => {
             end={l.to === "/"}
             data-testid={`mobile-${l.testid}`}
             className={({ isActive }) =>
-              `min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-[10px] transition-colors ${
+              `min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-xs transition-colors ${
                 isActive
                   ? "bg-[#10B981]/10 text-[#10B981]"
                   : "text-[#9CA3AF] hover:bg-[#141923] hover:text-[#F3F4F6]"
@@ -149,7 +149,7 @@ export const Sidebar = () => {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-[10px] text-[#9CA3AF] transition-colors hover:bg-[#141923] hover:text-[#F3F4F6]"
+            className="min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-xs text-[#9CA3AF] transition-colors hover:bg-[#141923] hover:text-[#F3F4F6]"
             aria-expanded={open}
             aria-controls="mobile-nav-drawer"
             data-testid="mobile-nav-menu-button"

@@ -137,7 +137,7 @@ export default function Leaderboard() {
                         T4 {p.top_4_finishes ?? 0}
                       </span>
                     </div>
-                    <div className="w-52 shrink-0 flex justify-end gap-2 text-[11px] font-mono">
+                    <div className="w-52 shrink-0 flex justify-end gap-2 text-xs font-mono">
                       <Chip label="Cur" value={p.attendance_streak ?? 0} />
                       <Chip label="Best" value={p.best_attendance_streak ?? 0} />
                       <Chip label="Titles" value={p.top_1_finishes ?? 0} accent />

@@ -170,3 +170,15 @@
 - Added tournament difficulty labels from the field's average and top ELO.
 - Surfaced difficulty on tournament archive cards, timeline rows, and tournament detail pages.
 - Kept the calculation in the static export using cached ratings only.
+
+## 2026-05-17 - P0 split static cache and tournament stories
+
+- Split the static export into a small dashboard manifest plus lazy-loaded player and tournament detail JSON files.
+- Added tournament-level match-of-the-tournament analytics and linked dashboard upset/anniversary rows directly to referenced match anchors.
+- Kept the implementation static-first and verified backend tests, frontend build, and browser navigation across dashboard/detail routes.
+
+## 2026-05-17 - P2 accessibility readability pass
+
+- Raised remaining 10px/11px UI labels to Tailwind `text-xs` across navigation, search, dashboard, tournament, player, season, compare, and leaderboard surfaces.
+- Brightened dark-theme muted/secondary gray overrides while leaving the existing light-theme mappings intact.
+- Updated the backlog so the completed cache split and readability pass no longer remain in the active Top 10.

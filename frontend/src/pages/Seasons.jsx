@@ -166,7 +166,7 @@ const seasonScoringLabel = (config = {}) => {
 
 const SeasonMeta = ({ label, value }) => (
   <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2 min-w-24">
-    <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B7280]">{label}</div>
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
     <div className="mt-1 font-mono text-sm text-[#F3F4F6]">{value ?? "-"}</div>
   </div>
 );

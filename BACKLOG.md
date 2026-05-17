@@ -90,6 +90,8 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Pinch-zoom bracket view for tournament detail pages
 - [x] Printable tournament bracket/detail pages
 - [x] Equipment/custom cue fields from local player overrides
+- [x] Split static cache for faster weak-signal loads
+- [x] Accessibility readability pass with larger small labels and improved gray-on-dark contrast
 
 ## Removed From Demo Scope
 
@@ -106,9 +108,7 @@ These were intentionally removed for the shared-hosting demo. They can return la
 
 ## EPIC 1 - Static Deploy And Data Refresh
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 1.8 | P0 | M | **Split static cache for faster weak-signal loads** by keeping homepage data small and lazy-loading detail JSON files |
+All current static deploy and data-refresh items are complete.
 
 ## EPIC 2 - Data Quality Without Admin UI
 
@@ -145,7 +145,6 @@ All current data-quality items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 6.6 | P3 | M | **Player photo/card art** from local static assets |
-| 6.7 | P2 | M | **Accessibility readability pass** increasing small font sizes and improving gray-on-dark contrast ratios |
 
 ## EPIC 7 - Seasons And League Standings
 
@@ -176,16 +175,16 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 1.8 Split static cache for faster weak-signal loads | Reduces the initial mobile download from the oversized monolithic cache in issue #73 |
-| 2 | 6.7 Accessibility readability pass | Improves every screen and addresses font-size/contrast feedback from issue #72 |
-| 3 | 4.10 Fix desktop bracket scrolling | Removes a blocking interaction bug in the single-tournament view |
-| 4 | 4.11 Remove tournament match State column and print button | Simplifies the highest-traffic tournament page |
-| 5 | 4.12 Numeric tournament difficulty metric | Replaces vague labels with inspectable strength values |
-| 6 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
-| 7 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
-| 8 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
-| 9 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 10 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 1 | 4.10 Fix desktop bracket scrolling | Removes a blocking interaction bug in the single-tournament view |
+| 2 | 4.11 Remove tournament match State column and print button | Simplifies the highest-traffic tournament page |
+| 3 | 4.12 Numeric tournament difficulty metric | Replaces vague labels with inspectable strength values |
+| 4 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
+| 5 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
+| 6 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
+| 7 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 8 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 9 | 4.13 Simplify tournament date and state labels | Clarifies tournament archive and detail metadata |
+| 10 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
 
 ---
 

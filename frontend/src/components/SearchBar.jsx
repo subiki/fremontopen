@@ -92,7 +92,7 @@ export const SearchBar = () => {
           )}
           {results.players.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] border-b border-[#273041]">
+              <div className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-[#6B7280] border-b border-[#273041]">
                 Players
               </div>
               {results.players.map((p) => (
@@ -107,7 +107,7 @@ export const SearchBar = () => {
                     <User size={12} className="text-[#10B981]" />
                     {p.name}
                   </span>
-                  <span className="font-mono text-[11px] text-[#9CA3AF] shrink-0">
+                  <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                     <span className="text-[#10B981]">{p.wins}W</span>
                     <span className="text-[#6B7280] mx-1">·</span>
                     <span className="text-[#EF4444]">{p.losses}L</span>
@@ -119,7 +119,7 @@ export const SearchBar = () => {
           )}
           {results.tournaments.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] border-b border-t border-[#273041]">
+              <div className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-[#6B7280] border-b border-t border-[#273041]">
                 Tournaments
               </div>
               {results.tournaments.map((t) => (
@@ -132,7 +132,7 @@ export const SearchBar = () => {
                 >
                   <Trophy size={12} className="text-[#F59E0B]" />
                   <span className="truncate">{t.name}</span>
-                  <span className="text-[10px] text-[#6B7280] ml-auto shrink-0">{t.game || "?"}</span>
+                  <span className="text-xs text-[#6B7280] ml-auto shrink-0">{t.game || "?"}</span>
                 </button>
               ))}
             </div>
