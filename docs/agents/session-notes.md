@@ -182,3 +182,9 @@
 - Raised remaining 10px/11px UI labels to Tailwind `text-xs` across navigation, search, dashboard, tournament, player, season, compare, and leaderboard surfaces.
 - Brightened dark-theme muted/secondary gray overrides while leaving the existing light-theme mappings intact.
 - Updated the backlog so the completed cache split and readability pass no longer remain in the active Top 10.
+
+## 2026-05-17 - Challonge refresh through May 16
+
+- Refreshed the Fremont Open Challonge cache with the May 16, 2026 event, `4Bs 8 ball 5/16/26`.
+- Rebuilt the static cache into 589 player bundles and 246 tournament bundles, then verified the production frontend build.
+- Added the local ignored `CHALLONGE_SUBDOMAIN=fremontopen` setting after an initial account-level sync showed the subdomain was missing locally.
