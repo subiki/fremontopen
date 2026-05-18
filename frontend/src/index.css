@@ -292,7 +292,13 @@ h1, h2, h3, h4, h5, h6 {
 
     [data-testid="bracket-zoom-viewport"] > div {
         min-width: 0 !important;
-        zoom: 0.75 !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    [data-testid="bracket-zoom-viewport"] > div > div {
+        transform: scale(0.75) !important;
+        transform-origin: top left !important;
     }
 
     [data-testid="bracket-match"],

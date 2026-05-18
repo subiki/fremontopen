@@ -25,6 +25,12 @@ const monthLabel = (value) => {
   return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 };
 
+const formatDifficultySummary = (difficulty) => {
+  if (!difficulty) return "Unknown field";
+  if (difficulty.average_elo) return `${difficulty.average_elo} avg ELO`;
+  return difficulty.label ? `${difficulty.label} field` : "Unknown field";
+};
+
 export default function Tournaments() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("date");
@@ -233,9 +239,9 @@ export default function Tournaments() {
                           </span>
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-mono">
-                  <span>{t.game || "-"}</span>
-                  <span>{t.difficulty?.label || "Unknown"} field</span>
-                  <span>{t.player_count || t.participants_count || 0} players</span>
+                          <span>{t.game || "-"}</span>
+                          <span>{formatDifficultySummary(t.difficulty)}</span>
+                          <span>{t.player_count || t.participants_count || 0} players</span>
                           <span>{t.duration_outlier ? "outlier" : t.normalized_duration_label || "-"}</span>
                         </div>
                       </div>
@@ -284,8 +290,8 @@ export default function Tournaments() {
                   <span className="font-mono">{t.player_count || t.participants_count || 0} players</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
-                  <span className="font-mono">Difficulty</span>
-                  <span className="font-mono text-[#F59E0B]">{t.difficulty?.label || "-"}</span>
+                  <span className="font-mono">Field strength</span>
+                  <span className="font-mono text-[#F59E0B]">{formatDifficultySummary(t.difficulty)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
                   <span className="font-mono">Duration</span>

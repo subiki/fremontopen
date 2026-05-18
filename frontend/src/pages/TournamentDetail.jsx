@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournament } from "../lib/api";
-import { ArrowsClockwise, CaretLeft, MagnifyingGlass, Minus, Plus, Printer } from "@phosphor-icons/react";
+import { ArrowsClockwise, CaretLeft, MagnifyingGlass, Minus, Plus } from "@phosphor-icons/react";
 
 const MIN_BRACKET_ZOOM = 0.65;
 const MAX_BRACKET_ZOOM = 1.45;
@@ -16,7 +16,9 @@ export default function TournamentDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bracketZoom, setBracketZoom] = useState(1);
+  const [bracketSize, setBracketSize] = useState({ width: 0, height: 0 });
   const pinchDistanceRef = useRef(null);
+  const bracketContentRef = useRef(null);
 
   const adjustBracketZoom = useCallback((delta) => {
     setBracketZoom((value) => clampBracketZoom(value + delta));
@@ -79,15 +81,45 @@ export default function TournamentDetail() {
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
   const bracketSections = useMemo(() => buildBracketSections(matches), [matches]);
-  const printActions = t ? <PrintButton /> : null;
+
+  useLayoutEffect(() => {
+    const element = bracketContentRef.current;
+    if (!element || !bracketSections.length) {
+      setBracketSize({ width: 0, height: 0 });
+      return undefined;
+    }
+
+    const measure = () => {
+      setBracketSize({
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+      });
+    };
+
+    measure();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [bracketSections]);
 
   return (
     <>
-      <Topbar title={t?.name || "Tournament"} subtitle={t?.game || ""} actions={printActions} />
+      <Topbar title={t?.name || "Tournament"} subtitle={t?.game || ""} />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="tournament-detail-page">
         <Link
           to="/tournaments"
-          className="print-hide inline-flex items-center gap-1 text-sm text-[#9CA3AF] hover:text-[#10B981] mb-5"
+          className="inline-flex items-center gap-1 text-sm text-[#9CA3AF] hover:text-[#10B981] mb-5"
         >
           <CaretLeft size={14} /> Back to tournaments
         </Link>
@@ -98,16 +130,14 @@ export default function TournamentDetail() {
           <MissingTournament id={id} />
         ) : (
           <>
-            <PrintHeader tournament={t} analytics={analytics} />
-
             <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6 grid grid-cols-2 md:grid-cols-6 gap-4">
-              <Info label="State" value={t.state || "-"} />
+              <Info label="Status" value={formatTournamentStatus(t.state)} />
+              <Info label="Date" value={formatTournamentDate(t.started_at, t.completed_at)} />
               <Info label="Game" value={t.game || "-"} />
               <Info label="Participants" value={analytics.player_count || t.participants_count || "-"} />
               <Info label="Pot" value={formatMoney(analytics.prize_pool)} />
-              <Info label="Difficulty" value={analytics.difficulty?.label || t.difficulty?.label || "-"} />
+              <Info label="Field Strength" value={formatDifficultyValue(analytics.difficulty || t.difficulty)} />
               <Info label="Duration" value={analytics.duration_label || t.duration_label || "-"} />
-              <Info label="Started" value={t.started_at ? new Date(t.started_at).toLocaleDateString() : "-"} />
             </div>
 
             {baseline ? (
@@ -247,29 +277,43 @@ export default function TournamentDetail() {
                   }}
                   style={{ touchAction: "pan-x pan-y" }}
                 >
-                <div className="space-y-6 min-w-max" style={{ zoom: bracketZoom }}>
-                  {bracketSections.map((section) => (
-                    <div key={section.key}>
-                      <div className="mb-3 text-xs uppercase tracking-[0.16em] text-[#6B7280]">
-                        {section.label}
-                      </div>
-                      <div className="flex gap-4">
-                        {section.rounds.map((round) => (
-                          <div key={round.key} className="w-72 shrink-0">
-                            <div className="mb-2 font-mono text-xs text-[#9CA3AF]">
-                              {round.label}
-                            </div>
-                            <div className="space-y-3">
-                              {round.matches.map((match) => (
-                                <BracketMatch key={match.id} match={match} />
-                              ))}
-                            </div>
+                  <div
+                    style={{
+                      width: bracketSize.width ? `${bracketSize.width * bracketZoom}px` : "max-content",
+                      height: bracketSize.height ? `${bracketSize.height * bracketZoom}px` : "auto",
+                    }}
+                  >
+                    <div
+                      ref={bracketContentRef}
+                      className="space-y-6 min-w-max"
+                      style={{
+                        transform: `scale(${bracketZoom})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      {bracketSections.map((section) => (
+                        <div key={section.key}>
+                          <div className="mb-3 text-xs uppercase tracking-[0.16em] text-[#6B7280]">
+                            {section.label}
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex gap-4">
+                            {section.rounds.map((round) => (
+                              <div key={round.key} className="w-72 shrink-0">
+                                <div className="mb-2 font-mono text-xs text-[#9CA3AF]">
+                                  {round.label}
+                                </div>
+                                <div className="space-y-3">
+                                  {round.matches.map((match) => (
+                                    <BracketMatch key={match.id} match={match} />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
                 </div>
               )}
             </section>
@@ -283,13 +327,12 @@ export default function TournamentDetail() {
                     <Th>Winner</Th>
                     <Th>Loser</Th>
                     <Th>Score</Th>
-                    <Th>State</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {matches.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-[#6B7280]">
+                      <td colSpan={4} className="py-6 text-center text-[#6B7280]">
                         No matches yet.
                       </td>
                     </tr>
@@ -321,11 +364,6 @@ export default function TournamentDetail() {
                             <MatchOdds odds={m.elo_odds} />
                           </div>
                         </Td>
-                        <Td>
-                          <span className="text-xs uppercase tracking-wider text-[#9CA3AF]">
-                            {m.state || "-"}
-                          </span>
-                        </Td>
                       </tr>
                     ))
                   )}
@@ -347,6 +385,27 @@ const Info = ({ label, value }) => (
 );
 
 const matchAnchorId = (matchId) => `match-${encodeURIComponent(String(matchId || ""))}`;
+
+const formatTournamentStatus = (value) => {
+  const status = String(value || "").replace(/_/g, " ").trim();
+  if (!status) return "-";
+  return status.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const formatTournamentDate = (startedAt, completedAt) => {
+  const value = startedAt || completedAt;
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+
+const formatDifficultyValue = (difficulty) => {
+  if (!difficulty) return "-";
+  const average = difficulty.average_elo;
+  if (!average) return difficulty.label || "-";
+  return `${average} avg ELO`;
+};
 
 const MissingTournament = ({ id }) => (
   <section className="max-w-2xl bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="missing-tournament">
@@ -374,39 +433,6 @@ const MissingTournament = ({ id }) => (
       </Link>
     </div>
   </section>
-);
-
-const PrintButton = () => (
-  <button
-    type="button"
-    onClick={() => window.print()}
-    className="print-hide inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#273041] bg-[#141923] px-3 text-sm font-medium text-[#F3F4F6] transition-colors hover:border-[#10B981]/50 hover:text-[#10B981]"
-    data-testid="print-tournament-button"
-  >
-    <Printer size={17} weight="duotone" />
-    <span className="hidden sm:inline">Print</span>
-  </button>
-);
-
-const PrintHeader = ({ tournament, analytics }) => (
-  <section className="print-only mb-6 border-b border-[#273041] pb-4">
-    <h1 className="font-[Outfit] text-3xl font-semibold text-[#F3F4F6]">
-      {tournament.name}
-    </h1>
-    <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
-      <PrintMeta label="Game" value={tournament.game || "-"} />
-      <PrintMeta label="State" value={tournament.state || "-"} />
-      <PrintMeta label="Players" value={analytics.player_count || tournament.participants_count || "-"} />
-      <PrintMeta label="Duration" value={analytics.duration_label || tournament.duration_label || "-"} />
-    </dl>
-  </section>
-);
-
-const PrintMeta = ({ label, value }) => (
-  <div>
-    <dt className="font-semibold text-[#6B7280]">{label}</dt>
-    <dd className="font-mono text-[#F3F4F6]">{value}</dd>
-  </div>
 );
 
 const BaselineStat = ({ label, value, to, title }) => {

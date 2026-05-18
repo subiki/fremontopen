@@ -92,6 +92,10 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Equipment/custom cue fields from local player overrides
 - [x] Split static cache for faster weak-signal loads
 - [x] Accessibility readability pass with larger small labels and improved gray-on-dark contrast
+- [x] Desktop bracket scrolling fix for tournament detail pages
+- [x] Remove tournament match State column and print button from single-tournament views
+- [x] Numeric tournament difficulty metric showing average field ELO
+- [x] Simplify tournament date and state labels
 
 ## Removed From Demo Scope
 
@@ -127,12 +131,7 @@ All current data-quality items are complete.
 
 ## EPIC 4 - Tournament Views
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 4.10 | P2 | S | **Fix desktop bracket scrolling** on tournament detail pages |
-| 4.11 | P2 | S | **Remove tournament match State column and print button** from single-tournament views |
-| 4.12 | P2 | M | **Numeric tournament difficulty metric** showing average field ELO or comparison to average tournament strength |
-| 4.13 | P2 | S | **Simplify tournament date and state labels** so started/state read as plain tournament date/status |
+All current tournament-view items are complete.
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
 
@@ -175,16 +174,15 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 4.10 Fix desktop bracket scrolling | Removes a blocking interaction bug in the single-tournament view |
-| 2 | 4.11 Remove tournament match State column and print button | Simplifies the highest-traffic tournament page |
-| 3 | 4.12 Numeric tournament difficulty metric | Replaces vague labels with inspectable strength values |
-| 4 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
-| 5 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
-| 6 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
-| 7 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 8 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
-| 9 | 4.13 Simplify tournament date and state labels | Clarifies tournament archive and detail metadata |
-| 10 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
+| 1 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
+| 2 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
+| 3 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
+| 4 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 5 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 6 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
+| 7 | 3.9 Remove player equipment panel | Trims non-core profile chrome from the static demo |
+| 8 | 6.6 Player photo/card art | Optional visual polish from local static assets |
+| 9 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
 
 ---
 

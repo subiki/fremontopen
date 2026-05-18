@@ -188,3 +188,19 @@
 - Refreshed the Fremont Open Challonge cache with the May 16, 2026 event, `4Bs 8 ball 5/16/26`.
 - Rebuilt the static cache into 589 player bundles and 246 tournament bundles, then verified the production frontend build.
 - Added the local ignored `CHALLONGE_SUBDOMAIN=fremontopen` setting after an initial account-level sync showed the subdomain was missing locally.
+
+## 2026-05-17 - P2 desktop bracket scrolling
+
+- Continued from the updated static backlog and took the top remaining P2 item, `4.10 Fix desktop bracket scrolling`.
+- Replaced the tournament-detail bracket viewport's CSS `zoom` layout with a measured transform-based wrapper so horizontal and vertical scrolling stay stable on desktop while keeping the existing zoom controls and pinch behavior.
+- Updated print CSS to keep the bracket scaled for paper without relying on runtime `zoom`.
+- Marked the backlog item done and advanced the Top 10 queue to the next remaining tournament-view cleanup items.
+- Frontend build verification in this worktree is currently blocked by local dependency/tooling drift: portable Yarn is outside the worktree, the shared dependency tree is not directly reusable here, and the current local build attempt failed on module resolution rather than the bracket patch itself.
+
+## 2026-05-18 - P2 tournament detail cleanup
+
+- Continued in backlog order after `4.10` and completed `4.11`, `4.12`, and `4.13` together on the tournament archive/detail views.
+- Removed the single-tournament print action and match-table State column from `frontend/src/pages/TournamentDetail.jsx`.
+- Simplified tournament metadata labels to plain `Date` and `Status`, and surfaced numeric field strength as average field ELO on both the tournament detail page and archive cards/timeline.
+- Restored a local `frontend/node_modules` tree in this worktree with the repo's portable Yarn path so frontend validation can run here again.
+- Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
