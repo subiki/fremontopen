@@ -33,7 +33,7 @@ export default function PlayerDetail() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [following, setFollowing] = useState(isFollowing(decoded));
   const [extras, setExtras] = useState(null);
 
@@ -66,7 +66,7 @@ export default function PlayerDetail() {
     (async () => {
       try {
         const lb = await fetchLeaderboard(1000);
-        setOrder(lb.map((p) => p.name));
+        setLeaderboard(lb);
       } catch {
         /* ignore */
       }
@@ -74,11 +74,11 @@ export default function PlayerDetail() {
   }, []);
 
   const position = useMemo(() => {
-    if (!order.length) return null;
-    const idx = order.indexOf(decoded);
+    if (!leaderboard.length) return null;
+    const idx = leaderboard.findIndex((player) => player.name === decoded);
     if (idx === -1) return null;
-    return { idx: idx + 1, total: order.length };
-  }, [order, decoded]);
+    return { idx: idx + 1, total: leaderboard.length };
+  }, [leaderboard, decoded]);
 
   const p = data?.player;
   const canonicalName = p?.name || decoded;
@@ -90,6 +90,8 @@ export default function PlayerDetail() {
   const attendance = extras?.attendance || {};
   const cash = extras?.cash || {};
   const form = extras?.form || {};
+  const coreResults = useMemo(() => summarizeCoreResults(matches, canonicalName), [matches, canonicalName]);
+  const rankSummary = useMemo(() => summarizePlayerRanks(leaderboard, canonicalName), [leaderboard, canonicalName]);
 
   useEffect(() => {
     if (p?.name && p.name !== decoded) {
@@ -182,6 +184,49 @@ export default function PlayerDetail() {
                 {p.nickname}
               </div>
             ) : null}
+
+            <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="core-results-summary">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                    Core Results
+                  </h2>
+                  <p className="mt-1 text-sm text-[#9CA3AF]">
+                    Quick read on races, racks, tournament volume, and current ranking context.
+                  </p>
+                </div>
+                <div className="text-xs font-mono text-[#6B7280]">
+                  {coreResults.scoredRaces} scored race{coreResults.scoredRaces === 1 ? "" : "s"} in cache
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <SummaryCard
+                  label="Races"
+                  primary={`${coreResults.racesWon}-${coreResults.racesLost}`}
+                  secondary={`${coreResults.racesPlayed} played`}
+                  detail={`${p.win_rate}% win rate`}
+                />
+                <SummaryCard
+                  label="Racks"
+                  primary={`${coreResults.racksWon}-${coreResults.racksLost}`}
+                  secondary={`${coreResults.racksPlayed} total`}
+                  detail={coreResults.scoredRaces ? `${coreResults.rackDiff >= 0 ? "+" : ""}${coreResults.rackDiff} diff` : "Waiting on scored matches"}
+                />
+                <SummaryCard
+                  label="Tournaments"
+                  primary={String(attendance.tournaments_played ?? p.tournaments_played ?? 0)}
+                  secondary={`${placements?.tournaments_counted ?? 0} with placement data`}
+                  detail={`${topFinishes.top_4 ?? 0} top-4 finishes`}
+                />
+                <SummaryCard
+                  label="Rank Context"
+                  primary={rankSummary.overall}
+                  secondary={`ELO ${rankSummary.elo}`}
+                  detail={`Avg place ${rankSummary.averagePlacement}`}
+                />
+              </div>
+            </section>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
               <StatCard label="Wins" value={p.wins} accent="text-[#10B981]" icon={Trophy} testid="pd-wins" to={rankingPath("wins")} />
               <StatCard label="Losses" value={p.losses} accent="text-[#EF4444]" icon={Target} testid="pd-losses" to={rankingPath("losses")} />
@@ -524,6 +569,80 @@ const PlacementStat = ({ label, value, to }) => {
   ) : (
     <div className={className}>{content}</div>
   );
+};
+
+const SummaryCard = ({ label, primary, secondary, detail }) => (
+  <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-4">
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{label}</div>
+    <div className="mt-2 font-mono text-2xl font-semibold text-[#F3F4F6]">{primary}</div>
+    <div className="mt-2 text-sm text-[#9CA3AF]">{secondary}</div>
+    <div className="mt-1 text-xs text-[#6B7280]">{detail}</div>
+  </div>
+);
+
+const summarizeCoreResults = (matches, playerName) => {
+  const summary = {
+    racesWon: 0,
+    racesLost: 0,
+    racesPlayed: 0,
+    racksWon: 0,
+    racksLost: 0,
+    racksPlayed: 0,
+    scoredRaces: 0,
+    rackDiff: 0,
+  };
+
+  (matches || []).forEach((match) => {
+    const won = match.winner_name === playerName;
+    const lost = match.loser_name === playerName;
+    if (!won && !lost) return;
+
+    summary.racesPlayed += 1;
+    if (won) summary.racesWon += 1;
+    if (lost) summary.racesLost += 1;
+
+    const parsed = parseScore(match.scores);
+    if (!parsed) return;
+
+    summary.scoredRaces += 1;
+    const playerRacksWon = won ? parsed.winner : parsed.loser;
+    const playerRacksLost = won ? parsed.loser : parsed.winner;
+    summary.racksWon += playerRacksWon;
+    summary.racksLost += playerRacksLost;
+  });
+
+  summary.racksPlayed = summary.racksWon + summary.racksLost;
+  summary.rackDiff = summary.racksWon - summary.racksLost;
+  return summary;
+};
+
+const summarizePlayerRanks = (leaderboard, playerName) => {
+  const defaultRanks = { overall: "-", elo: "-", averagePlacement: "-" };
+  if (!leaderboard?.length) return defaultRanks;
+
+  const overallIndex = leaderboard.findIndex((player) => player.name === playerName);
+  const eloRankings = [...leaderboard]
+    .filter((player) => player.elo_rating !== null && player.elo_rating !== undefined)
+    .sort((a, b) => (b.elo_rating ?? -Infinity) - (a.elo_rating ?? -Infinity) || a.name.localeCompare(b.name));
+  const avgPlaceRankings = [...leaderboard]
+    .filter((player) => player.average_placement !== null && player.average_placement !== undefined)
+    .sort((a, b) => (a.average_placement ?? Infinity) - (b.average_placement ?? Infinity) || a.name.localeCompare(b.name));
+
+  const formatRank = (index, total) => (index === -1 || !total ? "-" : `#${index + 1}/${total}`);
+  return {
+    overall: formatRank(overallIndex, leaderboard.length),
+    elo: formatRank(eloRankings.findIndex((player) => player.name === playerName), eloRankings.length),
+    averagePlacement: formatRank(avgPlaceRankings.findIndex((player) => player.name === playerName), avgPlaceRankings.length),
+  };
+};
+
+const parseScore = (score) => {
+  const numbers = String(score || "").match(/\d+/g)?.map(Number) || [];
+  if (numbers.length < 2) return null;
+  return {
+    winner: numbers[0],
+    loser: numbers[1],
+  };
 };
 
 const MatchOdds = ({ odds }) => {

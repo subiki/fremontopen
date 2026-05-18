@@ -98,6 +98,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Simplify tournament date and state labels
 - [x] Remove player profile prev/next controls
 - [x] Remove player equipment panel
+- [x] Player profile core results summary
 
 ## Removed From Demo Scope
 
@@ -124,7 +125,6 @@ All current data-quality items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 3.10 | P2 | M | **Player profile core results summary** showing racks won/lost, races won/lost, tournaments played, and rank stats |
 | 3.11 | P2 | M | **Biggest single tournament pot won per player** based on tournament payout data |
 | 3.12 | P2 | M | **Leaderboard filters for tournaments and racks played** |
 | 3.13 | P2 | S | **Clarify leaderboard current and best columns** with labels that explain streak meaning |
@@ -174,13 +174,12 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
-| 2 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
-| 3 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 4 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
-| 5 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
-| 6 | 6.6 Player photo/card art | Optional visual polish from local static assets |
-| 7 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
+| 1 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
+| 2 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 3 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 4 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
+| 5 | 6.6 Player photo/card art | Optional visual polish from local static assets |
+| 6 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
 
 ---
 

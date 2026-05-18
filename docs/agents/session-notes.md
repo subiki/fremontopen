@@ -211,3 +211,10 @@
 - Removed the glitchy prev/next player controls from `frontend/src/pages/PlayerDetail.jsx` while keeping the existing share/follow actions and leaderboard position subtitle.
 - Removed the equipment panel from the player profile so the page stays focused on stats, rankings, and comparison-oriented cards.
 - Verified the static frontend build again with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-18 - P2 player core results summary
+
+- Continued to `3.10` and added a dedicated `Core Results` summary section near the top of `frontend/src/pages/PlayerDetail.jsx`.
+- Derived race wins/losses, rack wins/losses, scored-race totals, tournaments played, and rank context directly from the cached player matches plus the fetched leaderboard list, keeping the slice client-only and static-first.
+- Kept the existing stat cards and deeper analytics sections intact; the new summary acts as a compact at-a-glance block instead of replacing the detailed views.
+- Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
