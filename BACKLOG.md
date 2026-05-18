@@ -96,6 +96,8 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Remove tournament match State column and print button from single-tournament views
 - [x] Numeric tournament difficulty metric showing average field ELO
 - [x] Simplify tournament date and state labels
+- [x] Remove player profile prev/next controls
+- [x] Remove player equipment panel
 
 ## Removed From Demo Scope
 
@@ -122,8 +124,6 @@ All current data-quality items are complete.
 
 | # | P | Effort | Item |
 |---|---|---|---|
-| 3.8 | P2 | S | **Remove player profile prev/next controls** because they are glitchy and not needed |
-| 3.9 | P2 | S | **Remove player equipment panel** from the player profile |
 | 3.10 | P2 | M | **Player profile core results summary** showing racks won/lost, races won/lost, tournaments played, and rank stats |
 | 3.11 | P2 | M | **Biggest single tournament pot won per player** based on tournament payout data |
 | 3.12 | P2 | M | **Leaderboard filters for tournaments and racks played** |
@@ -174,15 +174,13 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 3.8 Remove player profile prev/next controls | Removes a known glitch from player pages |
-| 2 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
-| 3 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
-| 4 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 5 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
-| 6 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
-| 7 | 3.9 Remove player equipment panel | Trims non-core profile chrome from the static demo |
-| 8 | 6.6 Player photo/card art | Optional visual polish from local static assets |
-| 9 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
+| 1 | 3.10 Player profile core results summary | Keeps the core racks/races/tournaments/ranks stats visible |
+| 2 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
+| 3 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 4 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 5 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
+| 6 | 6.6 Player photo/card art | Optional visual polish from local static assets |
+| 7 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
 
 ---
 

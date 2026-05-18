@@ -204,3 +204,10 @@
 - Simplified tournament metadata labels to plain `Date` and `Status`, and surfaced numeric field strength as average field ELO on both the tournament detail page and archive cards/timeline.
 - Restored a local `frontend/node_modules` tree in this worktree with the repo's portable Yarn path so frontend validation can run here again.
 - Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-18 - P2 player profile cleanup
+
+- Continued to the next two small player-profile backlog items, `3.8` and `3.9`, before starting the larger `3.10` summary work.
+- Removed the glitchy prev/next player controls from `frontend/src/pages/PlayerDetail.jsx` while keeping the existing share/follow actions and leaderboard position subtitle.
+- Removed the equipment panel from the player profile so the page stays focused on stats, rankings, and comparison-oriented cards.
+- Verified the static frontend build again with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
