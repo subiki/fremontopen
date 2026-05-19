@@ -189,17 +189,17 @@ For tournament views and/or dashboard analytics, add metrics that help understan
 
 ### Acceptance criteria
 
-- [ ] Compute the number of players in each tournament.
-- [ ] Show the average number of players over time.
-- [ ] Display the trend in a chart, table, or dashboard card.
-- [ ] Compute tournament duration when start/end timestamps are available.
-- [ ] Show duration on tournament detail pages.
-- [ ] Add a duration trend or summary view.
-- [ ] Count tournament wins by player.
-- [ ] Show the players with the most tournament wins.
-- [ ] Clearly display 1st, 2nd, 3rd, and 4th ranked tournament winners.
-- [ ] Handle ties clearly and consistently.
-- [ ] Handle missing or incomplete tournament data gracefully.
+- [x] Compute the number of players in each tournament.
+- [x] Show the average number of players over time.
+- [x] Display the trend in a chart, table, or dashboard card.
+- [x] Compute tournament duration when start/end timestamps are available.
+- [x] Show duration on tournament detail pages.
+- [x] Add a duration trend or summary view.
+- [x] Count tournament wins by player.
+- [x] Show the players with the most tournament wins.
+- [x] Clearly display 1st, 2nd, 3rd, and 4th ranked tournament winners.
+- [x] Handle ties clearly and consistently.
+- [x] Handle missing or incomplete tournament data gracefully.
 
 ### Notes
 JFL-priority feature request.
@@ -219,17 +219,17 @@ For player detail pages and rankings, add placement-based statistics that show p
 
 ### Acceptance criteria
 
-- [ ] Compute each player's placement per tournament where placement data is available.
-- [ ] Compute average placement per player.
-- [ ] Display average placement on player detail pages.
-- [ ] Make clear that lower average placement is better.
-- [ ] Count 1st-place finishes per player.
-- [ ] Count top-2 finishes per player.
-- [ ] Count top-3 finishes per player.
-- [ ] Count top-4 finishes per player.
-- [ ] Display top finish counts on player detail pages.
-- [ ] Consider adding average placement and top finish counts to leaderboard/table views.
-- [ ] Handle ties and missing placement data consistently.
+- [x] Compute each player's placement per tournament where placement data is available.
+- [x] Compute average placement per player.
+- [x] Display average placement on player detail pages.
+- [x] Make clear that lower average placement is better.
+- [x] Count 1st-place finishes per player.
+- [x] Count top-2 finishes per player.
+- [x] Count top-3 finishes per player.
+- [x] Count top-4 finishes per player.
+- [x] Display top finish counts on player detail pages.
+- [x] Consider adding average placement and top finish counts to leaderboard/table views.
+- [x] Handle ties and missing placement data consistently.
 
 ### Notes
 JFL-priority feature request.

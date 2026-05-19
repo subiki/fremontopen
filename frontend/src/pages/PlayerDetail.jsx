@@ -275,7 +275,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="Schedule"
-                value={p.strength_of_schedule ?? "â€”"}
+                value={p.strength_of_schedule ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={Scales}
                 testid="pd-strength-of-schedule"
