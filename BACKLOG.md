@@ -248,6 +248,18 @@ Because the backlog was reset for the static shared-hosting demo, running the
 sync with `--close-done` may close old issues for removed server/login/chat/admin
 features. That is expected.
 
+### Legacy Issue Titles To Close
+
+These older manually-created issue titles describe static-demo work that has already shipped
+and should be auto-closed by the backlog sync even though they predate the newer `epic:*`
+labels used by the current automation.
+
+- mobile navigation
+- race versus rack
+- normalize data
+- auto refresh
+- fargo
+
 To trigger the sync manually, go to **Actions -> Weekly Backlog Sync -> Run workflow**
 in the GitHub UI, or run locally after pushing:
 

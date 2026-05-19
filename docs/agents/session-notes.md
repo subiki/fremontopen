@@ -262,3 +262,9 @@
 - Re-checked `.github/workflows/data-refresh.yml` after the preflight fix and found the refresh job still only detected and staged `frontend/public/data/cache.json`.
 - Expanded workflow change detection and `git add` scope to include `frontend/public/data/players` and `frontend/public/data/tournaments`, matching the split static export layout already used by the demo.
 - Kept the fix limited to GitHub Actions YAML so scheduled refreshes can commit the full exported static dataset without requiring any backend scope changes.
+
+## 2026-05-19 - Backlog sync legacy issue cleanup
+
+- Re-checked the live open issue list against `BACKLOG.md` and verified several older JFL/P1 issues were stale even though the shipped work is already documented in code and session notes.
+- Added a `Legacy Issue Titles To Close` tracking section to `BACKLOG.md` and taught `scripts/create_github_issues.sh` to normalize titles plus close explicitly-listed older manual issue titles during `--close-done` sync runs.
+- Kept the close logic conservative by leaving the existing epic-label path intact and only broadening auto-close behavior for titles explicitly named in the backlog source of truth.
