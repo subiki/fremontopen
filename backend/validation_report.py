@@ -12,6 +12,11 @@ from typing import Any, Dict, Iterable, List
 ROOT_DIR = Path(__file__).parent
 DEFAULT_DB = ROOT_DIR / "cuestats_dev.db"
 DEFAULT_OUT = ROOT_DIR / "validation_report.json"
+ALLOWED_TABLES = {
+    "players": "players",
+    "tournaments": "tournaments",
+    "matches": "matches",
+}
 
 
 def _blank(value: Any) -> bool:
@@ -233,8 +238,11 @@ def _sqlite_path_from_env() -> Path:
 
 
 def _rows(conn: sqlite3.Connection, table: str) -> list[Dict[str, Any]]:
+    table_name = ALLOWED_TABLES.get(table)
+    if table_name is None:
+        raise ValueError(f"Unsupported table: {table}")
     conn.row_factory = sqlite3.Row
-    return [dict(row) for row in conn.execute(f"select * from {table}").fetchall()]
+    return [dict(row) for row in conn.execute(f"select * from {table_name}").fetchall()]
 
 
 def load_cached_rows(db_path: Path) -> tuple[list[Dict[str, Any]], list[Dict[str, Any]], list[Dict[str, Any]]]:

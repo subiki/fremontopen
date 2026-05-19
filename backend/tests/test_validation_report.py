@@ -1,9 +1,10 @@
 import sys
 from pathlib import Path
+import sqlite3
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from validation_report import build_report, validate_matches
+from validation_report import _rows, build_report, validate_matches
 
 
 def match(**overrides):
@@ -61,3 +62,17 @@ def test_build_report_summarizes_issue_counts():
         "blank_player_name": 1,
         "impossible_score": 1,
     }
+
+
+def test_rows_rejects_unknown_table_name():
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        try:
+            _rows(conn, "players; drop table matches;")
+        except ValueError as exc:
+            assert "Unsupported table" in str(exc)
+        else:
+            raise AssertionError("Expected unknown table names to be rejected")
+    finally:
+        conn.close()

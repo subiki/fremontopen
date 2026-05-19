@@ -250,3 +250,11 @@
 - Stopped requiring `CHALLONGE_SUBDOMAIN` as a GitHub secret and hard-wired the scheduled refresh workflow to the repo's fixed `fremontopen` subdomain.
 - Expanded workflow change detection and commit staging so split static export files under `frontend/public/data/players/` and `frontend/public/data/tournaments/` deploy with `cache.json` instead of being silently skipped.
 - Kept the change static-first and operationally minimal: no runtime backend, auth, admin, chat, or browser-based Challonge access.
+
+## 2026-05-19 - Security hardening follow-up
+
+- Continued after the workflow fix by checking post-backlog hardening work that existed in automation memory but was still missing from this checkout.
+- Replaced `backend/validation_report.py` table-name interpolation with a fixed allowlist so local report queries cannot be redirected to arbitrary SQL identifiers.
+- Tightened `backend/fargo_refresh.py` remote fetch validation to allow only public `http` and `https` hosts, blocking localhost and private-address sources before any robots or download request runs.
+- Updated `frontend/src/pages/Info.jsx` outbound links to `rel="noopener noreferrer"` for safer new-tab navigation.
+- Added targeted regression coverage in `backend/tests/test_validation_report.py` and `backend/tests/test_fargo_refresh.py`.
