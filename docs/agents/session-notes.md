@@ -234,3 +234,11 @@
 - Added export analytics coverage in `backend/tests/test_export_analytics.py` for ranking event overperformers from match-level ELO odds.
 - Updated `frontend/src/pages/TournamentDetail.jsx`, `frontend/src/pages/Dashboard.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/StatRankings.jsx`, and `frontend/src/pages/Leaderboard.jsx` to surface the new event/payout stories and clarify that current/best leaderboard streaks mean consecutive tournament attendance.
 - Regenerated `frontend/public/data/cache.json` and the split player/tournament bundle files, then passed both the shared-repo frontend build and backend export analytics tests.
+
+## 2026-05-18 - Finish optional static-demo backlog
+
+- Completed `6.6` by adding deterministic static player card art to the player directory and profile hero instead of blocking on missing real-photo assets.
+- Completed `7.5` with a minimal static-only multi-event slice: tournaments are now classified into local event series such as `4Bs` and `Talarico's`, and that series data is surfaced in the dashboard and tournament archive filters.
+- Extended `backend/export_static.py` and `backend/tests/test_export_analytics.py` with event-series classification so the static cache carries reusable series labels and counts.
+- Updated `frontend/src/pages/Players.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/Tournaments.jsx`, and `frontend/src/pages/Dashboard.jsx` to use the new card art and series metadata.
+- Regenerated `frontend/public/data/cache.json` plus the split player/tournament bundle files, then passed the shared-repo frontend build and backend export analytics tests again.

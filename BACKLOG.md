@@ -103,6 +103,8 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Biggest single tournament pot won per player
 - [x] Clarify leaderboard current and best columns
 - [x] Single-tournament performance above ELO view
+- [x] Player photo/card art from local static assets
+- [x] Multi-event support for other tournaments beyond Fremont Open
 
 ## Removed From Demo Scope
 
@@ -139,15 +141,11 @@ All current compare, rivalry, and story-view items are complete.
 
 ## EPIC 6 - Charts And Visual Polish
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 6.6 | P3 | M | **Player photo/card art** from local static assets |
+All current charts and visual polish items are complete.
 
 ## EPIC 7 - Seasons And League Standings
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 7.5 | P3 | M | **Multi-event support** for other tournaments beyond Fremont Open |
+All current season and multi-event items are complete.
 
 ## EPIC 8 - Static Site UX
 
@@ -170,10 +168,7 @@ These are deferred until the app has a backend again.
 
 ## Top 10 - Next Build Order
 
-| Rank | Backlog | Why next |
-|---|---|---|
-| 1 | 6.6 Player photo/card art | Optional visual polish from local static assets |
-| 2 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
+All current static-demo backlog items are complete. Remaining `EPIC 9` items stay deferred until the product has a backend again.
 
 ---
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
+import { PlayerArtCard } from "../components/PlayerArtCard";
 import { WinsOverTimeChart } from "../components/charts/WinsOverTimeChart";
 import { EloRatingChart } from "../components/charts/EloRatingChart";
 import { PlayerFormChart } from "../components/charts/PlayerFormChart";
@@ -186,6 +187,13 @@ export default function PlayerDetail() {
                 {p.nickname}
               </div>
             ) : null}
+
+            <section className="mb-6" data-testid="player-art-card">
+              <PlayerArtCard
+                player={p}
+                subtitle={`${attendance.tournaments_played ?? p.tournaments_played ?? 0} tournaments · ${topFinishes.first ?? p.top_1_finishes ?? 0} titles · ELO ${elo.rating ?? p.elo_rating ?? "—"}`}
+              />
+            </section>
 
             <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="core-results-summary">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">

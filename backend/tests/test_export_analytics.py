@@ -12,6 +12,7 @@ from export_static import (
     _cinderella_runs,
     _duration_baselines,
     _duration_minutes,
+    _event_series_label,
     _infer_tournament_placements,
     _h2h_heatmap,
     _load_prize_overrides,
@@ -76,6 +77,13 @@ def test_player_results_summary_tracks_races_and_racks():
         "racks_played": 14,
         "scored_races": 2,
     }
+
+
+def test_event_series_label_uses_tournament_name_markers():
+    assert _event_series_label({"name": "4Bs 9 ball 5/9/26"}) == "4Bs"
+    assert _event_series_label({"name": "Aug 14 Talarico's"}) == "Talarico's"
+    assert _event_series_label({"name": "Fremont Open Finals"}) == "Fremont Open"
+    assert _event_series_label({"name": "Weekly Mixer"}) == "Other"
 
 
 def test_performance_above_elo_ranks_event_overperformers():

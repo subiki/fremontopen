@@ -35,6 +35,7 @@ export default function Tournaments() {
   const [list, setList] = useState([]);
   const [sort, setSort] = useState("date");
   const [game, setGame] = useState("all");
+  const [series, setSeries] = useState("all");
   const [winner, setWinner] = useState("all");
   const [query, setQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -76,6 +77,17 @@ export default function Tournaments() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [list]);
 
+  const seriesOptions = useMemo(() => {
+    const counts = new Map();
+    list.forEach((t) => {
+      const label = t.series || "Other";
+      counts.set(label, (counts.get(label) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [list]);
+
   const sortedList = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const fromTime = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
@@ -87,6 +99,7 @@ export default function Tournaments() {
         || (t.winner || "").toLowerCase().includes(needle);
       return (
         (game === "all" || (t.game || "Unknown") === game)
+        && (series === "all" || (t.series || "Other") === series)
         && (winner === "all" || t.winner === winner)
         && matchesQuery
         && (!fromTime || eventDate >= fromTime)
@@ -97,7 +110,7 @@ export default function Tournaments() {
     if (sort === "players") return rows.sort((a, b) => (b.player_count || b.participants_count || 0) - (a.player_count || a.participants_count || 0));
     if (sort === "duration") return rows.sort((a, b) => (b.normalized_duration_minutes || 0) - (a.normalized_duration_minutes || 0));
     return rows.sort((a, b) => new Date(b.started_at || b.completed_at || 0) - new Date(a.started_at || a.completed_at || 0));
-  }, [list, sort, game, winner, query, dateFrom, dateTo]);
+  }, [list, sort, game, series, winner, query, dateFrom, dateTo]);
 
   const timelineGroups = useMemo(() => {
     const groups = new Map();
@@ -140,7 +153,7 @@ export default function Tournaments() {
               <CalendarDots size={14} /> Timeline
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-8 gap-3">
             <input
               type="search"
               value={query}
@@ -157,6 +170,19 @@ export default function Tournaments() {
             >
               <option value="all">All games</option>
               {gameOptions.map((option) => (
+                <option key={option.label} value={option.label}>
+                  {option.label} ({option.count})
+                </option>
+              ))}
+            </select>
+            <select
+              value={series}
+              onChange={(e) => setSeries(e.target.value)}
+              data-testid="tournament-series-filter-select"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+            >
+              <option value="all">All series</option>
+              {seriesOptions.map((option) => (
                 <option key={option.label} value={option.label}>
                   {option.label} ({option.count})
                 </option>
@@ -239,6 +265,7 @@ export default function Tournaments() {
                           </span>
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-mono">
+                          <span>{t.series || "Other"}</span>
                           <span>{t.game || "-"}</span>
                           <span>{formatDifficultySummary(t.difficulty)}</span>
                           <span>{t.player_count || t.participants_count || 0} players</span>
@@ -286,7 +313,11 @@ export default function Tournaments() {
                   {t.name}
                 </h3>
                 <div className="mt-3 flex items-center justify-between text-xs text-[#6B7280]">
+                  <span className="font-mono">{t.series || "Other"}</span>
                   <span className="font-mono">{t.game || "-"}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">
+                  <span className="font-mono">Participants</span>
                   <span className="font-mono">{t.player_count || t.participants_count || 0} players</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-[#6B7280]">

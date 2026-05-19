@@ -199,6 +199,20 @@ def _player_results_summary(matches: List[Dict[str, Any]], player_name: str) -> 
     return summary
 
 
+def _event_series_label(tournament: Dict[str, Any]) -> str:
+    haystack = " ".join([
+        str(tournament.get("name") or ""),
+        str(tournament.get("url") or ""),
+    ]).casefold()
+    if "4b" in haystack:
+        return "4Bs"
+    if "talarico" in haystack:
+        return "Talarico's"
+    if "fremont" in haystack:
+        return "Fremont Open"
+    return "Other"
+
+
 def _duration_baselines(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     usable = [
         row for row in rows
@@ -1381,6 +1395,7 @@ async def build_cache() -> Dict[str, Any]:
         all_cash_winnings: Dict[str, Dict[str, Any]] = {}
         single_tournament_overperformers: List[Dict[str, Any]] = []
         best_event_by_player: Dict[str, Dict[str, Any]] = {}
+        event_series_counts: Dict[str, int] = {}
         duration_values: List[int] = []
         duration_rows: List[Dict[str, Any]] = []
         duration_outlier_count = 0
@@ -1417,6 +1432,8 @@ async def build_cache() -> Dict[str, Any]:
                 if name
             })
             difficulty = _tournament_difficulty(singles_tournament_matches, elo)
+            series = _event_series_label(tournament)
+            event_series_counts[series] = event_series_counts.get(series, 0) + 1
             if normalized_duration is not None:
                 duration_rows.append({
                     "tournament_id": tid,
@@ -1480,6 +1497,7 @@ async def build_cache() -> Dict[str, Any]:
             tournament["player_count"] = player_count
             tournament["prize_pool"] = prize_pool["pot"]
             tournament["difficulty"] = difficulty
+            tournament["series"] = series
             match_of_tournament = _match_of_tournament(singles_tournament_matches)
             tournament_details[str(tid)] = {
                 "tournament": tournament,
@@ -1499,6 +1517,7 @@ async def build_cache() -> Dict[str, Any]:
                     "normalized_duration_label": _format_duration(normalized_duration),
                     "duration_outlier": tournament["duration_outlier"],
                     "winner": winner,
+                    "series": series,
                     "difficulty": difficulty,
                     "match_of_tournament": match_of_tournament,
                     "cinderella_runs": cinderella_runs,
@@ -1761,6 +1780,13 @@ async def build_cache() -> Dict[str, Any]:
             },
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
+            "event_series_summary": sorted(
+                [
+                    {"series": label, "count": count}
+                    for label, count in event_series_counts.items()
+                ],
+                key=lambda row: (-row["count"], row["series"].casefold()),
+            ),
             "season_standings": season_standings,
             "rivalry_index": rivalry_index,
             "h2h_heatmap": h2h_heatmap,

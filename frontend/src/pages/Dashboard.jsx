@@ -71,6 +71,7 @@ export default function Dashboard() {
   const seasonStandings = stats?.season_standings || [];
   const latestSeason = seasonStandings[0];
   const h2hHeatmap = stats?.h2h_heatmap || {};
+  const eventSeriesSummary = stats?.event_series_summary || [];
 
   return (
     <>
@@ -264,6 +265,40 @@ export default function Dashboard() {
             </dl>
           </div>
         </section>
+
+        {eventSeriesSummary.length ? (
+          <section
+            className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+            data-testid="event-series-panel"
+          >
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div>
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                  Event Series
+                </h2>
+                <div className="mt-1 text-sm text-[#9CA3AF]">
+                  Static grouping across Fremont Open, 4Bs, Talarico&apos;s, and other local events
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:min-w-[620px]">
+                {eventSeriesSummary.map((row) => (
+                  <div
+                    key={row.series}
+                    className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3"
+                  >
+                    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
+                      {row.series}
+                    </div>
+                    <div className="mt-2 font-mono text-2xl text-[#F3F4F6]">
+                      {row.count}
+                    </div>
+                    <div className="mt-1 text-xs text-[#6B7280]">tournaments</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {following.length > 0 ? (
           <section

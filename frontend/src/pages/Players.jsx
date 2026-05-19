@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
+import { PlayerArtCard } from "../components/PlayerArtCard";
 import { fetchPlayers } from "../lib/api";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 
@@ -91,6 +92,7 @@ export default function Players() {
             <thead>
               <tr>
                 <Th>Rank</Th>
+                <Th>Card</Th>
                 <Th>Player</Th>
                 <Th className="text-right">Wins</Th>
                 <Th className="text-right">Losses</Th>
@@ -104,13 +106,13 @@ export default function Players() {
             <tbody>
               {loading && !list.length ? (
                 <tr>
-                  <td colSpan={9} className="py-6 text-center text-[#6B7280]">
+                  <td colSpan={10} className="py-6 text-center text-[#6B7280]">
                     Loading…
                   </td>
                 </tr>
               ) : sortedList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-6 text-center text-[#6B7280]">
+                  <td colSpan={10} className="py-6 text-center text-[#6B7280]">
                     No players found.
                   </td>
                 </tr>
@@ -123,6 +125,14 @@ export default function Players() {
                   >
                     <Td className="font-mono text-xs text-[#6B7280]">
                       {String(i + 1).padStart(2, "0")}
+                    </Td>
+                    <Td className="w-[220px] min-w-[220px]">
+                      <PlayerArtCard
+                        player={p}
+                        compact
+                        linkTo={`/players/${encodeURIComponent(p.name)}`}
+                        subtitle={`${p.tournaments_played ?? 0} tournaments · ${p.win_rate}%`}
+                      />
                     </Td>
                     <Td>
                       <Link
