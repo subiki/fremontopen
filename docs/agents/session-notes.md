@@ -256,3 +256,9 @@
 - Confirmed via the public Actions API that run `26001211894` failed in the `Preflight secrets` step before sync, build, or deploy started.
 - Simplified `.github/workflows/data-refresh.yml` by removing the `CHALLONGE_SUBDOMAIN` secret requirement and hard-wiring the repo's static Challonge subdomain to `fremontopen`.
 - Kept the workflow static-first and reduced operational complexity by treating the subdomain as fixed repo config rather than mutable secret state.
+
+## 2026-05-19 - JFL refresh bundle staging fix
+
+- Re-checked `.github/workflows/data-refresh.yml` after the preflight fix and found the refresh job still only detected and staged `frontend/public/data/cache.json`.
+- Expanded workflow change detection and `git add` scope to include `frontend/public/data/players` and `frontend/public/data/tournaments`, matching the split static export layout already used by the demo.
+- Kept the fix limited to GitHub Actions YAML so scheduled refreshes can commit the full exported static dataset without requiring any backend scope changes.
