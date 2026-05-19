@@ -150,6 +150,55 @@ def _format_duration(minutes: Optional[int]) -> Optional[str]:
     return f"{mins}m"
 
 
+def _parse_score_totals(score: Optional[str]) -> Optional[Dict[str, int]]:
+    numbers = [int(value) for value in (str(score or "").replace("-", " ").split()) if value.isdigit()]
+    if len(numbers) < 2:
+        return None
+    return {
+        "winner_racks": numbers[0],
+        "loser_racks": numbers[1],
+    }
+
+
+def _player_results_summary(matches: List[Dict[str, Any]], player_name: str) -> Dict[str, int]:
+    summary = {
+        "races_won": 0,
+        "races_lost": 0,
+        "races_played": 0,
+        "racks_won": 0,
+        "racks_lost": 0,
+        "racks_played": 0,
+        "scored_races": 0,
+    }
+
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if winner != player_name and loser != player_name:
+            continue
+
+        summary["races_played"] += 1
+        if winner == player_name:
+            summary["races_won"] += 1
+        else:
+            summary["races_lost"] += 1
+
+        score = _parse_score_totals(match.get("scores"))
+        if not score:
+            continue
+
+        summary["scored_races"] += 1
+        if winner == player_name:
+            summary["racks_won"] += score["winner_racks"]
+            summary["racks_lost"] += score["loser_racks"]
+        else:
+            summary["racks_won"] += score["loser_racks"]
+            summary["racks_lost"] += score["winner_racks"]
+
+    summary["racks_played"] = summary["racks_won"] + summary["racks_lost"]
+    return summary
+
+
 def _duration_baselines(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     usable = [
         row for row in rows
@@ -1452,6 +1501,7 @@ async def build_cache() -> Dict[str, Any]:
             cash_winnings = all_cash_winnings.get(name, {"total": 0.0, "by_tournament": []})
             cash_total = round(cash_winnings["total"], 2)
             form_history = rolling_match_form(player_matches, name, 10)
+            results_summary = _player_results_summary(player_matches, name)
             average_placement = round(sum(placement_values) / len(placement_values), 2) if placement_values else None
             player["average_placement"] = average_placement
             player["top_1_finishes"] = top_finishes["first"]
@@ -1463,6 +1513,13 @@ async def build_cache() -> Dict[str, Any]:
             player["top_4_finishes"] = top_finishes["top_4"]
             player["placements_counted"] = len(placement_values)
             player["cash_won"] = cash_total
+            player["races_won"] = results_summary["races_won"]
+            player["races_lost"] = results_summary["races_lost"]
+            player["races_played"] = results_summary["races_played"]
+            player["racks_won"] = results_summary["racks_won"]
+            player["racks_lost"] = results_summary["racks_lost"]
+            player["racks_played"] = results_summary["racks_played"]
+            player["scored_races"] = results_summary["scored_races"]
             strength_of_schedule = _strength_of_schedule(player_matches, name, players_by_name, elo)
             player["strength_of_schedule"] = strength_of_schedule["average_opponent_elo"]
             player["opponent_win_rate"] = strength_of_schedule["average_opponent_win_rate"]
@@ -1509,6 +1566,7 @@ async def build_cache() -> Dict[str, Any]:
                     "history": elo["history"].get(name, []),
                 },
                 "attendance": player_attendance,
+                "results": results_summary,
                 "placements": {
                     "average": average_placement,
                     "tournaments_counted": len(placement_values),

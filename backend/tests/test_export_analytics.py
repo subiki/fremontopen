@@ -20,6 +20,8 @@ from export_static import (
     _match_elo_odds,
     _match_of_tournament,
     _normalized_duration_minutes,
+    _parse_score_totals,
+    _player_results_summary,
     _recent_activity_summary,
     _rivalry_index,
     _season_standings,
@@ -47,6 +49,32 @@ def test_duration_minutes_uses_start_and_end_timestamps():
         "2026-05-09T13:26:54.541-07:00",
         "2026-05-09T17:10:07.615-07:00",
     ) == 223
+
+
+def test_parse_score_totals_reads_winner_and_loser_racks():
+    assert _parse_score_totals("5-3") == {
+        "winner_racks": 5,
+        "loser_racks": 3,
+    }
+    assert _parse_score_totals("hill/hill") is None
+
+
+def test_player_results_summary_tracks_races_and_racks():
+    summary = _player_results_summary([
+        {**match(1, "A", "B"), "scores": "5-3"},
+        {**match(2, "C", "A"), "scores": "4-2"},
+        {**match(3, "A", "D"), "scores": ""},
+    ], "A")
+
+    assert summary == {
+        "races_won": 2,
+        "races_lost": 1,
+        "races_played": 3,
+        "racks_won": 7,
+        "racks_lost": 7,
+        "racks_played": 14,
+        "scored_races": 2,
+    }
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():

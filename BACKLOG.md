@@ -99,6 +99,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Remove player profile prev/next controls
 - [x] Remove player equipment panel
 - [x] Player profile core results summary
+- [x] Leaderboard filters for tournaments and racks played
 
 ## Removed From Demo Scope
 
@@ -126,7 +127,6 @@ All current data-quality items are complete.
 | # | P | Effort | Item |
 |---|---|---|---|
 | 3.11 | P2 | M | **Biggest single tournament pot won per player** based on tournament payout data |
-| 3.12 | P2 | M | **Leaderboard filters for tournaments and racks played** |
 | 3.13 | P2 | S | **Clarify leaderboard current and best columns** with labels that explain streak meaning |
 
 ## EPIC 4 - Tournament Views
@@ -174,12 +174,11 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 3.12 Leaderboard filters for tournaments and racks played | Makes ranking tables easier to trust and slice |
-| 2 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 3 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
-| 4 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
-| 5 | 6.6 Player photo/card art | Optional visual polish from local static assets |
-| 6 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
+| 1 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
+| 2 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
+| 3 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
+| 4 | 6.6 Player photo/card art | Optional visual polish from local static assets |
+| 5 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
 
 ---
 

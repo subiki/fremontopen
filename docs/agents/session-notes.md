@@ -218,3 +218,11 @@
 - Derived race wins/losses, rack wins/losses, scored-race totals, tournaments played, and rank context directly from the cached player matches plus the fetched leaderboard list, keeping the slice client-only and static-first.
 - Kept the existing stat cards and deeper analytics sections intact; the new summary acts as a compact at-a-glance block instead of replacing the detailed views.
 - Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-18 - P2 leaderboard tournament and rack filters
+
+- Continued to `3.12` and extended `backend/export_static.py` so each player summary now carries races won/lost/played plus racks won/lost/played for static filtering and ranking context.
+- Added targeted coverage in `backend/tests/test_export_analytics.py` for score parsing and the per-player results summary helper, then passed the export analytics test file with the shared repo venv.
+- Regenerated `frontend/public/data/cache.json` plus the player bundle files so the new leaderboard filters have live static data to read at deploy time.
+- Updated `frontend/src/pages/Leaderboard.jsx` with minimum tournaments and minimum racks filters, and surfaced tournament/rack totals in each leaderboard row for clearer filter feedback.
+- Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
