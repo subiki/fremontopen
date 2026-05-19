@@ -18,6 +18,7 @@ const metricConfigs = {
   opponent_count: { label: "Unique Opponents", value: (p) => p.opponent_count || 0, format: number, desc: true },
   average_placement: { label: "Average Placement", value: (p) => p.average_placement, format: decimal, desc: false },
   cash_won: { label: "Cash Won", value: (p) => p.cash_won || 0, format: money, desc: true },
+  biggest_tournament_cash: { label: "Biggest Single Payout", value: (p) => p.biggest_tournament_cash || 0, format: money, desc: true },
   top_1_finishes: { label: "1st Place Finishes", value: (p) => p.top_1_finishes || 0, format: number, desc: true },
   second_place_finishes: { label: "2nd Place Finishes", value: (p) => p.second_place_finishes || 0, format: number, desc: true },
   third_place_finishes: { label: "3rd Place Finishes", value: (p) => p.third_place_finishes || 0, format: number, desc: true },

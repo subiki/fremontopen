@@ -77,6 +77,7 @@ export default function TournamentDetail() {
   const analytics = data?.analytics || {};
   const placements = analytics.placements || [];
   const cinderellaRuns = analytics.cinderella_runs || [];
+  const performanceAboveElo = analytics.performance_above_elo || [];
   const matchOfTournament = analytics.match_of_tournament;
   const payoutsByPlace = new Map((analytics.prize_payouts || []).map((row) => [row.place, row]));
   const baseline = analytics.duration_baseline;
@@ -218,6 +219,27 @@ export default function TournamentDetail() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {cinderellaRuns.map((run) => (
                     <CinderellaCard key={run.player} run={run} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {performanceAboveElo.length ? (
+              <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="performance-above-elo-card">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                      Beat Expected ELO
+                    </h2>
+                    <div className="mt-1 text-sm text-[#9CA3AF]">
+                      Wins above match-by-match ELO expectation inside this event.
+                    </div>
+                  </div>
+                  <span className="text-xs text-[#6B7280]">Higher is better</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {performanceAboveElo.map((row) => (
+                    <PerformanceAboveEloCard key={row.player} row={row} />
                   ))}
                 </div>
               </section>
@@ -505,6 +527,47 @@ const CinderellaCard = ({ run }) => (
     </div>
   </div>
 );
+
+const PerformanceAboveEloCard = ({ row }) => {
+  const delta = Number(row.above_expectation || 0);
+  return (
+    <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link
+            to={`/players/${encodeURIComponent(row.player)}`}
+            className="truncate font-medium text-[#F3F4F6] hover:text-[#10B981]"
+          >
+            {row.player}
+          </Link>
+          <div className="mt-1 text-xs text-[#6B7280]">
+            {row.place ? `Place ${ordinal(row.place)} · ` : ""}
+            {row.wins}-{row.losses} across {row.matches} match{row.matches === 1 ? "" : "es"}
+          </div>
+        </div>
+        <div className="text-right font-mono">
+          <div className="text-lg font-semibold text-[#10B981]">
+            {delta >= 0 ? "+" : ""}{delta.toFixed(2)}
+          </div>
+          <div className="text-xs text-[#6B7280]">wins above ELO</div>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2 text-xs font-mono text-[#9CA3AF]">
+        <span className="rounded border border-[#273041] px-2 py-1">
+          Expected {Number(row.expected_wins || 0).toFixed(2)}
+        </span>
+        <span className="rounded border border-[#273041] px-2 py-1">
+          {row.upset_wins || 0} upset win{row.upset_wins === 1 ? "" : "s"}
+        </span>
+      </div>
+      {row.biggest_upset ? (
+        <div className="mt-3 text-xs text-[#6B7280]">
+          Biggest upset: beat {row.biggest_upset.opponent} at {row.biggest_upset.winner_probability}% odds.
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
 const MatchOfTournamentCard = ({ match }) => {
   const isUpset = match.reason === "upset";

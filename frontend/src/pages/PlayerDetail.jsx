@@ -89,6 +89,8 @@ export default function PlayerDetail() {
   const elo = extras?.elo || {};
   const attendance = extras?.attendance || {};
   const cash = extras?.cash || {};
+  const biggestCashWin = cash?.biggest_win || null;
+  const bestEventAboveElo = extras?.best_event_above_elo || null;
   const form = extras?.form || {};
   const coreResults = useMemo(() => summarizeCoreResults(matches, canonicalName), [matches, canonicalName]);
   const rankSummary = useMemo(() => summarizePlayerRanks(leaderboard, canonicalName), [leaderboard, canonicalName]);
@@ -288,6 +290,14 @@ export default function PlayerDetail() {
                 to={rankingPath("cash_won")}
               />
               <StatCard
+                label="Biggest Payout"
+                value={formatMoney(biggestCashWin?.amount ?? p.biggest_tournament_cash)}
+                accent="text-[#F59E0B]"
+                icon={Medal}
+                testid="pd-biggest-payout"
+                to={rankingPath("biggest_tournament_cash")}
+              />
+              <StatCard
                 label="1st Place"
                 value={topFinishes.first ?? "—"}
                 accent="text-[#F59E0B]"
@@ -349,6 +359,29 @@ export default function PlayerDetail() {
                 </div>
               )}
             </section>
+
+            {(bestEventAboveElo || biggestCashWin) ? (
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {bestEventAboveElo ? (
+                  <InsightCard
+                    title="Best Event Above ELO"
+                    value={`${bestEventAboveElo.above_expectation >= 0 ? "+" : ""}${Number(bestEventAboveElo.above_expectation || 0).toFixed(2)} wins`}
+                    detail={`${bestEventAboveElo.wins}-${bestEventAboveElo.losses} in ${bestEventAboveElo.tournament_name}`}
+                    meta={`Expected ${Number(bestEventAboveElo.expected_wins || 0).toFixed(2)} wins${bestEventAboveElo.place ? ` · Place ${ordinal(bestEventAboveElo.place)}` : ""}`}
+                    to={`/tournaments/${bestEventAboveElo.tournament_id}`}
+                  />
+                ) : null}
+                {biggestCashWin ? (
+                  <InsightCard
+                    title="Biggest Single Payout"
+                    value={formatMoney(biggestCashWin.amount)}
+                    detail={`${ordinal(biggestCashWin.place)} place in ${biggestCashWin.tournament_name}`}
+                    meta="Estimated from tournament payout rules"
+                    to={`/tournaments/${biggestCashWin.tournament_id}`}
+                  />
+                ) : null}
+              </section>
+            ) : null}
 
             {/* Streaks + Titles + Fargo + Performance */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
@@ -580,6 +613,25 @@ const SummaryCard = ({ label, primary, secondary, detail }) => (
   </div>
 );
 
+const InsightCard = ({ title, value, detail, meta, to }) => {
+  const content = (
+    <>
+      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">{title}</div>
+      <div className="mt-3 font-mono text-2xl font-semibold text-[#F59E0B]">{value}</div>
+      <div className="mt-3 text-sm text-[#F3F4F6]">{detail}</div>
+      <div className="mt-1 text-xs text-[#6B7280]">{meta}</div>
+    </>
+  );
+  const className = "bg-[#141923] border border-[#273041] rounded-lg p-6 hover:border-[#10B981]/30 transition-colors";
+  return to ? (
+    <Link to={to} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>{content}</div>
+  );
+};
+
 const summarizeCoreResults = (matches, playerName) => {
   const summary = {
     racesWon: 0,
@@ -652,6 +704,18 @@ const MatchOdds = ({ odds }) => {
       {odds.favorite} {Math.max(odds.winner_probability || 0, odds.loser_probability || 0)}% ELO
     </span>
   );
+};
+
+const ordinal = (value) => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  const mod100 = number % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${number}th`;
+  const mod10 = number % 10;
+  if (mod10 === 1) return `${number}st`;
+  if (mod10 === 2) return `${number}nd`;
+  if (mod10 === 3) return `${number}rd`;
+  return `${number}th`;
 };
 
 const formatMoney = (value) =>

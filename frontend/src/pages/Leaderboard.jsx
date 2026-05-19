@@ -52,7 +52,7 @@ export default function Leaderboard() {
           <div className="text-sm text-[#9CA3AF]">
             Showing players with at least <span className="font-mono text-[#F3F4F6]">{minMatches}</span> matches,
             <span className="font-mono text-[#F3F4F6]"> {minTournaments}</span> tournaments, and
-            <span className="font-mono text-[#F3F4F6]"> {minRacks}</span> racks.
+            <span className="font-mono text-[#F3F4F6]"> {minRacks}</span> racks. Current and best attendance streaks count consecutive tournament appearances.
           </div>
           <div className="flex flex-col xl:flex-row gap-3">
             <select
@@ -165,8 +165,8 @@ export default function Leaderboard() {
                       <span className="ml-2">{player.racks_played ?? 0} racks</span>
                     </div>
                     <div className="w-52 shrink-0 flex justify-end gap-2 text-xs font-mono">
-                      <Chip label="Cur" value={player.attendance_streak ?? 0} />
-                      <Chip label="Best" value={player.best_attendance_streak ?? 0} />
+                      <Chip label="Current Attend." value={player.attendance_streak ?? 0} />
+                      <Chip label="Best Attend." value={player.best_attendance_streak ?? 0} />
                       <Chip label="Titles" value={player.top_1_finishes ?? 0} accent />
                     </div>
                   </li>

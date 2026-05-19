@@ -60,6 +60,7 @@ export default function Dashboard() {
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const rivalryIndex = stats?.rivalry_index || [];
   const upsetTracker = stats?.upset_tracker || [];
+  const singleTournamentOverperformers = stats?.single_tournament_overperformers || [];
   const anniversary = stats?.anniversary_matches || {};
   const playerTrend = stats?.tournament_player_count_trend || [];
   const durationTrend = stats?.tournament_duration_trend || [];
@@ -344,6 +345,34 @@ export default function Dashboard() {
                 </Link>
                 <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                   {row.matches} / {row.a_wins}-{row.b_wins}
+                </span>
+              </>
+            )}
+          />
+          <AnalyticsList
+            title="Above ELO in One Event"
+            rows={singleTournamentOverperformers.slice(0, 6)}
+            empty="No event overperformers yet."
+            renderRow={(row) => (
+              <>
+                <div className="min-w-0">
+                  <Link
+                    to={`/players/${encodeURIComponent(row.player)}`}
+                    className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                  >
+                    {row.player}
+                  </Link>
+                  <div className="mt-1 text-xs text-[#6B7280] truncate">
+                    <Link to={`/tournaments/${row.tournament_id}`} className="hover:text-[#9CA3AF]">
+                      {row.tournament_name}
+                    </Link>
+                    <span className="ml-1">
+                      · {row.wins}-{row.losses}
+                    </span>
+                  </div>
+                </div>
+                <span className="font-mono text-xs text-[#10B981] shrink-0">
+                  {row.above_expectation >= 0 ? "+" : ""}{Number(row.above_expectation || 0).toFixed(2)}
                 </span>
               </>
             )}

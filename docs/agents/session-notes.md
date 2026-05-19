@@ -226,3 +226,11 @@
 - Regenerated `frontend/public/data/cache.json` plus the player bundle files so the new leaderboard filters have live static data to read at deploy time.
 - Updated `frontend/src/pages/Leaderboard.jsx` with minimum tournaments and minimum racks filters, and surfaced tournament/rack totals in each leaderboard row for clearer filter feedback.
 - Verified the static frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-18 - Finish remaining P2 demo backlog
+
+- Completed `5.5`, `3.11`, and `3.13` together to clear the last non-P3 static-demo backlog items.
+- Extended `backend/export_static.py` with tournament-level performance-above-ELO summaries, global single-event overperformance rankings, and each player's biggest single payout plus best event above expectation.
+- Added export analytics coverage in `backend/tests/test_export_analytics.py` for ranking event overperformers from match-level ELO odds.
+- Updated `frontend/src/pages/TournamentDetail.jsx`, `frontend/src/pages/Dashboard.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/StatRankings.jsx`, and `frontend/src/pages/Leaderboard.jsx` to surface the new event/payout stories and clarify that current/best leaderboard streaks mean consecutive tournament attendance.
+- Regenerated `frontend/public/data/cache.json` and the split player/tournament bundle files, then passed both the shared-repo frontend build and backend export analytics tests.

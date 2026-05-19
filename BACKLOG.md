@@ -100,6 +100,9 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Remove player equipment panel
 - [x] Player profile core results summary
 - [x] Leaderboard filters for tournaments and racks played
+- [x] Biggest single tournament pot won per player
+- [x] Clarify leaderboard current and best columns
+- [x] Single-tournament performance above ELO view
 
 ## Removed From Demo Scope
 
@@ -124,10 +127,7 @@ All current data-quality items are complete.
 
 ## EPIC 3 - Player Stats And Rankings
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 3.11 | P2 | M | **Biggest single tournament pot won per player** based on tournament payout data |
-| 3.13 | P2 | S | **Clarify leaderboard current and best columns** with labels that explain streak meaning |
+All current player-stats and ranking items are complete.
 
 ## EPIC 4 - Tournament Views
 
@@ -135,9 +135,7 @@ All current tournament-view items are complete.
 
 ## EPIC 5 - Compare, Rivalries, And Story Views
 
-| # | P | Effort | Item |
-|---|---|---|---|
-| 5.5 | P2 | M | **Single-tournament performance above ELO view** showing who beat expected rating most within one event |
+All current compare, rivalry, and story-view items are complete.
 
 ## EPIC 6 - Charts And Visual Polish
 
@@ -174,11 +172,8 @@ These are deferred until the app has a backend again.
 
 | Rank | Backlog | Why next |
 |---|---|---|
-| 1 | 5.5 Single-tournament performance above ELO view | Refines cinderella/run storytelling into a clear event-level metric |
-| 2 | 3.11 Biggest single tournament pot won per player | Extends payout data into player profiles |
-| 3 | 3.13 Clarify leaderboard current and best columns | Makes streak columns easier to understand |
-| 4 | 6.6 Player photo/card art | Optional visual polish from local static assets |
-| 5 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
+| 1 | 6.6 Player photo/card art | Optional visual polish from local static assets |
+| 2 | 7.5 Multi-event support | Deferred expansion beyond Fremont Open |
 
 ---
 

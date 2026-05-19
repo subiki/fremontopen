@@ -410,6 +410,91 @@ def _cinderella_runs(matches: List[Dict[str, Any]], limit: int = 3) -> List[Dict
     return out[:limit]
 
 
+def _performance_above_elo(
+    matches: List[Dict[str, Any]],
+    placements: Optional[Dict[str, int]] = None,
+    limit: Optional[int] = 4,
+) -> List[Dict[str, Any]]:
+    placements = placements or {}
+    rows: Dict[str, Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        odds = match.get("elo_odds") or {}
+        winner_probability = odds.get("winner_probability")
+        loser_probability = odds.get("loser_probability")
+        if (
+            not winner
+            or not loser
+            or winner_probability is None
+            or loser_probability is None
+        ):
+            continue
+
+        winner_row = rows.setdefault(winner, {
+            "player": winner,
+            "matches": 0,
+            "wins": 0,
+            "losses": 0,
+            "expected_wins": 0.0,
+            "above_expectation": 0.0,
+            "upset_wins": 0,
+            "biggest_upset": None,
+            "place": placements.get(winner),
+        })
+        winner_row["matches"] += 1
+        winner_row["wins"] += 1
+        winner_row["expected_wins"] += winner_probability / 100.0
+        if odds.get("favorite") == loser:
+            winner_row["upset_wins"] += 1
+            favorite_probability = loser_probability
+            upset = {
+                "opponent": loser,
+                "match_id": match.get("id"),
+                "round": match.get("round"),
+                "scores": match.get("scores"),
+                "winner_probability": winner_probability,
+                "favorite_probability": favorite_probability,
+            }
+            if (
+                not winner_row["biggest_upset"]
+                or favorite_probability > winner_row["biggest_upset"]["favorite_probability"]
+            ):
+                winner_row["biggest_upset"] = upset
+
+        loser_row = rows.setdefault(loser, {
+            "player": loser,
+            "matches": 0,
+            "wins": 0,
+            "losses": 0,
+            "expected_wins": 0.0,
+            "above_expectation": 0.0,
+            "upset_wins": 0,
+            "biggest_upset": None,
+            "place": placements.get(loser),
+        })
+        loser_row["matches"] += 1
+        loser_row["losses"] += 1
+        loser_row["expected_wins"] += loser_probability / 100.0
+
+    out = []
+    for row in rows.values():
+        row["expected_wins"] = round(row["expected_wins"], 2)
+        row["above_expectation"] = round(row["wins"] - row["expected_wins"], 2)
+        row["win_rate"] = round((row["wins"] / row["matches"]) * 100, 1) if row["matches"] else 0.0
+        out.append(row)
+
+    out.sort(
+        key=lambda row: (
+            -row["above_expectation"],
+            -row["wins"],
+            row["expected_wins"],
+            row["player"].casefold(),
+        )
+    )
+    return out[:limit] if isinstance(limit, int) else out
+
+
 def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[str, Any]]:
     rows = []
     for match in matches:
@@ -1294,6 +1379,8 @@ async def build_cache() -> Dict[str, Any]:
         winner_counts: Dict[str, int] = {}
         all_placements: Dict[str, Dict[str, int]] = {}
         all_cash_winnings: Dict[str, Dict[str, Any]] = {}
+        single_tournament_overperformers: List[Dict[str, Any]] = []
+        best_event_by_player: Dict[str, Dict[str, Any]] = {}
         duration_values: List[int] = []
         duration_rows: List[Dict[str, Any]] = []
         duration_outlier_count = 0
@@ -1340,6 +1427,7 @@ async def build_cache() -> Dict[str, Any]:
                     "duration_minutes": normalized_duration,
                 })
             cinderella_runs = _cinderella_runs(tournament_matches)
+            performance_rows = _performance_above_elo(singles_tournament_matches, placements, limit=None)
             prize_pool = _tournament_prize_payouts(
                 player_count,
                 placements,
@@ -1357,9 +1445,32 @@ async def build_cache() -> Dict[str, Any]:
                     cash_row["by_tournament"].append({
                         "tournament_id": tid,
                         "tournament_name": tournament.get("name"),
+                        "date": tournament.get("started_at") or tournament.get("completed_at"),
                         "place": payout["place"],
                         "amount": player_amount,
                     })
+            for performance in performance_rows:
+                event_row = {
+                    **performance,
+                    "tournament_id": tid,
+                    "tournament_name": tournament.get("name"),
+                    "date": tournament.get("started_at") or tournament.get("completed_at"),
+                    "game": tournament.get("game"),
+                }
+                single_tournament_overperformers.append(event_row)
+                current_best = best_event_by_player.get(performance["player"])
+                if not current_best or (
+                    event_row["above_expectation"],
+                    event_row["wins"],
+                    event_row.get("date") or "",
+                    event_row["tournament_name"] or "",
+                ) > (
+                    current_best["above_expectation"],
+                    current_best["wins"],
+                    current_best.get("date") or "",
+                    current_best["tournament_name"] or "",
+                ):
+                    best_event_by_player[performance["player"]] = event_row
             tournament["duration_minutes"] = duration_minutes
             tournament["duration_label"] = duration_label
             tournament["normalized_duration_minutes"] = normalized_duration
@@ -1391,6 +1502,7 @@ async def build_cache() -> Dict[str, Any]:
                     "difficulty": difficulty,
                     "match_of_tournament": match_of_tournament,
                     "cinderella_runs": cinderella_runs,
+                    "performance_above_elo": performance_rows[:4],
                     "placements": [
                         {"player": name, "place": place}
                         for name, place in sorted(placements.items(), key=lambda item: (item[1], item[0].casefold()))
@@ -1500,6 +1612,11 @@ async def build_cache() -> Dict[str, Any]:
             }
             cash_winnings = all_cash_winnings.get(name, {"total": 0.0, "by_tournament": []})
             cash_total = round(cash_winnings["total"], 2)
+            biggest_cash_win = max(
+                cash_winnings["by_tournament"],
+                key=lambda row: (row["amount"], -(row.get("place") or 99), row.get("date") or ""),
+                default=None,
+            )
             form_history = rolling_match_form(player_matches, name, 10)
             results_summary = _player_results_summary(player_matches, name)
             average_placement = round(sum(placement_values) / len(placement_values), 2) if placement_values else None
@@ -1513,6 +1630,7 @@ async def build_cache() -> Dict[str, Any]:
             player["top_4_finishes"] = top_finishes["top_4"]
             player["placements_counted"] = len(placement_values)
             player["cash_won"] = cash_total
+            player["biggest_tournament_cash"] = biggest_cash_win["amount"] if biggest_cash_win else 0.0
             player["races_won"] = results_summary["races_won"]
             player["races_lost"] = results_summary["races_lost"]
             player["races_played"] = results_summary["races_played"]
@@ -1577,9 +1695,11 @@ async def build_cache() -> Dict[str, Any]:
                 "cash": {
                     "total": cash_total,
                     "by_tournament": cash_winnings["by_tournament"],
+                    "biggest_win": biggest_cash_win,
                     "note": "Cash is estimated from $10 entries and rounded tournament payout rules.",
                 },
                 "strength_of_schedule": strength_of_schedule,
+                "best_event_above_elo": best_event_by_player.get(name),
             }
 
         sync_status = last_sync or {"status": "never_synced"}
@@ -1645,6 +1765,15 @@ async def build_cache() -> Dict[str, Any]:
             "rivalry_index": rivalry_index,
             "h2h_heatmap": h2h_heatmap,
             "upset_tracker": upset_tracker,
+            "single_tournament_overperformers": sorted(
+                single_tournament_overperformers,
+                key=lambda row: (
+                    -row["above_expectation"],
+                    -row["wins"],
+                    row["expected_wins"],
+                    row["player"].casefold(),
+                ),
+            )[:8],
             "anniversary_matches": anniversary,
             "players": players,
             "recent_matches": [

@@ -21,6 +21,7 @@ from export_static import (
     _match_of_tournament,
     _normalized_duration_minutes,
     _parse_score_totals,
+    _performance_above_elo,
     _player_results_summary,
     _recent_activity_summary,
     _rivalry_index,
@@ -75,6 +76,46 @@ def test_player_results_summary_tracks_races_and_racks():
         "racks_played": 14,
         "scored_races": 2,
     }
+
+
+def test_performance_above_elo_ranks_event_overperformers():
+    rows = _performance_above_elo([
+        {
+            **match(1, "Underdog", "Favorite"),
+            "scores": "1-0",
+            "elo_odds": {
+                "favorite": "Favorite",
+                "winner_probability": 25.0,
+                "loser_probability": 75.0,
+            },
+        },
+        {
+            **match(2, "Underdog", "Contender"),
+            "scores": "1-0",
+            "elo_odds": {
+                "favorite": "Contender",
+                "winner_probability": 40.0,
+                "loser_probability": 60.0,
+            },
+        },
+        {
+            **match(3, "Favorite", "Contender"),
+            "scores": "1-0",
+            "elo_odds": {
+                "favorite": "Favorite",
+                "winner_probability": 55.0,
+                "loser_probability": 45.0,
+            },
+        },
+    ], {"Underdog": 1, "Favorite": 2, "Contender": 3}, limit=3)
+
+    assert rows[0]["player"] == "Underdog"
+    assert rows[0]["wins"] == 2
+    assert rows[0]["expected_wins"] == 0.65
+    assert rows[0]["above_expectation"] == 1.35
+    assert rows[0]["upset_wins"] == 2
+    assert rows[0]["place"] == 1
+    assert rows[0]["biggest_upset"]["opponent"] == "Favorite"
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():
