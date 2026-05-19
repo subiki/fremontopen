@@ -23,7 +23,6 @@ jobs:
       - name: Preflight secrets
         env:
           CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
-          CHALLONGE_SUBDOMAIN: ${{ secrets.CHALLONGE_SUBDOMAIN }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -39,7 +38,6 @@ jobs:
           }
 
           require_secret CHALLONGE_API_KEY
-          require_secret CHALLONGE_SUBDOMAIN
           require_secret SSH_PRIVATE_KEY
           require_secret DEPLOY_HOST
           require_secret DEPLOY_USER
@@ -53,6 +51,7 @@ jobs:
           {
             echo "## Scheduled Static Data Refresh"
             echo "- Preflight secrets: passed"
+            echo "- Challonge subdomain: fremontopen"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Setup Python
@@ -70,7 +69,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./cuestats_dev.db
           CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
-          CHALLONGE_SUBDOMAIN: ${{ secrets.CHALLONGE_SUBDOMAIN }}
+          CHALLONGE_SUBDOMAIN: fremontopen
         run: |
           python sync_job.py
           python sync_job.py --dedupe-only

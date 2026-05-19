@@ -242,3 +242,17 @@
 - Extended `backend/export_static.py` and `backend/tests/test_export_analytics.py` with event-series classification so the static cache carries reusable series labels and counts.
 - Updated `frontend/src/pages/Players.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/Tournaments.jsx`, and `frontend/src/pages/Dashboard.jsx` to use the new card art and series metadata.
 - Regenerated `frontend/public/data/cache.json` plus the split player/tournament bundle files, then passed the shared-repo frontend build and backend export analytics tests again.
+
+## 2026-05-19 - Continuity sync and player-detail text cleanup
+
+- Re-read `BACKLOG.md`, `docs/agents/session-notes.md`, and the current checkout before taking a new slice because the static-demo backlog is already complete here.
+- Marked the stale JFL acceptance checklists complete in `BACKLOG.md` so the backlog source of truth matches the shipped tournament and placement analytics already in the static export and frontend.
+- Normalized remaining mojibake separators and fallback placeholders in `frontend/src/pages/PlayerDetail.jsx` to plain ASCII text.
+- Kept the work static-first with no new backend, runtime API, auth, admin, chat, or browser-side Challonge dependency.
+
+## 2026-05-19 - JFL sync workflow preflight fix
+
+- Investigated issue `#85` against the referenced GitHub Actions run instead of assuming a frontend or export regression.
+- Confirmed via the public Actions API that run `26001211894` failed in the `Preflight secrets` step before sync, build, or deploy started.
+- Simplified `.github/workflows/data-refresh.yml` by removing the `CHALLONGE_SUBDOMAIN` secret requirement and hard-wiring the repo's static Challonge subdomain to `fremontopen`.
+- Kept the workflow static-first and reduced operational complexity by treating the subdomain as fixed repo config rather than mutable secret state.
