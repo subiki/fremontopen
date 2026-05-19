@@ -23,7 +23,7 @@ jobs:
       - name: Preflight secrets
         env:
           CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
-          CHALLONGE_SUBDOMAIN: ${{ secrets.CHALLONGE_SUBDOMAIN }}
+          CHALLONGE_SUBDOMAIN: fremontopen
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -39,7 +39,6 @@ jobs:
           }
 
           require_secret CHALLONGE_API_KEY
-          require_secret CHALLONGE_SUBDOMAIN
           require_secret SSH_PRIVATE_KEY
           require_secret DEPLOY_HOST
           require_secret DEPLOY_USER
@@ -53,6 +52,7 @@ jobs:
           {
             echo "## Scheduled Static Data Refresh"
             echo "- Preflight secrets: passed"
+            echo "- Challonge subdomain: $CHALLONGE_SUBDOMAIN"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Setup Python
@@ -70,7 +70,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./cuestats_dev.db
           CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
-          CHALLONGE_SUBDOMAIN: ${{ secrets.CHALLONGE_SUBDOMAIN }}
+          CHALLONGE_SUBDOMAIN: fremontopen
         run: |
           python sync_job.py
           python sync_job.py --dedupe-only
@@ -123,7 +123,7 @@ jobs:
       - name: Detect data changes
         id: changes
         run: |
-          if git diff --quiet -- backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json; then
+          if git diff --quiet -- backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json frontend/public/data/players frontend/public/data/tournaments; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "- Data changes: none" >> "$GITHUB_STEP_SUMMARY"
           else
@@ -136,7 +136,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json
+          git add backend/cuestats_dev.db backend/player_overrides.json frontend/public/data/cache.json frontend/public/data/players frontend/public/data/tournaments
           cat > /tmp/refresh-commit-message.txt <<'EOF'
           [JFL][Agent-GitHub-Actions] Refresh static tournament data
 

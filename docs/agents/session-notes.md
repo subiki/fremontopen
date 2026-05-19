@@ -242,3 +242,11 @@
 - Extended `backend/export_static.py` and `backend/tests/test_export_analytics.py` with event-series classification so the static cache carries reusable series labels and counts.
 - Updated `frontend/src/pages/Players.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/Tournaments.jsx`, and `frontend/src/pages/Dashboard.jsx` to use the new card art and series metadata.
 - Regenerated `frontend/public/data/cache.json` plus the split player/tournament bundle files, then passed the shared-repo frontend build and backend export analytics tests again.
+
+## 2026-05-19 - P0 static refresh workflow hardening
+
+- Re-read the backlog, automation memory, and current checkout before selecting a post-backlog slice.
+- Confirmed the current `origin/main` checkout was missing a known deployment blocker fix in `.github/workflows/data-refresh.yml`.
+- Stopped requiring `CHALLONGE_SUBDOMAIN` as a GitHub secret and hard-wired the scheduled refresh workflow to the repo's fixed `fremontopen` subdomain.
+- Expanded workflow change detection and commit staging so split static export files under `frontend/public/data/players/` and `frontend/public/data/tournaments/` deploy with `cache.json` instead of being silently skipped.
+- Kept the change static-first and operationally minimal: no runtime backend, auth, admin, chat, or browser-based Challonge access.
