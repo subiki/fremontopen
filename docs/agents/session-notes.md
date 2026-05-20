@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-19 - Finalize pass after transient index lock
+
+- Re-ran `git status --short` and `git branch --show-current`; the branch was `main`.
+- Hit a brief `.git/index.lock` error while probing staged state, then rechecked the repo and confirmed the lock had cleared and the tree was clean.
+- Added this note as the only durable change for the pass; merged now on `main` as documentation-only closeout after verification.
+
 ## 2026-05-19 - Finalize merge confirmation
 
 - Rechecked the live checkout with `git status --short` and `git branch --show-current`; the tree was clean on `main`.
