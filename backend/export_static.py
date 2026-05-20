@@ -569,9 +569,19 @@ def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[
     return rows[:limit]
 
 
+def _elo_extreme_sort_key(row: Optional[Dict[str, Any]]) -> tuple[float, float, str]:
+    if not row:
+        return (float("-inf"), float("-inf"), "")
+    return (
+        float(row.get("rating_gap") or 0),
+        float(row.get("favorite_probability") or 0),
+        str(row.get("date") or ""),
+    )
+
+
 def _player_elo_extremes(matches: List[Dict[str, Any]], player_name: str) -> Dict[str, Any]:
-    best_upset = None
-    worst_loss = None
+    best_upset: Optional[Dict[str, Any]] = None
+    worst_loss: Optional[Dict[str, Any]] = None
     for match in matches:
         winner = match.get("winner_name")
         loser = match.get("loser_name")
@@ -593,15 +603,7 @@ def _player_elo_extremes(matches: List[Dict[str, Any]], player_name: str) -> Dic
                 "favorite_probability": favorite_probability,
                 "rating_gap": abs(odds.get("rating_gap") or 0),
             }
-            if not best_upset or (
-                upset["rating_gap"],
-                favorite_probability,
-                str(upset.get("date") or ""),
-            ) > (
-                best_upset["rating_gap"],
-                best_upset["favorite_probability"],
-                str(best_upset.get("date") or ""),
-            ):
+            if _elo_extreme_sort_key(upset) > _elo_extreme_sort_key(best_upset):
                 best_upset = upset
         elif loser == player_name and odds.get("favorite") == loser:
             winner_probability = odds.get("winner_probability")
@@ -619,15 +621,7 @@ def _player_elo_extremes(matches: List[Dict[str, Any]], player_name: str) -> Dic
                 "favorite_probability": loser_probability,
                 "rating_gap": abs(odds.get("rating_gap") or 0),
             }
-            if not worst_loss or (
-                loss["rating_gap"],
-                loser_probability,
-                str(loss.get("date") or ""),
-            ) > (
-                worst_loss["rating_gap"],
-                worst_loss["favorite_probability"],
-                str(worst_loss.get("date") or ""),
-            ):
+            if _elo_extreme_sort_key(loss) > _elo_extreme_sort_key(worst_loss):
                 worst_loss = loss
     return {"best_upset": best_upset, "worst_loss": worst_loss}
 
@@ -1767,17 +1761,17 @@ async def build_cache() -> Dict[str, Any]:
             player["racks_lost"] = results_summary["racks_lost"]
             player["racks_played"] = results_summary["racks_played"]
             player["scored_races"] = results_summary["scored_races"]
-            player["best_elo_upset_rating_gap"] = (
-                elo_extremes["best_upset"]["rating_gap"] if elo_extremes["best_upset"] else 0
-            )
+            best_upset = elo_extremes["best_upset"]
+            worst_loss = elo_extremes["worst_loss"]
+            player["best_elo_upset_rating_gap"] = best_upset["rating_gap"] if best_upset else 0
             player["best_elo_upset_probability"] = (
-                elo_extremes["best_upset"]["win_probability"] if elo_extremes["best_upset"] else 0.0
+                best_upset["win_probability"] if best_upset else 0.0
             )
             player["worst_elo_loss_rating_gap"] = (
-                elo_extremes["worst_loss"]["rating_gap"] if elo_extremes["worst_loss"] else 0
+                worst_loss["rating_gap"] if worst_loss else 0
             )
             player["worst_elo_loss_probability"] = (
-                elo_extremes["worst_loss"]["favorite_probability"] if elo_extremes["worst_loss"] else 0.0
+                worst_loss["favorite_probability"] if worst_loss else 0.0
             )
             strength_of_schedule = _strength_of_schedule(player_matches, name, players_by_name, elo)
             player["strength_of_schedule"] = strength_of_schedule["average_opponent_elo"]

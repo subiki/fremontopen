@@ -1,5 +1,20 @@
 # Agent Session Notes
 
+## 2026-05-20 - Secret scanner cleanup and export-static lint fix
+
+- Queried live GitHub code-scanning and secret-scanning alerts with authenticated `gh` access instead of relying on the sandboxed ops-review fallback.
+- Confirmed the three open secret-scanning alerts were historical placeholder MongoDB Atlas URIs from removed deployment/docs files (`deploy/bootstrap.sh` and `docs/SHARED_HOSTING.md`), not current-tree secrets; resolved alerts `#1`, `#2`, and `#3` as `false_positive` in GitHub.
+- Identified the remaining non-test production-file scanner findings as mostly Codacy lint noise, with the clearest repo-side target in `backend/export_static.py`.
+- Refactored `_player_elo_extremes` to use an explicit sort-key helper and local `best_upset` / `worst_loss` bindings so the exported ELO-extremes logic keeps the same behavior while avoiding the `unsubscriptable-object` alert family on that helper.
+- Verified with `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-scanner`.
+
+## 2026-05-20 - Ops review last-known snapshot fallback
+
+- Re-ran the repo-local ops review in the restricted Codex sandbox and confirmed the current environment still cannot reach `api.github.com`; `gh auth status` also shows the local `subiki` token is invalid, so live GitHub workflow and code-scanning visibility remains blocked here.
+- Found a reporting regression in `scripts/ops_review.py`: when GitHub access was blocked, the local run overwrote `.run-logs/ops-review/latest.*` with generic `P2` visibility blockers and dropped the last actionable findings for the static DreamHost demo.
+- Updated `scripts/ops_review.py` so blocker-only local runs preserve and surface the last non-blocker findings from the prior successful report as an explicitly stale `Last Known Actionable Findings` section plus JSON fallback payload fields, without using those carried-forward items for issue sync.
+- Added regression coverage in `backend/tests/test_ops_review.py` for the blocker fallback extraction and end-to-end report write path.
+
 ## 2026-05-19 - Finalize superseded closeout
 
 - Re-ran `git status --short` and `git branch --show-current`; the checkout was clean on `main`.
@@ -362,4 +377,3 @@
 - Implemented `_sync_issues` inside `scripts/ops_review.py` to reconcile active findings with open issues labeled `ops`. It creates new issues prefixed with `[Ops]` and labeled with their priority (`jfl`, `P0`, `P1`, `P2`, `P3`), and comments on and closes issues for findings that are no longer active.
 - Added comprehensive unit test coverage in `backend/tests/test_ops_review.py` validating the reconciliation logic.
 - Pushed all changes directly to `main` so the workflow is active and executable on GitHub.
-
