@@ -340,3 +340,17 @@
 - Expanded leaderboard sorting to include tournaments played, wins/losses, win rate, races, racks, rack differential, ELO, ELO upset/loss extremes, schedule strength, placements, streaks, and cash fields from the static cache.
 - Extended `backend/export_static.py` with per-player best ELO upset and worst ELO loss summaries derived from existing match ELO odds, then regenerated `frontend/public/data/cache.json` plus split player bundles.
 - Verified with `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp` and the static frontend build through the repo's portable Yarn path.
+
+## 2026-05-20 - Cache scale optimization handoff
+
+- Current `main` is clean and synced after commit `c25f963` (`Expand leaderboard stat sorting`) was pushed to `origin/main`.
+- Initial static-hosting scale audit found `frontend/public/data/cache.json` at roughly 1.6 MB, with the largest split player bundles near 1.0 MB; top player bundles now dominate the worst-case detail-page payload more than the landing cache.
+- The current frontend loader in `frontend/src/lib/api.js` always fetches `/data/cache.json` with `cache: "no-cache"`, then lazily fetches split player/tournament bundles with `cache: "no-cache"` as detail pages need them. This is simple but leaves browser/CDN caching value on the table for DreamHost static hosting.
+- Next recommended slice: keep the static-first model, add a generated lightweight manifest/index for app boot and list/search pages, and stop forcing `no-cache` for immutable generated JSON except when intentionally checking freshness metadata.
+- Suggested implementation order: measure current JSON shapes, decide which fields must remain in `cache.json` for dashboard/search/list pages, export a `manifest.json` or slim `cache-index.json`, update `frontend/src/lib/api.js` to load slim-first and lazy-load heavy detail bundles, then regenerate data and run export tests plus frontend build.
+
+## 2026-05-20 - Ops review workflow persistence fix
+
+- Re-ran the repo-local ops review against the restricted Codex sandbox and confirmed live GitHub visibility is still blocked here, so workflow status beyond the last captured report remains dependent on external Actions access or attached artifacts.
+- While validating the scheduled refresh path, found that `.github/workflows/data-refresh.yml` still only diffed and committed `backend/cuestats_dev.db`, `backend/player_overrides.json`, and `frontend/public/data/cache.json`, even though the static export also writes split player and tournament bundles.
+- Updated the workflow to treat `frontend/public/data/players` and `frontend/public/data/tournaments` as first-class generated artifacts during change detection and commit staging, then added a regression test at `backend/tests/test_data_refresh_workflow.py`.
