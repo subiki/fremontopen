@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-19 - Finalize superseded closeout
+
+- Re-ran `git status --short` and `git branch --show-current`; the checkout was clean on `main`.
+- Confirmed the cache-freshness and encoding-cleanup work was already merged earlier in commit `c3949ddf2542633794fa3bd0a1eddbfed7f1c634` (`Commit frontend freshness and ops review fixes`), so this pass made no code changes.
+- Verified the landed files still exist in place and recorded this pass as `SUPERSEDED`; merged now on `main` as documentation-only closeout with no blocker and no holding branch.
+
 ## 2026-05-19 - Freshness slice finalize superseded recheck
 
 - Re-ran `git status --short` and `git branch --show-current`; the checkout was clean on `main`.
