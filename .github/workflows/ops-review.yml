@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: write       # required to commit report updates back to the repository
       actions: read        # required to query workflow runs and job details
+      checks: read         # required to read check-run annotations
       security-events: read # required to query code scanning alerts
       issues: write        # required to create, comment, and close issues
 
