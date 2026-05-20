@@ -161,8 +161,8 @@ export default function PlayerDetail() {
         title={p?.name || decoded}
         subtitle={
           p
-            ? `${p.wins}W - ${p.losses}L · ${p.win_rate}% win rate${
-                position ? ` · #${position.idx} of ${position.total}` : ""
+            ? `${p.wins}W - ${p.losses}L . ${p.win_rate}% win rate${
+                position ? ` . #${position.idx} of ${position.total}` : ""
               }`
             : ""
         }
@@ -177,7 +177,7 @@ export default function PlayerDetail() {
         </Link>
 
         {loading ? (
-          <div className="text-[#6B7280]">Loading…</div>
+          <div className="text-[#6B7280]">Loading...</div>
         ) : !p ? (
           <MissingPlayer name={decoded} />
         ) : (
@@ -191,7 +191,7 @@ export default function PlayerDetail() {
             <section className="mb-6" data-testid="player-art-card">
               <PlayerArtCard
                 player={p}
-                subtitle={`${attendance.tournaments_played ?? p.tournaments_played ?? 0} tournaments · ${topFinishes.first ?? p.top_1_finishes ?? 0} titles · ELO ${elo.rating ?? p.elo_rating ?? "—"}`}
+                subtitle={`${attendance.tournaments_played ?? p.tournaments_played ?? 0} tournaments . ${topFinishes.first ?? p.top_1_finishes ?? 0} titles . ELO ${elo.rating ?? p.elo_rating ?? "-"}`}
               />
             </section>
 
@@ -259,7 +259,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="ELO"
-                value={elo.rating ?? p.elo_rating ?? "—"}
+                value={elo.rating ?? p.elo_rating ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={TrendUp}
                 testid="pd-elo-rating"
@@ -267,7 +267,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="ELO Peak"
-                value={elo.peak ?? p.elo_peak ?? "—"}
+                value={elo.peak ?? p.elo_peak ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={Fire}
                 testid="pd-elo-peak"
@@ -275,7 +275,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="Schedule"
-                value={p.strength_of_schedule ?? "â€”"}
+                value={p.strength_of_schedule ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={Scales}
                 testid="pd-strength-of-schedule"
@@ -283,7 +283,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="Avg Place"
-                value={placements?.average ?? "—"}
+                value={placements?.average ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={Medal}
                 testid="pd-average-placement"
@@ -307,7 +307,7 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="1st Place"
-                value={topFinishes.first ?? "—"}
+                value={topFinishes.first ?? "-"}
                 accent="text-[#F59E0B]"
                 icon={Trophy}
                 testid="pd-first-place"
@@ -315,28 +315,28 @@ export default function PlayerDetail() {
               />
               <StatCard
                 label="2nd Place"
-                value={topFinishes.second ?? "—"}
+                value={topFinishes.second ?? "-"}
                 icon={Medal}
                 testid="pd-second-place"
                 to={rankingPath("second_place_finishes")}
               />
               <StatCard
                 label="3rd Place"
-                value={topFinishes.third ?? "—"}
+                value={topFinishes.third ?? "-"}
                 icon={Medal}
                 testid="pd-third-place"
                 to={rankingPath("third_place_finishes")}
               />
               <StatCard
                 label="4th Place"
-                value={topFinishes.fourth ?? "—"}
+                value={topFinishes.fourth ?? "-"}
                 icon={Medal}
                 testid="pd-fourth-place"
                 to={rankingPath("fourth_place_finishes")}
               />
               <StatCard
                 label="Top 4 Total"
-                value={topFinishes.top_4 ?? "—"}
+                value={topFinishes.top_4 ?? "-"}
                 icon={Medal}
                 testid="pd-top-four"
                 to={rankingPath("top_4_finishes")}
@@ -375,7 +375,7 @@ export default function PlayerDetail() {
                     title="Best Event Above ELO"
                     value={`${bestEventAboveElo.above_expectation >= 0 ? "+" : ""}${Number(bestEventAboveElo.above_expectation || 0).toFixed(2)} wins`}
                     detail={`${bestEventAboveElo.wins}-${bestEventAboveElo.losses} in ${bestEventAboveElo.tournament_name}`}
-                    meta={`Expected ${Number(bestEventAboveElo.expected_wins || 0).toFixed(2)} wins${bestEventAboveElo.place ? ` · Place ${ordinal(bestEventAboveElo.place)}` : ""}`}
+                    meta={`Expected ${Number(bestEventAboveElo.expected_wins || 0).toFixed(2)} wins${bestEventAboveElo.place ? ` . Place ${ordinal(bestEventAboveElo.place)}` : ""}`}
                     to={`/tournaments/${bestEventAboveElo.tournament_id}`}
                   />
                 ) : null}
@@ -494,20 +494,20 @@ export default function PlayerDetail() {
                             to={`/players/${encodeURIComponent(opponent || "")}`}
                             className="text-[#F3F4F6] hover:text-[#10B981] truncate"
                           >
-                            {opponent || "—"}
+                            {opponent || "-"}
                           </Link>
                           {m.tournament_name ? (
                             <Link
                               to={`/tournaments/${m.tournament_id}`}
                               className="hidden sm:inline text-xs uppercase tracking-wider text-[#6B7280] hover:text-[#9CA3AF] truncate"
                             >
-                              · {m.tournament_name}
+                              . {m.tournament_name}
                             </Link>
                           ) : null}
                         </div>
                         <div className="flex shrink-0 items-center gap-3 font-mono text-xs text-[#9CA3AF]">
                           <MatchOdds odds={m.elo_odds} />
-                          {m.scores || "—"}
+                          {m.scores || "-"}
                         </div>
                       </li>
                     );
@@ -598,7 +598,7 @@ const PlacementStat = ({ label, value, to }) => {
       {label}
     </div>
     <div className="mt-2 font-mono text-2xl font-semibold text-[#F3F4F6]">
-      {value ?? "—"}
+      {value ?? "-"}
     </div>
     </>
   );
@@ -716,7 +716,7 @@ const MatchOdds = ({ odds }) => {
 
 const ordinal = (value) => {
   const number = Number(value);
-  if (!Number.isFinite(number)) return "—";
+  if (!Number.isFinite(number)) return "-";
   const mod100 = number % 100;
   if (mod100 >= 11 && mod100 <= 13) return `${number}th`;
   const mod10 = number % 10;
@@ -729,7 +729,7 @@ const ordinal = (value) => {
 const formatMoney = (value) =>
   typeof value === "number"
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
-    : "—";
+    : "-";
 
 
 const MissingPlayer = ({ name }) => (
@@ -765,7 +765,7 @@ const StreakCard = ({ streaks }) => {
     return (
       <div className="bg-[#141923] border border-[#273041] rounded-lg p-5">
         <div className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Streak</div>
-        <div className="mt-2 font-mono text-3xl text-[#6B7280]">—</div>
+        <div className="mt-2 font-mono text-3xl text-[#6B7280]">-</div>
       </div>
     );
   }
@@ -783,10 +783,10 @@ const StreakCard = ({ streaks }) => {
           isW ? "text-[#10B981]" : isL ? "text-[#EF4444]" : "text-[#F3F4F6]"
         }`}
       >
-        {cur.length ? `${cur.length}${cur.type}` : "—"}
+        {cur.length ? `${cur.length}${cur.type}` : "-"}
       </div>
       <div className="text-xs text-[#6B7280] mt-2 font-mono">
-        Longest <span className="text-[#10B981]">W{streaks.longest_w}</span> · <span className="text-[#EF4444]">L{streaks.longest_l}</span>
+        Longest <span className="text-[#10B981]">W{streaks.longest_w}</span> . <span className="text-[#EF4444]">L{streaks.longest_l}</span>
       </div>
     </div>
   );
@@ -797,7 +797,7 @@ const TitlesCard = ({ titles }) => {
     return (
       <div className="bg-[#141923] border border-[#273041] rounded-lg p-5">
         <div className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Tourney titles</div>
-        <div className="mt-2 font-mono text-3xl text-[#6B7280]">—</div>
+        <div className="mt-2 font-mono text-3xl text-[#6B7280]">-</div>
       </div>
     );
   }
@@ -841,7 +841,7 @@ const PerfCard = ({ perf }) => {
   const Icon = above ? TrendUp : below ? TrendDown : Scales;
   const color = above ? "text-[#10B981]" : below ? "text-[#EF4444]" : "text-[#9CA3AF]";
   const score = perf.performance_score;
-  const display = perf.rated_matches ? `${score >= 0 ? "+" : ""}${score.toFixed(2)}` : "—";
+  const display = perf.rated_matches ? `${score >= 0 ? "+" : ""}${score.toFixed(2)}` : "-";
   return (
     <div className="bg-[#141923] border border-[#273041] rounded-lg p-5" data-testid="perf-card">
       <div className="flex items-center justify-between">

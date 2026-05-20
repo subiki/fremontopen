@@ -1,20 +1,9 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, Moon, Sun, WarningCircle } from "@phosphor-icons/react";
 import { fetchSyncStatus } from "../lib/api";
+import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { SearchBar } from "./SearchBar";
 import { getTheme, onThemeChange, toggleTheme } from "../lib/theme";
-
-const formatRelative = (iso) => {
-  if (!iso) return "no data yet";
-  const d = new Date(iso);
-  const diffMs = Date.now() - d.getTime();
-  const m = Math.floor(diffMs / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-};
 
 export const Topbar = ({ title, subtitle, actions }) => {
   const [status, setStatus] = useState(null);
@@ -43,6 +32,11 @@ export const Topbar = ({ title, subtitle, actions }) => {
   const ok = status?.status === "ok";
   const err = status?.status === "error";
   const never = !status || status?.status === "never_synced";
+  const freshness = assessCacheFreshness({
+    generated_at: status?.generated_at,
+    last_synced_at: status?.last_synced_at,
+    sync_status: status?.status,
+  });
 
   return (
     <header
@@ -93,9 +87,22 @@ export const Topbar = ({ title, subtitle, actions }) => {
                 ? "stale data"
                 : never
                 ? "no data yet"
-                : `data updated ${formatRelative(status?.last_synced_at)}`}
+                : `data updated ${formatRelativeTime(status?.last_synced_at)}`}
             </span>
           </div>
+          {freshness.tone === "aging" || freshness.tone === "stale" || freshness.tone === "error" ? (
+            <div
+              className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-md border text-xs ${
+                freshness.tone === "stale" || freshness.tone === "error"
+                  ? "bg-[#2A1313] border-[#7F1D1D] text-[#FCA5A5]"
+                  : "bg-[#2A2112] border-[#7C5A14] text-[#FCD34D]"
+              }`}
+              title={freshness.detail}
+            >
+              <WarningCircle size={14} weight="fill" />
+              <span className="font-mono">{freshness.label.toLowerCase()}</span>
+            </div>
+          ) : null}
         </div>
       </div>
     </header>

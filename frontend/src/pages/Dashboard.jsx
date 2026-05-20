@@ -3,6 +3,7 @@ import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
 import { fetchStats, fetchPlayers } from "../lib/api";
+import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -71,6 +72,7 @@ export default function Dashboard() {
   const latestSeason = seasonStandings[0];
   const h2hHeatmap = stats?.h2h_heatmap || {};
   const eventSeriesSummary = stats?.event_series_summary || [];
+  const freshness = assessCacheFreshness(cacheMetadata);
 
   return (
     <>
@@ -85,50 +87,50 @@ export default function Dashboard() {
         >
           <StatCard
             label="Tournaments"
-            value={stats?.total_tournaments ?? "—"}
+            value={stats?.total_tournaments ?? "-"}
             icon={Trophy}
             testid="stat-tournaments"
           />
           <StatCard
             label="Matches"
-            value={stats?.total_matches ?? "—"}
+            value={stats?.total_matches ?? "-"}
             icon={Target}
             testid="stat-matches"
           />
           <StatCard
             label="Players"
-            value={stats?.total_players ?? "—"}
+            value={stats?.total_players ?? "-"}
             icon={Users}
             testid="stat-players"
           />
           <StatCard
             label="Top W-L"
-            value={topPlayers[0] ? `${topPlayers[0].wins}-${topPlayers[0].losses}` : "—"}
+            value={topPlayers[0] ? `${topPlayers[0].wins}-${topPlayers[0].losses}` : "-"}
             accent="text-[#10B981]"
             icon={ChartLineUp}
             testid="stat-top-wl"
           />
           <StatCard
             label="Avg Field"
-            value={stats?.average_tournament_players ?? "—"}
+            value={stats?.average_tournament_players ?? "-"}
             icon={Users}
             testid="stat-avg-field"
           />
           <StatCard
             label="Avg Duration"
-            value={stats?.average_tournament_duration_label ?? "—"}
+            value={stats?.average_tournament_duration_label ?? "-"}
             icon={Clock}
             testid="stat-avg-duration"
           />
           <StatCard
             label="Qualified Players"
-            value={stats?.qualified_player_count ?? "—"}
+            value={stats?.qualified_player_count ?? "-"}
             icon={Users}
             testid="stat-qualified-players"
           />
           <StatCard
             label="Most Titles"
-            value={topTournamentWinners[0] ? `${topTournamentWinners[0].wins}` : "—"}
+            value={topTournamentWinners[0] ? `${topTournamentWinners[0].wins}` : "-"}
             accent="text-[#F59E0B]"
             icon={Medal}
             testid="stat-most-titles"
@@ -247,21 +249,24 @@ export default function Dashboard() {
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
           data-testid="cache-metadata-panel"
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-            <div>
-              <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
-                Data Cache
-              </h2>
-              <div className="mt-1 text-sm text-[#9CA3AF]">
-                Static Challonge snapshot for this build
+          <div className="flex flex-col gap-5">
+            <CacheFreshnessBanner freshness={freshness} cacheMetadata={cacheMetadata} />
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div>
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">
+                  Data Cache
+                </h2>
+                <div className="mt-1 text-sm text-[#9CA3AF]">
+                  Static Challonge snapshot for this build
+                </div>
               </div>
+              <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:min-w-[680px]">
+                <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} />
+                <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} />
+                <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} />
+                <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} />
+              </dl>
             </div>
-            <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:min-w-[680px]">
-              <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} />
-              <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} />
-              <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} />
-              <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} />
-            </dl>
           </div>
         </section>
 
@@ -332,7 +337,7 @@ export default function Dashboard() {
                     ) : (
                       <span className="font-mono text-xs">
                         <span className="text-[#10B981]">{p.wins}W</span>
-                        <span className="text-[#6B7280] mx-1">·</span>
+                        <span className="text-[#6B7280] mx-1">.</span>
                         <span className="text-[#EF4444]">{p.losses}L</span>
                       </span>
                     )}
@@ -401,7 +406,7 @@ export default function Dashboard() {
                       {row.tournament_name}
                     </Link>
                     <span className="ml-1">
-                      · {row.wins}-{row.losses}
+                      . {row.wins}-{row.losses}
                     </span>
                   </div>
                 </div>
@@ -471,7 +476,7 @@ export default function Dashboard() {
                     {row.tournament_name}
                   </Link>
                   <div className="mt-1 text-xs text-[#6B7280] truncate">
-                    {row.game || "Unknown"} · {row.players ?? "—"} players · {row.duration_label || "—"}
+                    {row.game || "Unknown"} . {row.players ?? "-"} players . {row.duration_label || "-"}
                   </div>
                 </div>
                 <span className={`font-mono text-xs shrink-0 ${durationPaceTone(row.duration_vs_average?.status)}`}>
@@ -495,11 +500,11 @@ export default function Dashboard() {
                 to="/leaderboard"
                 className="text-xs uppercase tracking-[0.18em] text-[#10B981] hover:underline"
               >
-                Full leaderboard →
+                Full leaderboard ->
               </Link>
             </div>
             {loading && !topPlayers.length ? (
-              <div className="text-[#6B7280] text-sm">Loading…</div>
+              <div className="text-[#6B7280] text-sm">Loading...</div>
             ) : topPlayers.length === 0 ? (
               <div className="text-[#6B7280] text-sm">
                 No data yet. The cache will populate after the next scheduled sync.
@@ -525,7 +530,7 @@ export default function Dashboard() {
                     </div>
                     <div className="font-mono text-sm">
                       <span className="text-[#10B981]">{p.wins}W</span>
-                      <span className="text-[#6B7280] mx-1">·</span>
+                      <span className="text-[#6B7280] mx-1">.</span>
                       <span className="text-[#EF4444]">{p.losses}L</span>
                       <span className="text-[#6B7280] ml-2">{p.win_rate}%</span>
                     </div>
@@ -561,7 +566,7 @@ export default function Dashboard() {
                       <span className="hidden sm:inline text-[#6B7280] mr-2">
                         {m.tournament_game || "Game TBD"}
                       </span>
-                      {m.scores || "—"}
+                      {m.scores || "-"}
                     </div>
                   </li>
                 ))}
@@ -656,6 +661,53 @@ const MetadataStat = ({ label, value }) => (
     <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
       {value}
     </dd>
+  </div>
+);
+
+const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
+  const toneClasses = {
+    fresh: "border-[#14532D] bg-[#0F2218] text-[#D1FAE5]",
+    aging: "border-[#7C5A14] bg-[#2A2112] text-[#FDE68A]",
+    stale: "border-[#7F1D1D] bg-[#2A1313] text-[#FECACA]",
+    error: "border-[#7F1D1D] bg-[#2A1313] text-[#FECACA]",
+    empty: "border-[#273041] bg-[#0B0E14] text-[#D1D5DB]",
+  };
+  const badgeTone = toneClasses[freshness.tone] || toneClasses.empty;
+  const statusLabel = cacheMetadata.sync_status || "unknown";
+
+  return (
+    <div
+      className={`rounded-lg border px-4 py-4 sm:px-5 ${badgeTone}`}
+      data-testid="cache-freshness-banner"
+    >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+            {freshness.label}
+          </div>
+          <div className="mt-2 font-[Outfit] text-xl font-semibold">
+            {freshness.summary}
+          </div>
+          <div className="mt-1 text-sm opacity-90">
+            {freshness.detail}
+          </div>
+        </div>
+        <dl className="grid grid-cols-2 gap-3 text-sm lg:min-w-[280px]">
+          <MetadataChip label="Sync status" value={statusLabel} />
+          <MetadataChip
+            label="Export lag"
+            value={formatExportLag(cacheMetadata.generated_at, cacheMetadata.last_synced_at)}
+          />
+        </dl>
+      </div>
+    </div>
+  );
+};
+
+const MetadataChip = ({ label, value }) => (
+  <div className="rounded-md border border-current/20 bg-black/10 px-3 py-2">
+    <dt className="text-[11px] uppercase tracking-[0.14em] opacity-70">{label}</dt>
+    <dd className="mt-1 font-mono text-sm">{value}</dd>
   </div>
 );
 
@@ -823,6 +875,15 @@ const seasonScoringLabel = (config = {}) => {
   const win = config.win_points ?? 3;
   const loss = config.loss_points ?? 1;
   return `${win} pts per win, ${loss} per loss`;
+};
+
+const formatExportLag = (generatedAt, lastSyncedAt) => {
+  if (!generatedAt || !lastSyncedAt) return "-";
+  const generated = new Date(generatedAt);
+  const synced = new Date(lastSyncedAt);
+  if (Number.isNaN(generated.getTime()) || Number.isNaN(synced.getTime())) return "-";
+  if (generated.getTime() < synced.getTime()) return "-";
+  return formatRelativeTime(lastSyncedAt, generated.getTime());
 };
 
 const shortName = (value = "") => {

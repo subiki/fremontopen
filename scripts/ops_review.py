@@ -77,11 +77,43 @@ def _workflow_base_priority(name: str) -> tuple[str, bool]:
     return mapping.get(name, ("P3", False))
 
 
-def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Finding]:
-    payload = _github_json(
-        f"{API_ROOT}/repos/{repo}/actions/runs?status=completed&per_page={WORKFLOW_WINDOW}",
-        token=token,
+def _format_request_error(exc: Exception) -> str:
+    if isinstance(exc, urllib.error.HTTPError):
+        detail = exc.read().decode("utf-8", errors="replace").strip()
+        if detail:
+            return detail[:200]
+    reason = getattr(exc, "reason", None)
+    if reason:
+        return str(reason)
+    return str(exc)
+
+
+def _request_blocker_finding(source: str, title: str, detail: str, next_step: str) -> Finding:
+    return Finding(
+        source=source,
+        title=title,
+        priority="P2",
+        needed=True,
+        summary=f"GitHub API access is blocked: {detail[:200]}",
+        next_step=next_step,
     )
+
+
+def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Finding]:
+    try:
+        payload = _github_json(
+            f"{API_ROOT}/repos/{repo}/actions/runs?status=completed&per_page={WORKFLOW_WINDOW}",
+            token=token,
+        )
+    except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+        return [
+            _request_blocker_finding(
+                source="workflow",
+                title="GitHub workflow review unavailable",
+                detail=_format_request_error(exc),
+                next_step="Run the ops review where outbound HTTPS access to api.github.com is allowed, or attach a captured Actions report artifact.",
+            )
+        ]
     runs = payload.get("workflow_runs") or []
     failures = [run for run in runs if run.get("conclusion") == "failure"]
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -93,7 +125,10 @@ def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Fin
         latest = sorted(grouped_runs, key=lambda row: row.get("created_at") or "", reverse=True)[0]
         priority, needed = _workflow_base_priority(name)
         run_id = latest.get("id")
-        jobs = _github_json(f"{API_ROOT}/repos/{repo}/actions/runs/{run_id}/jobs", token=token)
+        try:
+            jobs = _github_json(f"{API_ROOT}/repos/{repo}/actions/runs/{run_id}/jobs", token=token)
+        except (urllib.error.HTTPError, urllib.error.URLError):
+            jobs = {"jobs": []}
         job = (jobs.get("jobs") or [{}])[0]
         annotations = []
         if job.get("id"):
@@ -102,7 +137,7 @@ def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Fin
                     f"{API_ROOT}/repos/{repo}/check-runs/{job['id']}/annotations",
                     token=token,
                 )
-            except urllib.error.HTTPError:
+            except (urllib.error.HTTPError, urllib.error.URLError):
                 annotations = []
 
         annotation_messages = [row.get("message") for row in annotations if row.get("message")]
@@ -170,16 +205,16 @@ def _summarize_code_scanning(repo: str, token: str | None = None) -> list[Findin
             f"{API_ROOT}/repos/{repo}/code-scanning/alerts?state=open&per_page=100",
             token=token,
         )
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
+    except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+        detail = _format_request_error(exc)
         return [
             Finding(
                 source="code-scanning",
                 title="GitHub code scanning request failed",
                 priority="P2",
                 needed=True,
-                summary=f"GitHub rejected code-scanning access: {detail[:200]}",
-                next_step="Verify the token has permission to read code-scanning alerts for the repository.",
+                summary=f"GitHub code-scanning access failed: {detail[:200]}",
+                next_step="Verify the token has permission to read code-scanning alerts and that outbound HTTPS access to api.github.com is allowed.",
             )
         ]
 

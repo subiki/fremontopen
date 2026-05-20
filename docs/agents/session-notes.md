@@ -1,5 +1,25 @@
 # Agent Session Notes
 
+## 2026-05-19 - Ops review network-blocker fallback
+
+- Reviewed the static-demo ops triage flow against `docs/agents/ops-reviewer.md` and the generated `.run-logs/ops-review/latest.*` report, which currently points to a `P1` scheduled refresh failure from missing `CHALLONGE_API_KEY` and `CHALLONGE_SUBDOMAIN` repo secrets plus a `P2` code-scanning visibility gap from missing `GITHUB_TOKEN` or `GH_TOKEN`.
+- Confirmed the local Codex shell cannot reach `api.github.com` in this environment and that `scripts/ops_review.py` previously crashed with `WinError 10013` instead of writing a blocker report.
+- Hardened `scripts/ops_review.py` to emit explicit `P2` workflow/code-scanning access blockers when GitHub API requests are denied or otherwise unreachable, and added focused regression coverage in `backend/tests/test_ops_review.py`.
+- Verified with `.\.venv\Scripts\python.exe -m pytest backend/tests/test_ops_review.py --basetemp .pytest-tmp-ops-review` and `.\.venv\Scripts\python.exe scripts\ops_review.py --out-dir .run-logs\ops-review-local`.
+
+## 2026-05-19 - Static cache freshness warnings
+
+- Audited the post-backlog static demo for operational clarity and found that the site exposed cache metadata without clearly telling viewers when the exported snapshot was aging or stale.
+- Added a shared frontend cache-freshness helper plus a prominent `Data Cache` warning banner on the dashboard that classifies the current snapshot as fresh, aging, stale, error, or empty using the existing `generated_at` and `last_synced_at` values only.
+- Added a compact topbar warning pill for aging or stale snapshots so cache drift is visible outside the dashboard too, without introducing any runtime backend dependency.
+- Verified the production frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-19 - Frontend encoding cleanup
+
+- Audited the current static-demo checkout after backlog completion and found a real UI defect: several React surfaces rendered mojibake placeholders and separators such as broken dashes, dots, arrows, and ellipses.
+- Replaced the affected text in `frontend/src/pages/Dashboard.jsx`, `frontend/src/pages/Players.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/TournamentDetail.jsx`, `frontend/src/components/SearchBar.jsx`, and `frontend/src/components/PlayerArtCard.jsx` with ASCII-safe equivalents to avoid Windows encoding regressions.
+- Verified the production frontend build with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-19 - Dashboard field and pace trend
 
 - Combined the dashboard field-size and duration trend cards into one static `Field and Pace Trend` list so each recent event shows field size, normalized duration, and whether it finished ahead of, on, or behind its same-bucket average.
@@ -261,3 +281,6 @@
 - Fixed rack-win export normalization so reversed score strings like `2-4` now count as 4 racks for the winner and 2 for the loser instead of trusting score position.
 - Added targeted regression coverage for the score-normalization bug and a small reviewed-only single-name alias workflow based on `backend/player_aliases.json`.
 - Added `backend/single_name_aliases.py` plus `scripts/review-single-name-aliases.ps1` so unambiguous first-name merges can be reviewed, copied into the alias file, then rebuilt through static dedupe/export without Challonge calls.
+- Added a static-first ops review script at `scripts/ops_review.py` that triages public GitHub Actions failures and, when token access is available, GitHub code-scanning alerts into a prioritized report.
+- Added `docs/agents/ops-reviewer.md` as the steering spec for recurring ops automation, including priority rules and noise filters for the DreamHost static demo.
+- Created a file-backed Codex automation definition under `C:\Users\karmi\.codex\automations\ops-review\` and explicitly avoided OS-level task scheduling after removing the accidental Windows scheduled task.

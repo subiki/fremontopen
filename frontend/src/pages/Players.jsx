@@ -53,7 +53,7 @@ export default function Players() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search players… (try 'Jimmy')"
+              placeholder="Search players... (try 'Jimmy')"
               data-testid="player-search-input"
               className="w-full bg-[#0B0E14] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-4 py-2.5 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
             />
@@ -107,7 +107,7 @@ export default function Players() {
               {loading && !list.length ? (
                 <tr>
                   <td colSpan={10} className="py-6 text-center text-[#6B7280]">
-                    Loading…
+                    Loading...
                   </td>
                 </tr>
               ) : sortedList.length === 0 ? (
@@ -131,7 +131,7 @@ export default function Players() {
                         player={p}
                         compact
                         linkTo={`/players/${encodeURIComponent(p.name)}`}
-                        subtitle={`${p.tournaments_played ?? 0} tournaments · ${p.win_rate}%`}
+                        subtitle={`${p.tournaments_played ?? 0} tournaments . ${p.win_rate}%`}
                       />
                     </Td>
                     <Td>
@@ -147,10 +147,10 @@ export default function Players() {
                     </Td>
                     <Td className="text-right font-mono text-[#10B981]">{p.wins}</Td>
                     <Td className="text-right font-mono text-[#EF4444]">{p.losses}</Td>
-                    <Td className="text-right font-mono text-[#F59E0B]">{p.elo_rating ?? "—"}</Td>
+                    <Td className="text-right font-mono text-[#F59E0B]">{p.elo_rating ?? "-"}</Td>
                     <Td className="text-right font-mono">{p.tournaments_played ?? 0}</Td>
                     <Td className="text-right font-mono">{p.win_rate}%</Td>
-                    <Td className="text-right font-mono">{p.average_placement ?? "—"}</Td>
+                    <Td className="text-right font-mono">{p.average_placement ?? "-"}</Td>
                     <Td className="text-right font-mono">{p.top_4_finishes ?? 0}</Td>
                   </tr>
                 ))

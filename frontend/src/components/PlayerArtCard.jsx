@@ -40,7 +40,7 @@ const initialsFor = (name = "") =>
 
 const statLine = (player) => {
   const total = (player?.wins || 0) + (player?.losses || 0);
-  return `${player?.wins || 0}-${player?.losses || 0} · ${total} matches`;
+  return `${player?.wins || 0}-${player?.losses || 0} . ${total} matches`;
 };
 
 export function PlayerArtCard({
@@ -72,7 +72,7 @@ export function PlayerArtCard({
           </div>
           <div className="text-right">
             <div className={`font-mono text-[#E5E7EB] ${compact ? "text-xs" : "text-sm"}`}>
-              ELO {player?.elo_rating ?? "—"}
+              ELO {player?.elo_rating ?? "-"}
             </div>
             <div className={`mt-1 font-mono ${theme.chip} ${compact ? "text-[11px]" : "text-xs"}`}>
               {player?.top_1_finishes ?? 0} title{player?.top_1_finishes === 1 ? "" : "s"}

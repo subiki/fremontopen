@@ -59,3 +59,4 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+scripts/__pycache__/

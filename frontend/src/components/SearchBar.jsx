@@ -66,7 +66,7 @@ export const SearchBar = () => {
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={onKey}
         onFocus={() => q && setOpen(true)}
-        placeholder="Search players or tournaments…"
+        placeholder="Search players or tournaments..."
         data-testid="search-input"
         className="w-full bg-[#141923] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-9 py-2 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
       />
@@ -86,7 +86,7 @@ export const SearchBar = () => {
           className="absolute z-50 mt-2 w-full bg-[#141923] border border-[#273041] rounded-md shadow-xl max-h-96 overflow-y-auto"
           data-testid="search-results"
         >
-          {loading && <div className="px-4 py-3 text-xs text-[#6B7280]">Searching…</div>}
+          {loading && <div className="px-4 py-3 text-xs text-[#6B7280]">Searching...</div>}
           {!loading && total === 0 && (
             <div className="px-4 py-3 text-xs text-[#6B7280]">No results</div>
           )}
@@ -109,7 +109,7 @@ export const SearchBar = () => {
                   </span>
                   <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                     <span className="text-[#10B981]">{p.wins}W</span>
-                    <span className="text-[#6B7280] mx-1">·</span>
+                    <span className="text-[#6B7280] mx-1">.</span>
                     <span className="text-[#EF4444]">{p.losses}L</span>
                     {p.fargo ? <span className="ml-2 text-[#F59E0B]">FR {p.fargo}</span> : null}
                   </span>

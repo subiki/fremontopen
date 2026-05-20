@@ -541,7 +541,7 @@ const PerformanceAboveEloCard = ({ row }) => {
             {row.player}
           </Link>
           <div className="mt-1 text-xs text-[#6B7280]">
-            {row.place ? `Place ${ordinal(row.place)} · ` : ""}
+            {row.place ? `Place ${ordinal(row.place)} . ` : ""}
             {row.wins}-{row.losses} across {row.matches} match{row.matches === 1 ? "" : "es"}
           </div>
         </div>
