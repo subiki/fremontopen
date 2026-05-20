@@ -36,16 +36,30 @@ def _iso_to_dt(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def _github_json(url: str, token: str | None = None) -> Any:
+def _github_request(url: str, method: str = "GET", data: Any = None, token: str | None = None) -> Any:
     headers = {
         "User-Agent": "fremontopen-ops-review",
         "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, headers=headers)
+    
+    req_data = None
+    if data is not None:
+        req_data = json.dumps(data).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+        
+    req = urllib.request.Request(url, method=method, data=req_data, headers=headers)
     with urllib.request.urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+        resp_bytes = response.read()
+        if not resp_bytes:
+            return None
+        return json.loads(resp_bytes.decode("utf-8"))
+
+
+def _github_json(url: str, token: str | None = None) -> Any:
+    return _github_request(url, method="GET", token=token)
 
 
 @dataclass
@@ -312,10 +326,90 @@ def _build_report(findings: list[Finding], repo: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _sync_issues(repo: str, findings: list[Finding], token: str | None = None) -> None:
+    if not token:
+        print("No GITHUB_TOKEN or GH_TOKEN provided. Skipping issue sync.")
+        return
+
+    print("Starting GitHub issue sync for active operations findings...")
+    
+    url = f"{API_ROOT}/repos/{repo}/issues?state=open&labels=ops&per_page=100"
+    try:
+        open_issues = _github_json(url, token=token)
+    except Exception as exc:
+        print(f"Failed to fetch open ops issues: {exc}")
+        return
+
+    open_ops_issues_by_title = {}
+    for issue in open_issues:
+        if "pull_request" in issue:
+            continue
+        title = issue.get("title")
+        if title:
+            open_ops_issues_by_title[title] = issue
+
+    active_findings = [f for f in findings if f.needed]
+    active_titles = set()
+
+    for finding in active_findings:
+        issue_title = f"[Ops] {finding.title}"
+        active_titles.add(issue_title)
+        
+        priority_label = "jfl" if finding.priority.upper() == "JFL" else finding.priority
+        labels = ["ops", priority_label]
+        
+        body = f"""### Summary
+{finding.summary}
+
+### Next Step
+{finding.next_step}
+
+### Source
+{finding.source}
+"""
+        if finding.url:
+            body += f"\n[View on GitHub]({finding.url})"
+            
+        if issue_title in open_ops_issues_by_title:
+            print(f"Issue already exists and is open: {issue_title}")
+        else:
+            create_url = f"{API_ROOT}/repos/{repo}/issues"
+            payload = {
+                "title": issue_title,
+                "body": body.strip(),
+                "labels": labels
+            }
+            try:
+                new_issue = _github_request(create_url, method="POST", data=payload, token=token)
+                print(f"Created issue #{new_issue.get('number')}: {issue_title}")
+            except Exception as exc:
+                print(f"Failed to create issue for '{issue_title}': {exc}")
+
+    for title, issue in open_ops_issues_by_title.items():
+        if title not in active_titles:
+            issue_number = issue.get("number")
+            close_url = f"{API_ROOT}/repos/{repo}/issues/{issue_number}"
+            comment_url = f"{API_ROOT}/repos/{repo}/issues/{issue_number}/comments"
+            comment_payload = {
+                "body": "Automatically closed by ops-review sync: this finding is no longer active."
+            }
+            close_payload = {
+                "state": "closed",
+                "state_reason": "completed"
+            }
+            try:
+                _github_request(comment_url, method="POST", data=comment_payload, token=token)
+                _github_request(close_url, method="PATCH", data=close_payload, token=token)
+                print(f"Closed issue #{issue_number}: {title}")
+            except Exception as exc:
+                print(f"Failed to close issue #{issue_number}: {exc}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Review GitHub workflow failures and code-scanning alerts.")
     parser.add_argument("--repo", default=REPO, help="Repository in owner/name form.")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for markdown/json reports.")
+    parser.add_argument("--sync-issues", action="store_true", help="Sync active findings to GitHub Issues.")
     args = parser.parse_args()
 
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
@@ -325,6 +419,9 @@ def main() -> int:
     findings = []
     findings.extend(_summarize_failed_workflows(args.repo, token=token))
     findings.extend(_summarize_code_scanning(args.repo, token=token))
+
+    if args.sync_issues:
+        _sync_issues(args.repo, findings, token=token)
 
     report = _build_report(findings, args.repo)
     timestamp = _utc_now().strftime("%Y%m%d-%H%M%S")

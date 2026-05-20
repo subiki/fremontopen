@@ -1,0 +1,51 @@
+name: Operations Review and Issue Sync
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # Every day at 08:00 UTC
+  workflow_dispatch:     # Allow manual trigger from the Actions tab
+
+concurrency:
+  group: ops-review-sync
+  cancel-in-progress: false
+
+jobs:
+  ops-review:
+    name: Operations Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # required to commit report updates back to the repository
+      actions: read        # required to query workflow runs and job details
+      security-events: read # required to query code scanning alerts
+      issues: write        # required to create, comment, and close issues
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend deps
+        run: python -m pip install -r backend/requirements.txt
+
+      - name: Run operations review & sync issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/ops_review.py --sync-issues
+
+      - name: Commit ops review report updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .run-logs/ops-review/
+          if git diff --cached --quiet; then
+            echo "No report changes to commit"
+          else
+            git commit -m "[Ops][Agent-GitHub-Actions] Update operations review reports"
+            git push
+          fi
