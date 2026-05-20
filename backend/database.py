@@ -4,12 +4,14 @@ Local tooling uses SQLite at ``backend/cuestats_dev.db``. The deployed site is
 static and reads ``frontend/public/data/cache.json`` only.
 """
 import os
+from pathlib import Path
 from sqlalchemy import (
     MetaData, Table, Column,
     Integer, String, Float, JSON,
 )
 from sqlalchemy.ext.asyncio import create_async_engine
 
+ROOT_DIR = Path(__file__).resolve().parent
 metadata = MetaData()
 
 tournaments = Table(
@@ -58,11 +60,30 @@ sync_meta = Table(
 
 
 def make_engine(database_url: str = None):
-    url = database_url or os.environ["DATABASE_URL"]
+    url = _normalize_database_url(database_url or os.environ["DATABASE_URL"])
     kwargs = {"echo": False, "pool_pre_ping": True}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
     return create_async_engine(url, **kwargs)
+
+
+def _normalize_database_url(url: str) -> str:
+    prefixes = (
+        "sqlite+aiosqlite:///",
+        "sqlite:///",
+    )
+    for prefix in prefixes:
+        if not url.startswith(prefix):
+            continue
+        path_value = url[len(prefix):]
+        if not path_value or path_value == ":memory:":
+            return url
+        candidate = Path(path_value)
+        if candidate.is_absolute():
+            return f"{prefix}{candidate.as_posix()}"
+        resolved = (ROOT_DIR / candidate).resolve()
+        return f"{prefix}{resolved.as_posix()}"
+    return url
 
 
 async def init_db(engine) -> None:

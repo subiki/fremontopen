@@ -36,6 +36,9 @@ frontend/.env
 backend/alias_suggestions.json
 backend/validation_report.json
 backend/fargo_refresh_report.json
+/.pytest_cache/
+/.pytest-tmp-*/
+/cuestats_dev.db
 /.sass-cache
 /connect.lock
 /coverage

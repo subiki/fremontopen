@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-19 - Repo-root SQLite path guard
+
+- Reviewed the current `origin/main` state before pushing and found the static-demo backlog slice was already upstream, so the remaining shippable delta was the local export safety fix rather than another replay of cache/UI work.
+- Normalized relative SQLite `DATABASE_URL` values inside `backend/database.py` so repo-root runs now resolve `sqlite+aiosqlite:///./cuestats_dev.db` to `backend/cuestats_dev.db` instead of creating a zero-byte root database.
+- Added focused regression coverage in `backend/tests/test_database.py` for both the relative-path fix and the absolute-path pass-through case.
+- Added ignore rules for repo-root pytest temp directories and the accidental root `cuestats_dev.db` artifact to keep local-only operational churn out of commits.
+- Verified with `.\.venv\Scripts\python.exe -m pytest backend/tests/test_database.py backend/tests/test_export_analytics.py backend/tests/test_fargo_refresh.py --basetemp .pytest-tmp-db-path-fix` and `.\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-14 - P3 equipment overrides
 
 - Re-read backlog, docs, and live GitHub labels after printable tournament detail pages.
