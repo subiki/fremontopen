@@ -1,5 +1,12 @@
 # Agent Session Notes
 
+## 2026-05-19 - Superseded single-tournament overperformance closeout
+
+- Verified `git status --short` and `git branch --show-current` before finalizing; the checkout was already clean on `main`.
+- Confirmed the `5.5` single-tournament performance-above-ELO slice was already present on the current branch in `backend/export_static.py`, `frontend/src/pages/Dashboard.jsx`, `frontend/src/pages/PlayerDetail.jsx`, and `frontend/src/pages/TournamentDetail.jsx`.
+- Verified the existing landed implementation by inspecting the live checkout and recent session notes rather than replaying or re-committing duplicate code.
+- Outcome: superseded by already-merged branch state, so no holding branch was needed and only this closeout note was added.
+
 ## 2026-05-19 - agent closeout for merged optional static-demo work
 
 - Verified the real checkout state with `git status --short` and `git branch --show-current`; the working tree was clean on `main`.
