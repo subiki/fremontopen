@@ -327,3 +327,9 @@
 - Added a static-first ops review script at `scripts/ops_review.py` that triages public GitHub Actions failures and, when token access is available, GitHub code-scanning alerts into a prioritized report.
 - Added `docs/agents/ops-reviewer.md` as the steering spec for recurring ops automation, including priority rules and noise filters for the DreamHost static demo.
 - Created a file-backed Codex automation definition under `C:\Users\karmi\.codex\automations\ops-review\` and explicitly avoided OS-level task scheduling after removing the accidental Windows scheduled task.
+## 2026-05-19 Ops review follow-up
+
+- Re-reviewed `.run-logs/ops-review/latest.md`, `docs/agents/ops-reviewer.md`, and `scripts/ops_review.py` against the static DreamHost demo scope.
+- Removed the redundant `CHALLONGE_SUBDOMAIN` GitHub secret requirement from `.github/workflows/data-refresh.yml` by pinning the workflow to the repo's fixed `fremontopen` subdomain.
+- Updated `scripts/ops_review.py` and `backend/tests/test_ops_review.py` so the refresh failure is now reported as the remaining `CHALLONGE_API_KEY` secret gap instead of a combined secret blocker.
+- Verification target: targeted `pytest backend/tests/test_ops_review.py` plus a local `scripts/run-ops-review.ps1` run if GitHub API access remains blocked.

@@ -144,8 +144,13 @@ def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Fin
         title_bits = [row.get("title") for row in annotations if row.get("title")]
         root_cause = annotation_messages[0] if annotation_messages else "No annotation details available"
 
-        if "CHALLONGE_API_KEY is required" in " ".join(annotation_messages):
-            root_cause = "Missing CHALLONGE_API_KEY and CHALLONGE_SUBDOMAIN repository secrets"
+        joined_annotations = " ".join(annotation_messages)
+        if "CHALLONGE_API_KEY is required" in joined_annotations:
+            root_cause = "Missing CHALLONGE_API_KEY repository secret"
+            priority = "P1"
+            needed = True
+        elif "CHALLONGE_SUBDOMAIN is required" in joined_annotations:
+            root_cause = "Missing CHALLONGE_SUBDOMAIN repository secret"
             priority = "P1"
             needed = True
         elif name == "Push on main":
@@ -177,7 +182,9 @@ def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Fin
 def _workflow_next_step(name: str, messages: list[str], titles: list[str]) -> str:
     joined = " ".join(messages + titles)
     if "CHALLONGE_API_KEY is required" in joined:
-        return "Set CHALLONGE_API_KEY and CHALLONGE_SUBDOMAIN in GitHub repo secrets, then rerun Scheduled static data refresh."
+        return "Set CHALLONGE_API_KEY in GitHub repo secrets, then rerun Scheduled static data refresh."
+    if "CHALLONGE_SUBDOMAIN is required" in joined:
+        return "Set CHALLONGE_SUBDOMAIN in GitHub repo secrets only if the workflow still relies on a non-default subdomain."
     if name == "Deploy static demo to DreamHost shared hosting":
         return "Inspect the failed deploy job first; production shipping is blocked until it passes."
     if name == "Weekly Backlog Sync":
