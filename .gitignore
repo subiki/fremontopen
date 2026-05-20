@@ -34,6 +34,7 @@ node_modules
 # misc
 frontend/.env
 backend/alias_suggestions.json
+backend/single_name_aliases.json
 backend/validation_report.json
 backend/fargo_refresh_report.json
 /.pytest_cache/

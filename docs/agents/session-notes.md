@@ -258,3 +258,6 @@
 - Extended `backend/export_static.py` and `backend/tests/test_export_analytics.py` with event-series classification so the static cache carries reusable series labels and counts.
 - Updated `frontend/src/pages/Players.jsx`, `frontend/src/pages/PlayerDetail.jsx`, `frontend/src/pages/Tournaments.jsx`, and `frontend/src/pages/Dashboard.jsx` to use the new card art and series metadata.
 - Regenerated `frontend/public/data/cache.json` plus the split player/tournament bundle files, then passed the shared-repo frontend build and backend export analytics tests again.
+- Fixed rack-win export normalization so reversed score strings like `2-4` now count as 4 racks for the winner and 2 for the loser instead of trusting score position.
+- Added targeted regression coverage for the score-normalization bug and a small reviewed-only single-name alias workflow based on `backend/player_aliases.json`.
+- Added `backend/single_name_aliases.py` plus `scripts/review-single-name-aliases.ps1` so unambiguous first-name merges can be reviewed, copied into the alias file, then rebuilt through static dedupe/export without Challonge calls.

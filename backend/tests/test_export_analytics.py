@@ -54,10 +54,14 @@ def test_duration_minutes_uses_start_and_end_timestamps():
     ) == 223
 
 
-def test_parse_score_totals_reads_winner_and_loser_racks():
+def test_parse_score_totals_normalizes_winner_and_loser_racks():
     assert _parse_score_totals("5-3") == {
         "winner_racks": 5,
         "loser_racks": 3,
+    }
+    assert _parse_score_totals("2-4") == {
+        "winner_racks": 4,
+        "loser_racks": 2,
     }
     assert _parse_score_totals("hill/hill") is None
 
@@ -65,7 +69,7 @@ def test_parse_score_totals_reads_winner_and_loser_racks():
 def test_player_results_summary_tracks_races_and_racks():
     summary = _player_results_summary([
         {**match(1, "A", "B"), "scores": "5-3"},
-        {**match(2, "C", "A"), "scores": "4-2"},
+        {**match(2, "C", "A"), "scores": "2-4"},
         {**match(3, "A", "D"), "scores": ""},
     ], "A")
 

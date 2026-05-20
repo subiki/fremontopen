@@ -154,9 +154,11 @@ def _parse_score_totals(score: Optional[str]) -> Optional[Dict[str, int]]:
     numbers = [int(value) for value in (str(score or "").replace("-", " ").split()) if value.isdigit()]
     if len(numbers) < 2:
         return None
+    winner_racks = max(numbers[0], numbers[1])
+    loser_racks = min(numbers[0], numbers[1])
     return {
-        "winner_racks": numbers[0],
-        "loser_racks": numbers[1],
+        "winner_racks": winner_racks,
+        "loser_racks": loser_racks,
     }
 
 

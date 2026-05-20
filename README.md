@@ -135,6 +135,23 @@ cd backend
 The report is written to `backend/alias_suggestions.json` and is not applied
 automatically.
 
+For the narrow "single first name to one full name" cleanup workflow, run:
+
+```powershell
+.\scripts\review-single-name-aliases.ps1
+```
+
+That writes `backend/single_name_aliases.json` with only unambiguous
+single-token candidates such as `"Jim" -> "Jim Catlin"`. Copy the aliases you
+want into `backend/player_aliases.json`, then rebuild the static cache without
+calling Challonge again:
+
+```powershell
+.\scripts\review-single-name-aliases.ps1 -Rebuild -Build
+```
+
+Ambiguous names are intentionally left out of that report.
+
 ## Local Player Overrides And Fargo Import
 
 Use `backend/player_overrides.json` for manual player metadata such as Fargo
