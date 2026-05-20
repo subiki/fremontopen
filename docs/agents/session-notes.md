@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-19 - agent closeout for merged optional static-demo work
+
+- Verified the real checkout state with `git status --short` and `git branch --show-current`; the working tree was clean on `main`.
+- Confirmed the previously useful optional static-demo work is already preserved in commit `62f6936` (`Finish optional static demo backlog`), including deterministic player art and static multi-event browsing.
+- No holding branch was needed because there were no remaining uncommitted files from this agent slice to preserve.
+
 ## 2026-05-19 - Ops review network-blocker fallback
 
 - Reviewed the static-demo ops triage flow against `docs/agents/ops-reviewer.md` and the generated `.run-logs/ops-review/latest.*` report, which currently points to a `P1` scheduled refresh failure from missing `CHALLONGE_API_KEY` and `CHALLONGE_SUBDOMAIN` repo secrets plus a `P2` code-scanning visibility gap from missing `GITHUB_TOKEN` or `GH_TOKEN`.
