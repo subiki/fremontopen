@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchLeaderboard } from "../lib/api";
+import { compareLeaderboardPlayers, getLeaderboardMetric, leaderboardMetricGroups } from "../lib/leaderboardMetrics";
 import { Crown } from "@phosphor-icons/react";
 
 export default function Leaderboard() {
@@ -31,22 +32,16 @@ export default function Leaderboard() {
       && (player.tournaments_played || 0) >= minTournaments
       && (player.racks_played || 0) >= minRacks
     );
-    const byNumberDesc = (key) => (left, right) => (right[key] ?? -Infinity) - (left[key] ?? -Infinity);
-    if (sort === "elo") return rows.sort(byNumberDesc("elo_rating"));
-    if (sort === "schedule") return rows.sort(byNumberDesc("strength_of_schedule"));
-    if (sort === "win_rate") return rows.sort(byNumberDesc("win_rate"));
-    if (sort === "average_placement") {
-      return rows.sort((left, right) => (left.average_placement ?? Infinity) - (right.average_placement ?? Infinity));
-    }
-    if (sort === "top_4") return rows.sort(byNumberDesc("top_4_finishes"));
-    return rows.sort(byNumberDesc("wins"));
+    const metric = getLeaderboardMetric(sort);
+    return rows.sort((left, right) => compareLeaderboardPlayers(metric, left, right));
   }, [list, sort, minMatches, minTournaments, minRacks]);
 
   const max = Math.max(1, ...sortedList.map((player) => player.wins + player.losses));
+  const selectedMetric = getLeaderboardMetric(sort);
 
   return (
     <>
-      <Topbar title="Leaderboard" subtitle="Players ranked by total wins and top finishes" onSyncDone={load} />
+      <Topbar title="Leaderboard" subtitle={`Players ranked by ${selectedMetric.label.toLowerCase()}`} onSyncDone={load} />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="leaderboard-page">
         <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-[#9CA3AF]">
@@ -92,14 +87,20 @@ export default function Leaderboard() {
               value={sort}
               onChange={(event) => setSort(event.target.value)}
               data-testid="leaderboard-sort-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] min-w-[240px]"
             >
-              <option value="wins">Sort by wins</option>
-              <option value="elo">Sort by ELO</option>
-              <option value="schedule">Sort by schedule</option>
-              <option value="win_rate">Sort by win rate</option>
-              <option value="average_placement">Sort by avg place</option>
-              <option value="top_4">Sort by top 4s</option>
+              {leaderboardMetricGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.metrics.map((metricKey) => {
+                    const metric = getLeaderboardMetric(metricKey);
+                    return (
+                      <option key={metricKey} value={metricKey}>
+                        Sort by {metric.label.toLowerCase()}
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
             </select>
           </div>
         </div>
@@ -117,7 +118,7 @@ export default function Leaderboard() {
                 return (
                   <li
                     key={player.name}
-                    className="min-w-[1180px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
+                    className="min-w-[1340px] flex items-center gap-4 px-4 py-3 hover:bg-[#1E2532]/50 rounded-md transition-colors"
                     data-testid={`leaderboard-row-${index}`}
                   >
                     <div className="w-7 shrink-0 flex items-center justify-center">
@@ -151,6 +152,15 @@ export default function Leaderboard() {
                       <span className="text-[#6B7280] mx-1">.</span>
                       <span className="text-[#EF4444]">{player.losses}L</span>
                       <span className="text-[#9CA3AF] ml-2">{player.win_rate}%</span>
+                    </div>
+                    <div className="w-44 shrink-0 text-right">
+                      <div className="text-[10px] uppercase text-[#6B7280]">{selectedMetric.label}</div>
+                      <Link
+                        to={`/rankings/${sort}`}
+                        className="font-mono text-sm text-[#F59E0B] hover:text-[#FBBF24]"
+                      >
+                        {selectedMetric.format(selectedMetric.value(player))}
+                      </Link>
                     </div>
                     <div className="w-44 shrink-0 text-right font-mono text-xs">
                       <span className="text-[#F59E0B]">ELO {player.elo_rating ?? "-"}</span>

@@ -333,3 +333,10 @@
 - Removed the redundant `CHALLONGE_SUBDOMAIN` GitHub secret requirement from `.github/workflows/data-refresh.yml` by pinning the workflow to the repo's fixed `fremontopen` subdomain.
 - Updated `scripts/ops_review.py` and `backend/tests/test_ops_review.py` so the refresh failure is now reported as the remaining `CHALLONGE_API_KEY` secret gap instead of a combined secret blocker.
 - Verification target: targeted `pytest backend/tests/test_ops_review.py` plus a local `scripts/run-ops-review.ps1` run if GitHub API access remains blocked.
+
+## 2026-05-20 - Expanded leaderboard stat sorting
+
+- Added a shared frontend leaderboard metric registry so `/leaderboard` and `/rankings/:stat` expose the same sortable stat set.
+- Expanded leaderboard sorting to include tournaments played, wins/losses, win rate, races, racks, rack differential, ELO, ELO upset/loss extremes, schedule strength, placements, streaks, and cash fields from the static cache.
+- Extended `backend/export_static.py` with per-player best ELO upset and worst ELO loss summaries derived from existing match ELO odds, then regenerated `frontend/public/data/cache.json` plus split player bundles.
+- Verified with `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp` and the static frontend build through the repo's portable Yarn path.

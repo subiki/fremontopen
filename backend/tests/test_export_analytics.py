@@ -24,6 +24,7 @@ from export_static import (
     _normalized_duration_minutes,
     _parse_score_totals,
     _performance_above_elo,
+    _player_elo_extremes,
     _player_results_summary,
     _recent_activity_summary,
     _rivalry_index,
@@ -385,6 +386,44 @@ def test_upset_tracker_ranks_biggest_underdog_wins():
     assert [row["winner"] for row in upsets] == ["A", "C"]
     assert upsets[0]["favorite_probability"] == 80.0
     assert upsets[0]["tournament_name"] == "Ten"
+
+
+def test_player_elo_extremes_tracks_best_upset_and_worst_favorite_loss():
+    rows = [
+        {
+            **match(1, "A", "B"),
+            "tournament_id": 10,
+            "tournament_name": "Eight",
+            "scores": "5-3",
+            "elo_odds": {
+                "favorite": "B",
+                "winner_probability": 22.0,
+                "loser_probability": 78.0,
+                "rating_gap": -220,
+            },
+        },
+        {
+            **match(2, "C", "A"),
+            "tournament_id": 11,
+            "tournament_name": "Nine",
+            "scores": "5-4",
+            "elo_odds": {
+                "favorite": "A",
+                "winner_probability": 30.0,
+                "loser_probability": 70.0,
+                "rating_gap": -150,
+            },
+        },
+    ]
+
+    extremes = _player_elo_extremes(rows, "A")
+
+    assert extremes["best_upset"]["opponent"] == "B"
+    assert extremes["best_upset"]["rating_gap"] == 220
+    assert extremes["best_upset"]["win_probability"] == 22.0
+    assert extremes["worst_loss"]["opponent"] == "C"
+    assert extremes["worst_loss"]["rating_gap"] == 150
+    assert extremes["worst_loss"]["favorite_probability"] == 70.0
 
 
 def test_match_of_tournament_prefers_biggest_upset():

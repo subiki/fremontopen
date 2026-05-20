@@ -569,6 +569,69 @@ def _upset_tracker(matches: List[Dict[str, Any]], limit: int = 10) -> List[Dict[
     return rows[:limit]
 
 
+def _player_elo_extremes(matches: List[Dict[str, Any]], player_name: str) -> Dict[str, Any]:
+    best_upset = None
+    worst_loss = None
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        odds = match.get("elo_odds") or {}
+        if not winner or not loser:
+            continue
+        if winner == player_name and odds.get("favorite") != winner:
+            favorite_probability = odds.get("loser_probability")
+            if favorite_probability is None:
+                continue
+            upset = {
+                "match_id": match.get("id"),
+                "opponent": loser,
+                "tournament_id": match.get("tournament_id"),
+                "tournament_name": match.get("tournament_name"),
+                "date": match.get("completed_at"),
+                "scores": match.get("scores"),
+                "win_probability": odds.get("winner_probability"),
+                "favorite_probability": favorite_probability,
+                "rating_gap": abs(odds.get("rating_gap") or 0),
+            }
+            if not best_upset or (
+                upset["rating_gap"],
+                favorite_probability,
+                str(upset.get("date") or ""),
+            ) > (
+                best_upset["rating_gap"],
+                best_upset["favorite_probability"],
+                str(best_upset.get("date") or ""),
+            ):
+                best_upset = upset
+        elif loser == player_name and odds.get("favorite") == loser:
+            winner_probability = odds.get("winner_probability")
+            loser_probability = odds.get("loser_probability")
+            if winner_probability is None or loser_probability is None:
+                continue
+            loss = {
+                "match_id": match.get("id"),
+                "opponent": winner,
+                "tournament_id": match.get("tournament_id"),
+                "tournament_name": match.get("tournament_name"),
+                "date": match.get("completed_at"),
+                "scores": match.get("scores"),
+                "opponent_win_probability": winner_probability,
+                "favorite_probability": loser_probability,
+                "rating_gap": abs(odds.get("rating_gap") or 0),
+            }
+            if not worst_loss or (
+                loss["rating_gap"],
+                loser_probability,
+                str(loss.get("date") or ""),
+            ) > (
+                worst_loss["rating_gap"],
+                worst_loss["favorite_probability"],
+                str(worst_loss.get("date") or ""),
+            ):
+                worst_loss = loss
+    return {"best_upset": best_upset, "worst_loss": worst_loss}
+
+
 def _match_story(match: Dict[str, Any], reason: str, score: float, detail: str) -> Dict[str, Any]:
     odds = match.get("elo_odds") or {}
     return {
@@ -1684,6 +1747,7 @@ async def build_cache() -> Dict[str, Any]:
             )
             form_history = rolling_match_form(player_matches, name, 10)
             results_summary = _player_results_summary(player_matches, name)
+            elo_extremes = _player_elo_extremes(player_matches, name)
             average_placement = round(sum(placement_values) / len(placement_values), 2) if placement_values else None
             player["average_placement"] = average_placement
             player["top_1_finishes"] = top_finishes["first"]
@@ -1703,6 +1767,18 @@ async def build_cache() -> Dict[str, Any]:
             player["racks_lost"] = results_summary["racks_lost"]
             player["racks_played"] = results_summary["racks_played"]
             player["scored_races"] = results_summary["scored_races"]
+            player["best_elo_upset_rating_gap"] = (
+                elo_extremes["best_upset"]["rating_gap"] if elo_extremes["best_upset"] else 0
+            )
+            player["best_elo_upset_probability"] = (
+                elo_extremes["best_upset"]["win_probability"] if elo_extremes["best_upset"] else 0.0
+            )
+            player["worst_elo_loss_rating_gap"] = (
+                elo_extremes["worst_loss"]["rating_gap"] if elo_extremes["worst_loss"] else 0
+            )
+            player["worst_elo_loss_probability"] = (
+                elo_extremes["worst_loss"]["favorite_probability"] if elo_extremes["worst_loss"] else 0.0
+            )
             strength_of_schedule = _strength_of_schedule(player_matches, name, players_by_name, elo)
             player["strength_of_schedule"] = strength_of_schedule["average_opponent_elo"]
             player["opponent_win_rate"] = strength_of_schedule["average_opponent_win_rate"]
@@ -1750,6 +1826,7 @@ async def build_cache() -> Dict[str, Any]:
                 },
                 "attendance": player_attendance,
                 "results": results_summary,
+                "elo_extremes": elo_extremes,
                 "placements": {
                     "average": average_placement,
                     "tournaments_counted": len(placement_values),
