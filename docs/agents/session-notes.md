@@ -354,3 +354,12 @@
 - Re-ran the repo-local ops review against the restricted Codex sandbox and confirmed live GitHub visibility is still blocked here, so workflow status beyond the last captured report remains dependent on external Actions access or attached artifacts.
 - While validating the scheduled refresh path, found that `.github/workflows/data-refresh.yml` still only diffed and committed `backend/cuestats_dev.db`, `backend/player_overrides.json`, and `frontend/public/data/cache.json`, even though the static export also writes split player and tournament bundles.
 - Updated the workflow to treat `frontend/public/data/players` and `frontend/public/data/tournaments` as first-class generated artifacts during change detection and commit staging, then added a regression test at `backend/tests/test_data_refresh_workflow.py`.
+
+## 2026-05-20 - Operations and Backlog Automation Issue Sync
+
+- Created a new GitHub Actions workflow at `.github/workflows/ops-review.yml` configured to run daily and on dispatch.
+- Refactored `scripts/ops_review.py` by adding `_github_request` to support POST/PATCH requests to the GitHub API.
+- Implemented `_sync_issues` inside `scripts/ops_review.py` to reconcile active findings with open issues labeled `ops`. It creates new issues prefixed with `[Ops]` and labeled with their priority (`jfl`, `P0`, `P1`, `P2`, `P3`), and comments on and closes issues for findings that are no longer active.
+- Added comprehensive unit test coverage in `backend/tests/test_ops_review.py` validating the reconciliation logic.
+- Pushed all changes directly to `main` so the workflow is active and executable on GitHub.
+
