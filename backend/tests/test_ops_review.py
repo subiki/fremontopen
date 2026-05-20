@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 import urllib.error
 from pathlib import Path
@@ -164,3 +165,172 @@ def test_sync_issues_reconciles_correctly(monkeypatch):
     assert closed_issues[0]["url"].endswith("/issues/102")
     assert closed_issues[0]["data"]["state"] == "closed"
 
+
+def test_fallback_findings_reuse_last_actionable_snapshot_when_visibility_is_blocked():
+    current_findings = [
+        ops_review.Finding(
+            source="workflow",
+            title="GitHub workflow review unavailable",
+            priority="P2",
+            needed=True,
+            summary="GitHub API access is blocked",
+            next_step="Run elsewhere",
+        ),
+        ops_review.Finding(
+            source="code-scanning",
+            title="GitHub code scanning unavailable",
+            priority="P2",
+            needed=True,
+            summary="Token missing",
+            next_step="Set token",
+        ),
+    ]
+    previous_payload = {
+        "generated_at": "2026-05-20T19:58:38.144694+00:00",
+        "findings": [
+            {
+                "source": "workflow",
+                "title": "Scheduled static data refresh",
+                "priority": "P1",
+                "needed": True,
+                "summary": "Missing CHALLONGE_API_KEY repository secret",
+                "next_step": "Set secret and rerun",
+                "url": "https://example.invalid/run/123",
+                "metadata": {"run_id": 123},
+            },
+            {
+                "source": "workflow",
+                "title": "GitHub workflow review unavailable",
+                "priority": "P2",
+                "needed": True,
+                "summary": "blocked",
+                "next_step": "Run elsewhere",
+                "url": None,
+                "metadata": None,
+            },
+        ],
+    }
+
+    generated_at, fallback_findings = ops_review._fallback_findings(current_findings, previous_payload)
+
+    assert generated_at == "2026-05-20T19:58:38.144694+00:00"
+    assert len(fallback_findings) == 1
+    assert fallback_findings[0].title == "Scheduled static data refresh"
+
+
+def test_main_writes_fallback_snapshot_into_report(tmp_path, monkeypatch):
+    out_dir = tmp_path / "ops-review"
+    out_dir.mkdir()
+    (out_dir / "latest.json").write_text(
+        json.dumps(
+            {
+                "repo": "subiki/fremontopen",
+                "generated_at": "2026-05-20T19:58:38.144694+00:00",
+                "findings": [
+                    {
+                        "source": "workflow",
+                        "title": "Scheduled static data refresh",
+                        "priority": "P1",
+                        "needed": True,
+                        "summary": "Missing CHALLONGE_API_KEY repository secret",
+                        "next_step": "Set secret and rerun",
+                        "url": "https://example.invalid/run/123",
+                        "metadata": {"run_id": 123},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        ops_review,
+        "_summarize_failed_workflows",
+        lambda repo, token=None: [
+            ops_review.Finding(
+                source="workflow",
+                title="GitHub workflow review unavailable",
+                priority="P2",
+                needed=True,
+                summary="GitHub API access is blocked",
+                next_step="Run elsewhere",
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        ops_review,
+        "_summarize_code_scanning",
+        lambda repo, token=None: [
+            ops_review.Finding(
+                source="code-scanning",
+                title="GitHub code scanning unavailable",
+                priority="P2",
+                needed=True,
+                summary="Token missing",
+                next_step="Set token",
+            )
+        ],
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["ops_review.py", "--repo", "subiki/fremontopen", "--out-dir", str(out_dir)],
+    )
+
+    assert ops_review.main() == 0
+
+    report = (out_dir / "latest.md").read_text(encoding="utf-8")
+    payload = json.loads((out_dir / "latest.json").read_text(encoding="utf-8"))
+
+    assert "## Last Known Actionable Findings" in report
+    assert "Scheduled static data refresh" in report
+    assert payload["fallback_generated_at"] == "2026-05-20T19:58:38.144694+00:00"
+    assert payload["fallback_findings"][0]["title"] == "Scheduled static data refresh"
+
+
+def test_load_last_actionable_report_skips_blocker_only_latest(tmp_path):
+    out_dir = tmp_path / "ops-review"
+    out_dir.mkdir()
+    latest_path = out_dir / "latest.json"
+    latest_path.write_text(
+        json.dumps(
+            {
+                "generated_at": "2026-05-20T23:31:43.071422+00:00",
+                "findings": [
+                    {
+                        "source": "workflow",
+                        "title": "GitHub workflow review unavailable",
+                        "priority": "P2",
+                        "needed": True,
+                        "summary": "blocked",
+                        "next_step": "Run elsewhere",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (out_dir / "20260520-195838.json").write_text(
+        json.dumps(
+            {
+                "generated_at": "2026-05-20T19:58:38.144694+00:00",
+                "findings": [
+                    {
+                        "source": "workflow",
+                        "title": "Scheduled static data refresh",
+                        "priority": "P1",
+                        "needed": True,
+                        "summary": "Missing CHALLONGE_API_KEY repository secret",
+                        "next_step": "Set secret and rerun",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = ops_review._load_last_actionable_report(out_dir, latest_path)
+
+    assert payload is not None
+    assert payload["generated_at"] == "2026-05-20T19:58:38.144694+00:00"

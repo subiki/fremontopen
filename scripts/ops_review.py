@@ -24,6 +24,11 @@ API_ROOT = "https://api.github.com"
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = ROOT_DIR / ".run-logs" / "ops-review"
 WORKFLOW_WINDOW = 30
+VISIBILITY_BLOCKER_TITLES = {
+    "GitHub workflow review unavailable",
+    "GitHub code scanning unavailable",
+    "GitHub code scanning request failed",
+}
 
 
 def _utc_now() -> datetime:
@@ -111,6 +116,69 @@ def _request_blocker_finding(source: str, title: str, detail: str, next_step: st
         summary=f"GitHub API access is blocked: {detail[:200]}",
         next_step=next_step,
     )
+
+
+def _is_visibility_blocker(finding: Finding) -> bool:
+    return finding.title in VISIBILITY_BLOCKER_TITLES
+
+
+def _load_previous_report(path: Path) -> dict[str, Any] | None:
+    try:
+        if not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _coerce_finding(row: dict[str, Any]) -> Finding | None:
+    required_keys = {"source", "title", "priority", "needed", "summary", "next_step"}
+    if not required_keys.issubset(row):
+        return None
+    return Finding(
+        source=str(row["source"]),
+        title=str(row["title"]),
+        priority=str(row["priority"]),
+        needed=bool(row["needed"]),
+        summary=str(row["summary"]),
+        next_step=str(row["next_step"]),
+        url=row.get("url"),
+        metadata=row.get("metadata"),
+    )
+
+
+def _fallback_findings(current_findings: list[Finding], previous_payload: dict[str, Any] | None) -> tuple[str | None, list[Finding]]:
+    if not current_findings or not all(_is_visibility_blocker(finding) for finding in current_findings):
+        return None, []
+    if not previous_payload:
+        return None, []
+
+    previous_generated_at = previous_payload.get("generated_at")
+    carried = []
+    for row in previous_payload.get("findings") or []:
+        finding = _coerce_finding(row)
+        if finding and not _is_visibility_blocker(finding):
+            carried.append(finding)
+    return previous_generated_at, carried
+
+
+def _load_last_actionable_report(out_dir: Path, latest_json_path: Path) -> dict[str, Any] | None:
+    candidates = [latest_json_path]
+    history_paths = sorted(out_dir.glob("*.json"), reverse=True)
+    candidates.extend(path for path in history_paths if path != latest_json_path)
+
+    for path in candidates:
+        payload = _load_previous_report(path)
+        if not payload:
+            continue
+        findings = []
+        for row in payload.get("findings") or []:
+            finding = _coerce_finding(row)
+            if finding and not _is_visibility_blocker(finding):
+                findings.append(finding)
+        if findings:
+            return payload
+    return None
 
 
 def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Finding]:
@@ -292,8 +360,14 @@ def _severity_to_priority(value: str) -> str:
     return "P3"
 
 
-def _build_report(findings: list[Finding], repo: str) -> str:
+def _build_report(
+    findings: list[Finding],
+    repo: str,
+    fallback_generated_at: str | None = None,
+    fallback_findings: list[Finding] | None = None,
+) -> str:
     now = _utc_now().isoformat()
+    fallback_findings = fallback_findings or []
     lines = [
         f"# Fremont Open Ops Review",
         "",
@@ -313,6 +387,26 @@ def _build_report(findings: list[Finding], repo: str) -> str:
         if finding.url:
             item = f"[{item}]({finding.url})"
         lines.append(f"| {finding.priority} | {needed} | {finding.source} | {item} | {summary} | {next_step} |")
+
+    if fallback_findings:
+        snapshot_at = fallback_generated_at or "unknown time"
+        lines.extend([
+            "",
+            "## Last Known Actionable Findings",
+            "",
+            f"Current GitHub visibility is blocked in this environment, so the items below are carried forward from the last successful report at `{snapshot_at}`.",
+            "",
+            "| Priority | Needed | Source | Item | Summary | Next Step |",
+            "|---|---|---|---|---|---|",
+        ])
+        for finding in sorted(fallback_findings, key=lambda row: (_priority_rank(row.priority), not row.needed, row.title.casefold())):
+            needed = "yes" if finding.needed else "no"
+            item = finding.title.replace("|", "/")
+            summary = finding.summary.replace("|", "/")
+            next_step = finding.next_step.replace("|", "/")
+            if finding.url:
+                item = f"[{item}]({finding.url})"
+            lines.append(f"| {finding.priority} | {needed} | {finding.source} | {item} | {summary} | {next_step} |")
 
     lines.extend([
         "",
@@ -423,12 +517,20 @@ def main() -> int:
     if args.sync_issues:
         _sync_issues(args.repo, findings, token=token)
 
-    report = _build_report(findings, args.repo)
     timestamp = _utc_now().strftime("%Y%m%d-%H%M%S")
     md_path = out_dir / "latest.md"
     json_path = out_dir / "latest.json"
     history_md_path = out_dir / f"{timestamp}.md"
     history_json_path = out_dir / f"{timestamp}.json"
+    previous_payload = _load_last_actionable_report(out_dir, json_path)
+    fallback_generated_at, carried_findings = _fallback_findings(findings, previous_payload)
+
+    report = _build_report(
+        findings,
+        args.repo,
+        fallback_generated_at=fallback_generated_at,
+        fallback_findings=carried_findings,
+    )
 
     md_path.write_text(report, encoding="utf-8")
     history_md_path.write_text(report, encoding="utf-8")
@@ -436,6 +538,8 @@ def main() -> int:
         "repo": args.repo,
         "generated_at": _utc_now().isoformat(),
         "findings": [finding.__dict__ for finding in findings],
+        "fallback_generated_at": fallback_generated_at,
+        "fallback_findings": [finding.__dict__ for finding in carried_findings],
     }
     serialized = json.dumps(payload, indent=2) + "\n"
     json_path.write_text(serialized, encoding="utf-8")
