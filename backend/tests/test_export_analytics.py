@@ -11,6 +11,7 @@ from export_static import (
     _attendance_stats,
     _cinderella_runs,
     _duration_baselines,
+    _duration_delta_summary,
     _duration_minutes,
     _event_series_label,
     _infer_tournament_placements,
@@ -194,6 +195,26 @@ def test_duration_baselines_group_by_game_and_player_count():
     assert group["average_label"] == "3h 30m"
     assert group["shortest"]["duration_label"] == "3h"
     assert group["longest"]["duration_label"] == "4h"
+
+
+def test_duration_delta_summary_rates_ahead_behind_and_on_pace():
+    baseline = {"average_minutes": 210, "average_label": "3h 30m", "sample_count": 4}
+
+    ahead = _duration_delta_summary(180, baseline)
+    on_pace = _duration_delta_summary(218, baseline)
+    behind = _duration_delta_summary(255, baseline)
+
+    assert ahead["status"] == "ahead"
+    assert ahead["label"] == "30m ahead of avg"
+    assert ahead["delta_minutes"] == -30
+
+    assert on_pace["status"] == "on"
+    assert on_pace["label"] == "On pace"
+    assert on_pace["delta_minutes"] == 8
+
+    assert behind["status"] == "behind"
+    assert behind["label"] == "45m behind avg"
+    assert behind["delta_minutes"] == 45
 
 
 def test_qualified_player_requires_minimum_matches():

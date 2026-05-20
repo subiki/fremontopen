@@ -287,6 +287,35 @@ def _duration_baselines(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _duration_delta_summary(
+    duration_minutes: Optional[int],
+    baseline: Optional[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    baseline_minutes = baseline.get("average_minutes") if baseline else None
+    if not isinstance(duration_minutes, int) or not isinstance(baseline_minutes, int):
+        return None
+    delta_minutes = duration_minutes - baseline_minutes
+    abs_delta = abs(delta_minutes)
+    if abs_delta <= 10:
+        status = "on"
+        label = "On pace"
+    elif delta_minutes < 0:
+        status = "ahead"
+        label = f"{_format_duration(abs_delta)} ahead of avg"
+    else:
+        status = "behind"
+        label = f"{_format_duration(abs_delta)} behind avg"
+    return {
+        "status": status,
+        "label": label,
+        "delta_minutes": delta_minutes,
+        "delta_label": _format_duration(abs_delta),
+        "baseline_minutes": baseline_minutes,
+        "baseline_label": baseline.get("average_label"),
+        "sample_count": baseline.get("sample_count"),
+    }
+
+
 def _round_to_nearest_five(value: float) -> int:
     return int(math.floor((value / 5) + 0.5) * 5)
 
@@ -1378,6 +1407,7 @@ async def build_cache() -> Dict[str, Any]:
             "average_duration_label": None,
             "player_count_trend": [],
             "duration_trend": [],
+            "field_duration_trend": [],
             "duration_extremes": None,
             "duration_groups": [],
             "winner_leaderboard": [],
@@ -1566,10 +1596,24 @@ async def build_cache() -> Dict[str, Any]:
             detail = tournament_details.get(str(tid))
             if detail is not None:
                 detail["analytics"]["duration_baseline"] = baseline
+            pace = _duration_delta_summary(row.get("duration_minutes"), baseline)
+            if pace is None:
+                continue
+            tournament_analytics["field_duration_trend"].append({
+                "tournament_id": tid,
+                "tournament_name": row.get("tournament_name"),
+                "date": row.get("date"),
+                "game": row.get("game") or "Unknown",
+                "players": int(row.get("player_count") or 0),
+                "duration_minutes": row.get("duration_minutes"),
+                "duration_label": _format_duration(row.get("duration_minutes")),
+                "duration_vs_average": pace,
+            })
         if duration_values:
             avg_duration = round(sum(duration_values) / len(duration_values))
             tournament_analytics["average_duration_minutes"] = avg_duration
             tournament_analytics["average_duration_label"] = _format_duration(avg_duration)
+        tournament_analytics["field_duration_trend"].sort(key=lambda row: row.get("date") or "")
 
         player_details = {}
         player_extras = {}
@@ -1780,6 +1824,7 @@ async def build_cache() -> Dict[str, Any]:
             },
             "tournament_player_count_trend": tournament_analytics["player_count_trend"][-8:],
             "tournament_duration_trend": tournament_analytics["duration_trend"][-8:],
+            "tournament_field_duration_trend": tournament_analytics["field_duration_trend"][-8:],
             "event_series_summary": sorted(
                 [
                     {"series": label, "count": count}

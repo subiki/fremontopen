@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-19 - Dashboard field and pace trend
+
+- Combined the dashboard field-size and duration trend cards into one static `Field and Pace Trend` list so each recent event shows field size, normalized duration, and whether it finished ahead of, on, or behind its same-bucket average.
+- Added exporter logic in `backend/export_static.py` to join each tournament duration row with its game-and-player-count baseline and emit `tournament_field_duration_trend` for the dashboard payload.
+- Added regression coverage in `backend/tests/test_export_analytics.py` for the ahead/on/behind duration rating thresholds.
+- Regenerated `frontend/public/data/cache.json` with `.\.venv\Scripts\python.exe backend\export_static.py`, which now also proves the repo-root export path remains safe after the prior SQLite normalization fix.
+- Verified with `.\.venv\Scripts\python.exe -m pytest backend/tests/test_export_analytics.py --basetemp C:\Users\karmi\.codex\tmp\pytest-field-pace` and `.\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-19 - Repo-root SQLite path guard
 
 - Reviewed the current `origin/main` state before pushing and found the static-demo backlog slice was already upstream, so the remaining shippable delta was the local export safety fix rather than another replay of cache/UI work.

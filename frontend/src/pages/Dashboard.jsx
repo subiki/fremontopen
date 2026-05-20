@@ -62,8 +62,7 @@ export default function Dashboard() {
   const upsetTracker = stats?.upset_tracker || [];
   const singleTournamentOverperformers = stats?.single_tournament_overperformers || [];
   const anniversary = stats?.anniversary_matches || {};
-  const playerTrend = stats?.tournament_player_count_trend || [];
-  const durationTrend = stats?.tournament_duration_trend || [];
+  const fieldDurationTrend = stats?.tournament_field_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
   const durationGroups = stats?.tournament_duration_groups || [];
   const dashboardTrends = stats?.dashboard_trends || {};
@@ -459,34 +458,25 @@ export default function Dashboard() {
             )}
           />
           <AnalyticsList
-            title="Field Size Trend"
-            rows={playerTrend}
-            empty="No player-count trend yet."
+            title="Field and Pace Trend"
+            rows={fieldDurationTrend}
+            empty="No field-vs-duration trend yet."
             renderRow={(row) => (
               <>
-                <Link
-                  to={`/tournaments/${row.tournament_id}`}
-                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
-                >
-                  {row.tournament_name}
-                </Link>
-                <span className="font-mono text-sm text-[#9CA3AF]">{row.players ?? "—"} players</span>
-              </>
-            )}
-          />
-          <AnalyticsList
-            title="Duration Trend"
-            rows={durationTrend}
-            empty="No duration data yet."
-            renderRow={(row) => (
-              <>
-                <Link
-                  to={`/tournaments/${row.tournament_id}`}
-                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
-                >
-                  {row.tournament_name}
-                </Link>
-                <span className="font-mono text-sm text-[#9CA3AF]">{row.duration_label || "—"}</span>
+                <div className="min-w-0">
+                  <Link
+                    to={`/tournaments/${row.tournament_id}`}
+                    className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                  >
+                    {row.tournament_name}
+                  </Link>
+                  <div className="mt-1 text-xs text-[#6B7280] truncate">
+                    {row.game || "Unknown"} · {row.players ?? "—"} players · {row.duration_label || "—"}
+                  </div>
+                </div>
+                <span className={`font-mono text-xs shrink-0 ${durationPaceTone(row.duration_vs_average?.status)}`}>
+                  {row.duration_vs_average?.label || "No avg"}
+                </span>
               </>
             )}
           />
@@ -650,6 +640,12 @@ const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   );
 
   return to ? <Link to={to}>{body}</Link> : body;
+};
+
+const durationPaceTone = (status) => {
+  if (status === "ahead") return "text-[#10B981]";
+  if (status === "behind") return "text-[#F59E0B]";
+  return "text-[#9CA3AF]";
 };
 
 const MetadataStat = ({ label, value }) => (
