@@ -101,6 +101,17 @@ def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[st
         ),
         key=lambda row: (-row["bytes"], row["path"]),
     )[:10]
+    top_level_files = sorted(
+        (
+            {
+                "path": str(path.relative_to(public_root)).replace("\\", "/"),
+                "bytes": path.stat().st_size,
+            }
+            for path in data_root.glob("*.json")
+            if path.name != "cache.json"
+        ),
+        key=lambda row: (-row["bytes"], row["path"]),
+    )
     cache_top_level = {
         key: _json_size_bytes(value)
         for key, value in cache.items()
@@ -122,7 +133,58 @@ def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[st
             "stats_sections": stats_sections,
         },
         "largest_files": largest_files,
+        "top_level_files": top_level_files,
     }
+
+
+def _build_refresh_summary(report: Dict[str, Any]) -> str:
+    totals = report.get("totals") or {}
+    cache = report.get("cache") or {}
+    stats_sections = cache.get("stats_sections") or {}
+    largest_files = report.get("largest_files") or []
+    top_level_files = report.get("top_level_files") or []
+
+    top_stats = sorted(
+        stats_sections.items(),
+        key=lambda item: (-item[1], item[0]),
+    )[:8]
+    lines = [
+        "# Static Refresh Summary",
+        "",
+        f"- Generated: `{report.get('generated_at') or 'unknown'}`",
+        f"- Total JSON files: `{totals.get('json_files', 0)}`",
+        f"- Total JSON bytes: `{totals.get('bytes', 0)}`",
+        f"- cache.json bytes: `{cache.get('bytes', 0)}`",
+        "",
+        "## Heaviest Stats Sections",
+        "",
+    ]
+    if top_stats:
+        lines.extend([f"- `{name}`: `{size}` bytes" for name, size in top_stats])
+    else:
+        lines.append("- None")
+
+    lines.extend([
+        "",
+        "## Largest Files",
+        "",
+    ])
+    if largest_files:
+        lines.extend([f"- `{row['path']}`: `{row['bytes']}` bytes" for row in largest_files[:10]])
+    else:
+        lines.append("- None")
+
+    lines.extend([
+        "",
+        "## Generated Analytics Files",
+        "",
+    ])
+    if top_level_files:
+        lines.extend([f"- `{row['path']}`: `{row['bytes']}` bytes" for row in top_level_files])
+    else:
+        lines.append("- None")
+
+    return "\n".join(lines) + "\n"
 
 
 def _detail_file_name(prefix: str, key: str) -> str:
@@ -2128,8 +2190,14 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         encoding="utf-8",
     )
     size_report_path = out.parent / "data-size-report.json"
+    size_report = _build_data_size_report(public_root, cache)
     size_report_path.write_text(
-        json.dumps(_build_data_size_report(public_root, cache), default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        json.dumps(size_report, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    refresh_summary_path = out.parent / "refresh-summary.md"
+    refresh_summary_path.write_text(
+        _build_refresh_summary(size_report),
         encoding="utf-8",
     )
     print(

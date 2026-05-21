@@ -103,6 +103,9 @@ jobs:
           python export_static.py
           echo "- Fargo refresh: completed from authorized source" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Append refresh summary
+        run: cat frontend/public/data/refresh-summary.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -128,6 +131,7 @@ jobs:
             backend/player_overrides.json \
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
+            frontend/public/data/refresh-summary.md \
             frontend/public/data/h2h-heatmap.json \
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \
@@ -153,6 +157,7 @@ jobs:
             backend/player_overrides.json \
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
+            frontend/public/data/refresh-summary.md \
             frontend/public/data/h2h-heatmap.json \
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \

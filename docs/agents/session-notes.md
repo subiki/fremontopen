@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Added static refresh summary artifact
+
+- Added `frontend/public/data/refresh-summary.md` generation in `backend/export_static.py` from the existing static size report so every export now leaves a readable summary of cache size, total JSON footprint, heaviest stats sections, largest files, and generated analytics files.
+- Updated `.github/workflows/data-refresh.yml` to append `refresh-summary.md` into `$GITHUB_STEP_SUMMARY` after refresh/export and to track the file in change detection and auto-commit steps.
+- Extended `backend/tests/test_data_refresh_workflow.py` coverage so the scheduled refresh workflow must keep the refresh summary path and summary append step.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-refresh-summary2`, and `npm run build --prefix frontend`.
+- The generated summary now reports the final current state in one place: `cache.json` at `964,121` bytes, `1,844` total JSON files, and the major split analytics artifacts such as `season-standings.json`, `h2h-heatmap.json`, and `recent-matches.json`.
+
 ## 2026-05-20 - Split duration groups and event overperformers out of boot stats
 
 - Moved `tournament_duration_groups` and `single_tournament_overperformers` out of `stats` into dedicated static files at `frontend/public/data/tournament-duration-groups.json` and `frontend/public/data/single-tournament-overperformers.json`.
