@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
@@ -26,44 +26,84 @@ export default function Dashboard() {
   const [durationGroups, setDurationGroups] = useState([]);
   const [singleTournamentOverperformers, setSingleTournamentOverperformers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
 
-  const load = async () => {
+  const loadCore = async () => {
     setLoading(true);
     try {
-      const [
-        statsData,
-        topPlayersData,
-        heatmapData,
-        recentMatchesData,
-        rivalryIndexData,
-        durationGroupsData,
-        overperformersData,
-      ] = await Promise.all([
+      const [statsData, topPlayersData] = await Promise.all([
         fetchStats(),
         fetchLeaderboard(5),
-        fetchH2HHeatmap(),
-        fetchRecentMatches(),
-        fetchRivalryIndex(),
-        fetchTournamentDurationGroups(),
-        fetchSingleTournamentOverperformers(),
       ]);
       setStats(statsData);
       setTopPlayers(topPlayersData);
-      setH2HHeatmap(heatmapData || { players: [], matrix: [], top_pairs: [] });
-      setRecentMatches(recentMatchesData || []);
-      setRivalryIndex(rivalryIndexData || []);
-      setDurationGroups(durationGroupsData || []);
-      setSingleTournamentOverperformers(overperformersData || []);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
+    loadCore();
   }, []);
+
+  useEffect(() => {
+    if (!stats) return undefined;
+
+    let cancelled = false;
+    setAnalyticsLoading(true);
+
+    const loadDeferred = async () => {
+      try {
+        const [
+          heatmapData,
+          recentMatchesData,
+          rivalryIndexData,
+          durationGroupsData,
+          overperformersData,
+        ] = await Promise.all([
+          fetchH2HHeatmap(),
+          fetchRecentMatches(),
+          fetchRivalryIndex(),
+          fetchTournamentDurationGroups(),
+          fetchSingleTournamentOverperformers(),
+        ]);
+        if (cancelled) return;
+        startTransition(() => {
+          setH2HHeatmap(heatmapData || { players: [], matrix: [], top_pairs: [] });
+          setRecentMatches(recentMatchesData || []);
+          setRivalryIndex(rivalryIndexData || []);
+          setDurationGroups(durationGroupsData || []);
+          setSingleTournamentOverperformers(overperformersData || []);
+          setAnalyticsLoading(false);
+        });
+      } catch {
+        if (!cancelled) {
+          startTransition(() => setAnalyticsLoading(false));
+        }
+      }
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      const handle = window.requestIdleCallback(() => {
+        void loadDeferred();
+      }, { timeout: 1200 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(handle);
+      };
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadDeferred();
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [stats]);
 
   useEffect(() => {
     return onFollowingChange((list) => setFollowing(list));
@@ -239,6 +279,12 @@ export default function Dashboard() {
               {durationGroups.slice(0, 2).map((group) => (
                 <TimingGroupCard key={`${group.game}-${group.player_count}`} group={group} />
               ))}
+              {analyticsLoading && durationGroups.length === 0 ? (
+                <>
+                  <TimingGroupCard loading />
+                  <TimingGroupCard loading />
+                </>
+              ) : null}
             </div>
           </div>
         </section>
@@ -275,7 +321,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <H2HHeatmap heatmap={h2hHeatmap} />
+        <H2HHeatmap heatmap={h2hHeatmap} loading={analyticsLoading} />
 
         <section
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
@@ -405,6 +451,7 @@ export default function Dashboard() {
           <AnalyticsList
             title="Rivalry Index"
             rows={rivalryIndex.slice(0, 6)}
+            loading={analyticsLoading}
             empty="No rivalry index yet."
             renderRow={(row) => (
               <>
@@ -423,6 +470,7 @@ export default function Dashboard() {
           <AnalyticsList
             title="Above ELO in One Event"
             rows={singleTournamentOverperformers.slice(0, 6)}
+            loading={analyticsLoading}
             empty="No event overperformers yet."
             renderRow={(row) => (
               <>
@@ -579,11 +627,13 @@ export default function Dashboard() {
             <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-5">
               Recent Matches
             </h2>
-            {recent.length === 0 ? (
+            {analyticsLoading && recentMatches.length === 0 ? (
+              <div className="text-[#6B7280] text-sm">Loading deferred analytics...</div>
+            ) : recentMatches.length === 0 ? (
               <div className="text-[#6B7280] text-sm">No matches yet.</div>
             ) : (
               <ul className="space-y-3">
-                {recent.map((m) => (
+                {recentMatches.map((m) => (
                   <li
                     key={m.id}
                     className="flex items-center justify-between text-sm"
@@ -759,16 +809,18 @@ const TimingExtremeCard = ({ label, row }) => {
   return row?.tournament_id ? <Link to={`/tournaments/${row.tournament_id}`}>{body}</Link> : body;
 };
 
-const TimingGroupCard = ({ group }) => (
+const TimingGroupCard = ({ group, loading = false }) => (
   <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
     <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
-      {group.game} / {group.player_count} players
+      {loading ? "Loading..." : `${group.game} / ${group.player_count} players`}
     </div>
     <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
-      {group.shortest?.duration_label || "-"} - {group.longest?.duration_label || "-"}
+      {loading ? "Deferred panel" : `${group.shortest?.duration_label || "-"} - ${group.longest?.duration_label || "-"}`}
     </div>
     <div className="mt-1 text-xs text-[#9CA3AF]">
-      Avg {group.average_label || "-"} across {group.sample_count} event{group.sample_count === 1 ? "" : "s"}
+      {loading
+        ? "Loads after the dashboard core cards."
+        : `Avg ${group.average_label || "-"} across ${group.sample_count} event${group.sample_count === 1 ? "" : "s"}`}
     </div>
   </div>
 );
@@ -813,7 +865,7 @@ const SeasonStandingsChart = ({ season }) => {
   );
 };
 
-const H2HHeatmap = ({ heatmap }) => {
+const H2HHeatmap = ({ heatmap, loading = false }) => {
   const players = (heatmap?.players || []).map((row) => row.player);
   const matrix = heatmap?.matrix || [];
 
@@ -832,7 +884,9 @@ const H2HHeatmap = ({ heatmap }) => {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          {players.length === 0 ? (
+          {loading && players.length === 0 ? (
+            <div className="text-[#6B7280] text-sm">Loading deferred analytics...</div>
+          ) : players.length === 0 ? (
             <div className="text-[#6B7280] text-sm">No head-to-head matrix yet.</div>
           ) : (
             <div className="overflow-x-auto rounded-md border border-[#273041]">
@@ -924,12 +978,14 @@ const shortName = (value = "") => {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 };
 
-const AnalyticsList = ({ title, rows, empty, renderRow }) => (
+const AnalyticsList = ({ title, rows, empty, loading = false, renderRow }) => (
   <section className="bg-[#141923] border border-[#273041] rounded-lg p-6">
     <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">
       {title}
     </h2>
-    {rows.length === 0 ? (
+    {loading && rows.length === 0 ? (
+      <div className="text-[#6B7280] text-sm">Loading deferred analytics...</div>
+    ) : rows.length === 0 ? (
       <div className="text-[#6B7280] text-sm">{empty}</div>
     ) : (
       <ul className="divide-y divide-[#273041]/60">

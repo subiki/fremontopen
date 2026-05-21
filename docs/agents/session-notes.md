@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Deferred dashboard analytics panel loading
+
+- Updated `frontend/src/pages/Dashboard.jsx` so the dashboard core now loads `fetchStats()` and the top-five leaderboard first, while lower-priority analytics panels fetch afterward in an idle/deferred pass.
+- Deferred analytics now use a second effect with `requestIdleCallback` when available and fall back to `setTimeout(0)` otherwise, with `startTransition` used for the background state updates.
+- Added lightweight loading states for deferred dashboard panels such as H2H heatmap, rivalry index, recent matches, and timing-group cards so the page stays intentional while those panels fill in.
+- Verified with `npm run build --prefix frontend`.
+- This implements ranked issue `#90` and keeps the static-first architecture intact while making the dashboard feel faster on weaker connections.
+
 ## 2026-05-20 - Added static refresh summary artifact
 
 - Added `frontend/public/data/refresh-summary.md` generation in `backend/export_static.py` from the existing static size report so every export now leaves a readable summary of cache size, total JSON footprint, heaviest stats sections, largest files, and generated analytics files.
