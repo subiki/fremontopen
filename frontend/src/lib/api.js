@@ -39,6 +39,12 @@ const loadSeasonStandings = async (cache) => {
   return (file && await loadDataFile(file)) || [];
 };
 
+const loadH2HHeatmap = async (cache) => {
+  if (cache.h2h_heatmap) return cache.h2h_heatmap;
+  const file = cache.data_files?.h2h_heatmap;
+  return (file && await loadDataFile(file)) || { players: [], matrix: [], top_pairs: [] };
+};
+
 const notFound = (detail = "Not found") => {
   const error = new Error(detail);
   error.response = { status: 404, data: { detail } };
@@ -230,6 +236,7 @@ const staticGet = async (path, config = {}) => {
   if (path === "/sync/status") return { data: cache.sync_status };
   if (path === "/stats") return { data: cache.stats };
   if (path === "/seasons") return { data: await loadSeasonStandings(cache) };
+  if (path === "/analytics/h2h-heatmap") return { data: await loadH2HHeatmap(cache) };
   if (path === "/tournaments") return { data: cache.tournaments };
   if (path.startsWith("/tournaments/")) {
     const id = decodePathPart(path.split("/")[2]);
@@ -302,6 +309,7 @@ export const api = STATIC_DATA
 
 export const fetchStats = () => api.get("/stats").then((r) => r.data);
 export const fetchSeasonStandings = () => api.get("/seasons").then((r) => r.data);
+export const fetchH2HHeatmap = () => api.get("/analytics/h2h-heatmap").then((r) => r.data);
 export const fetchTournaments = () => api.get("/tournaments").then((r) => r.data);
 export const fetchTournament = (id) => api.get(`/tournaments/${id}`).then((r) => r.data);
 export const fetchPlayers = (q = "") =>

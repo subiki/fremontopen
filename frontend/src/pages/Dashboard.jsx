@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
-import { fetchStats, fetchPlayers, fetchLeaderboard } from "../lib/api";
+import { fetchStats, fetchPlayers, fetchLeaderboard, fetchH2HHeatmap } from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -11,6 +11,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [topPlayers, setTopPlayers] = useState([]);
+  const [h2hHeatmap, setH2HHeatmap] = useState({ players: [], matrix: [], top_pairs: [] });
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -18,12 +19,14 @@ export default function Dashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      const [statsData, topPlayersData] = await Promise.all([
+      const [statsData, topPlayersData, heatmapData] = await Promise.all([
         fetchStats(),
         fetchLeaderboard(5),
+        fetchH2HHeatmap(),
       ]);
       setStats(statsData);
       setTopPlayers(topPlayersData);
+      setH2HHeatmap(heatmapData || { players: [], matrix: [], top_pairs: [] });
     } finally {
       setLoading(false);
     }
@@ -75,7 +78,6 @@ export default function Dashboard() {
   const cacheMetadata = stats?.cache_metadata || {};
   const seasonStandings = stats?.season_standings || [];
   const latestSeason = seasonStandings[0];
-  const h2hHeatmap = stats?.h2h_heatmap || {};
   const eventSeriesSummary = stats?.event_series_summary || [];
   const freshness = assessCacheFreshness(cacheMetadata);
 

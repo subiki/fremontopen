@@ -1,5 +1,14 @@
 # Agent Session Notes
 
+## 2026-05-20 - Added static data budget automation and split H2H heatmap
+
+- Moved the dashboard H2H heatmap out of `stats` into a dedicated static file at `frontend/public/data/h2h-heatmap.json`, added `/analytics/h2h-heatmap` in `frontend/src/lib/api.js`, and updated `frontend/src/pages/Dashboard.jsx` to load it separately from the boot payload.
+- Added `frontend/public/data/data-size-report.json` generation in `backend/export_static.py` so every export now records total JSON count/bytes, largest files, and the size of top-level `cache.json` and `stats` sections.
+- Added `scripts/check_static_data_budget.py` and wired it into both `scripts/refresh-static-data.ps1` and `.github/workflows/data-refresh.yml` so oversized static payload regressions fail the refresh path automatically.
+- Updated `backend/tests/test_data_refresh_workflow.py` to keep the workflow tracking `data-size-report.json`, `h2h-heatmap.json`, and `season-standings.json`, and to require the budget-check script step.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_export_analytics.py backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-static-automation`, and `npm run build --prefix frontend`.
+- Current exported footprint is `1,839` JSON files totaling `31,791,997` bytes, with `cache.json` down to `982,291` bytes and the largest player shard still `645,247` bytes.
+
 ## 2026-05-20 - Slimmed cache.json by moving full seasons out of stats
 
 - Removed duplicated `stats.players` from the dashboard payload and switched `frontend/src/pages/Dashboard.jsx` to load its top-five leaderboard rows through `fetchLeaderboard(5)` instead.

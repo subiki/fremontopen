@@ -78,6 +78,7 @@ jobs:
             python import_side_matches.py --source manual_side_matches.csv
           fi
           python export_static.py
+          python ../scripts/check_static_data_budget.py
 
       - name: Monthly Fargo refresh
         if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 19 1 * *'
@@ -126,7 +127,10 @@ jobs:
             backend/cuestats_dev.db \
             backend/player_overrides.json \
             frontend/public/data/cache.json \
+            frontend/public/data/data-size-report.json \
+            frontend/public/data/h2h-heatmap.json \
             frontend/public/data/players \
+            frontend/public/data/season-standings.json \
             frontend/public/data/tournaments; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "- Data changes: none" >> "$GITHUB_STEP_SUMMARY"
@@ -144,7 +148,10 @@ jobs:
             backend/cuestats_dev.db \
             backend/player_overrides.json \
             frontend/public/data/cache.json \
+            frontend/public/data/data-size-report.json \
+            frontend/public/data/h2h-heatmap.json \
             frontend/public/data/players \
+            frontend/public/data/season-standings.json \
             frontend/public/data/tournaments
           cat > /tmp/refresh-commit-message.txt <<'EOF'
           [JFL][Agent-GitHub-Actions] Refresh static tournament data

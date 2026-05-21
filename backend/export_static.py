@@ -84,6 +84,47 @@ def _json_default(value):
     return value
 
 
+def _json_size_bytes(value: Any) -> int:
+    return len(json.dumps(value, default=_json_default, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+
+def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[str, Any]:
+    data_root = public_root / "data"
+    json_files = sorted(data_root.rglob("*.json"))
+    largest_files = sorted(
+        (
+            {
+                "path": str(path.relative_to(public_root)).replace("\\", "/"),
+                "bytes": path.stat().st_size,
+            }
+            for path in json_files
+        ),
+        key=lambda row: (-row["bytes"], row["path"]),
+    )[:10]
+    cache_top_level = {
+        key: _json_size_bytes(value)
+        for key, value in cache.items()
+    }
+    stats_sections = {
+        key: _json_size_bytes(value)
+        for key, value in (cache.get("stats") or {}).items()
+    }
+    return {
+        "generated_at": cache.get("generated_at"),
+        "totals": {
+            "json_files": len(json_files),
+            "bytes": sum(path.stat().st_size for path in json_files),
+        },
+        "cache": {
+            "path": "data/cache.json",
+            "bytes": (data_root / "cache.json").stat().st_size,
+            "top_level_sections": cache_top_level,
+            "stats_sections": stats_sections,
+        },
+        "largest_files": largest_files,
+    }
+
+
 def _detail_file_name(prefix: str, key: str) -> str:
     digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
     return f"data/{prefix}/{digest}.json"
@@ -1865,6 +1906,7 @@ async def build_cache() -> Dict[str, Any]:
         anniversary = _anniversary_matches(singles_matches)
         season_standings = _season_standings(tournaments, singles_matches, season_points)
         season_standings_preview = _season_standings_preview(season_standings)
+        h2h_heatmap = _h2h_heatmap(singles_matches)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),
@@ -1926,7 +1968,6 @@ async def build_cache() -> Dict[str, Any]:
             ),
             "season_standings": season_standings_preview,
             "rivalry_index": rivalry_index,
-            "h2h_heatmap": h2h_heatmap,
             "upset_tracker": upset_tracker,
             "single_tournament_overperformers": sorted(
                 single_tournament_overperformers,
@@ -1962,6 +2003,7 @@ async def build_cache() -> Dict[str, Any]:
             "tournament_analytics": tournament_analytics,
             "players": players,
             "season_standings": season_standings,
+            "h2h_heatmap": h2h_heatmap,
             "player_details": player_details,
             "player_extras": player_extras,
             "matches": matches,
@@ -1991,6 +2033,7 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
 
     tournament_details = cache.pop("tournament_details", {})
     season_standings = cache.pop("season_standings", [])
+    h2h_heatmap = cache.pop("h2h_heatmap", {})
     player_details = cache.pop("player_details", {})
     player_extras = cache.pop("player_extras", {})
     cache.pop("matches", None)
@@ -2040,14 +2083,25 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         json.dumps(season_standings, default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+    heatmap_rel_path = "data/h2h-heatmap.json"
+    (public_root / heatmap_rel_path).write_text(
+        json.dumps(h2h_heatmap, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
 
     cache["data_files"] = {
         "tournaments": tournament_files,
         "players": player_files,
         "season_standings": season_rel_path,
+        "h2h_heatmap": heatmap_rel_path,
     }
     out.write_text(
         json.dumps(cache, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    size_report_path = out.parent / "data-size-report.json"
+    size_report_path.write_text(
+        json.dumps(_build_data_size_report(public_root, cache), default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
     print(
