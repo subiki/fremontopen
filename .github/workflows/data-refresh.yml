@@ -129,6 +129,8 @@ jobs:
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
             frontend/public/data/h2h-heatmap.json \
+            frontend/public/data/recent-matches.json \
+            frontend/public/data/rivalry-index.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
             frontend/public/data/tournaments; then
@@ -150,6 +152,8 @@ jobs:
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
             frontend/public/data/h2h-heatmap.json \
+            frontend/public/data/recent-matches.json \
+            frontend/public/data/rivalry-index.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
             frontend/public/data/tournaments

@@ -1967,7 +1967,6 @@ async def build_cache() -> Dict[str, Any]:
                 key=lambda row: (-row["count"], row["series"].casefold()),
             ),
             "season_standings": season_standings_preview,
-            "rivalry_index": rivalry_index,
             "upset_tracker": upset_tracker,
             "single_tournament_overperformers": sorted(
                 single_tournament_overperformers,
@@ -1979,10 +1978,6 @@ async def build_cache() -> Dict[str, Any]:
                 ),
             )[:8],
             "anniversary_matches": anniversary,
-            "recent_matches": [
-                m for m in matches
-                if m.get("winner_name") and m.get("loser_name")
-            ][:10],
             "last_synced_at": sync_status.get("last_synced_at"),
             "dashboard_trends": {
                 "latest_sync": sync_status.get("last_synced_at"),
@@ -2004,6 +1999,11 @@ async def build_cache() -> Dict[str, Any]:
             "players": players,
             "season_standings": season_standings,
             "h2h_heatmap": h2h_heatmap,
+            "recent_matches": [
+                m for m in matches
+                if m.get("winner_name") and m.get("loser_name")
+            ][:10],
+            "rivalry_index": rivalry_index,
             "player_details": player_details,
             "player_extras": player_extras,
             "matches": matches,
@@ -2034,6 +2034,8 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     tournament_details = cache.pop("tournament_details", {})
     season_standings = cache.pop("season_standings", [])
     h2h_heatmap = cache.pop("h2h_heatmap", {})
+    recent_matches = cache.pop("recent_matches", [])
+    rivalry_index = cache.pop("rivalry_index", [])
     player_details = cache.pop("player_details", {})
     player_extras = cache.pop("player_extras", {})
     cache.pop("matches", None)
@@ -2088,12 +2090,24 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         json.dumps(h2h_heatmap, default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+    recent_matches_rel_path = "data/recent-matches.json"
+    (public_root / recent_matches_rel_path).write_text(
+        json.dumps(recent_matches, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    rivalry_index_rel_path = "data/rivalry-index.json"
+    (public_root / rivalry_index_rel_path).write_text(
+        json.dumps(rivalry_index, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
 
     cache["data_files"] = {
         "tournaments": tournament_files,
         "players": player_files,
         "season_standings": season_rel_path,
         "h2h_heatmap": heatmap_rel_path,
+        "recent_matches": recent_matches_rel_path,
+        "rivalry_index": rivalry_index_rel_path,
     }
     out.write_text(
         json.dumps(cache, default=_json_default, ensure_ascii=False, separators=(",", ":")),

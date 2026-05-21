@@ -45,6 +45,18 @@ const loadH2HHeatmap = async (cache) => {
   return (file && await loadDataFile(file)) || { players: [], matrix: [], top_pairs: [] };
 };
 
+const loadRecentMatches = async (cache) => {
+  if (cache.recent_matches) return cache.recent_matches;
+  const file = cache.data_files?.recent_matches;
+  return (file && await loadDataFile(file)) || [];
+};
+
+const loadRivalryIndex = async (cache) => {
+  if (cache.rivalry_index) return cache.rivalry_index;
+  const file = cache.data_files?.rivalry_index;
+  return (file && await loadDataFile(file)) || [];
+};
+
 const notFound = (detail = "Not found") => {
   const error = new Error(detail);
   error.response = { status: 404, data: { detail } };
@@ -237,6 +249,8 @@ const staticGet = async (path, config = {}) => {
   if (path === "/stats") return { data: cache.stats };
   if (path === "/seasons") return { data: await loadSeasonStandings(cache) };
   if (path === "/analytics/h2h-heatmap") return { data: await loadH2HHeatmap(cache) };
+  if (path === "/analytics/recent-matches") return { data: await loadRecentMatches(cache) };
+  if (path === "/analytics/rivalry-index") return { data: await loadRivalryIndex(cache) };
   if (path === "/tournaments") return { data: cache.tournaments };
   if (path.startsWith("/tournaments/")) {
     const id = decodePathPart(path.split("/")[2]);
@@ -310,6 +324,8 @@ export const api = STATIC_DATA
 export const fetchStats = () => api.get("/stats").then((r) => r.data);
 export const fetchSeasonStandings = () => api.get("/seasons").then((r) => r.data);
 export const fetchH2HHeatmap = () => api.get("/analytics/h2h-heatmap").then((r) => r.data);
+export const fetchRecentMatches = () => api.get("/analytics/recent-matches").then((r) => r.data);
+export const fetchRivalryIndex = () => api.get("/analytics/rivalry-index").then((r) => r.data);
 export const fetchTournaments = () => api.get("/tournaments").then((r) => r.data);
 export const fetchTournament = (id) => api.get(`/tournaments/${id}`).then((r) => r.data);
 export const fetchPlayers = (q = "") =>

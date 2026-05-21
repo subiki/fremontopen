@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Split recent matches and rivalry index out of boot stats
+
+- Moved `recent_matches` and `rivalry_index` out of `stats` into dedicated static files at `frontend/public/data/recent-matches.json` and `frontend/public/data/rivalry-index.json`.
+- Added `/analytics/recent-matches` and `/analytics/rivalry-index` in `frontend/src/lib/api.js`, and updated `frontend/src/pages/Dashboard.jsx` to fetch those panels separately instead of carrying them in the initial `/stats` payload.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so automated refreshes track the new generated analytics files alongside the existing static artifacts.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-continue`, and `npm run build --prefix frontend`.
+- Post-change `frontend/public/data/cache.json` is `970,999` bytes, down another `11,292` bytes from the prior budget-automation slice, while `recent-matches.json` is `6,956` bytes and `rivalry-index.json` is `4,387` bytes.
+
 ## 2026-05-20 - Added static data budget automation and split H2H heatmap
 
 - Moved the dashboard H2H heatmap out of `stats` into a dedicated static file at `frontend/public/data/h2h-heatmap.json`, added `/analytics/h2h-heatmap` in `frontend/src/lib/api.js`, and updated `frontend/src/pages/Dashboard.jsx` to load it separately from the boot payload.

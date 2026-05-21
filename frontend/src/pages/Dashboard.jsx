@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
-import { fetchStats, fetchPlayers, fetchLeaderboard, fetchH2HHeatmap } from "../lib/api";
+import {
+  fetchStats,
+  fetchPlayers,
+  fetchLeaderboard,
+  fetchH2HHeatmap,
+  fetchRecentMatches,
+  fetchRivalryIndex,
+} from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -12,6 +19,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [topPlayers, setTopPlayers] = useState([]);
   const [h2hHeatmap, setH2HHeatmap] = useState({ players: [], matrix: [], top_pairs: [] });
+  const [recentMatches, setRecentMatches] = useState([]);
+  const [rivalryIndex, setRivalryIndex] = useState([]);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -19,14 +28,18 @@ export default function Dashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      const [statsData, topPlayersData, heatmapData] = await Promise.all([
+      const [statsData, topPlayersData, heatmapData, recentMatchesData, rivalryIndexData] = await Promise.all([
         fetchStats(),
         fetchLeaderboard(5),
         fetchH2HHeatmap(),
+        fetchRecentMatches(),
+        fetchRivalryIndex(),
       ]);
       setStats(statsData);
       setTopPlayers(topPlayersData);
       setH2HHeatmap(heatmapData || { players: [], matrix: [], top_pairs: [] });
+      setRecentMatches(recentMatchesData || []);
+      setRivalryIndex(rivalryIndexData || []);
     } finally {
       setLoading(false);
     }
@@ -65,9 +78,7 @@ export default function Dashboard() {
     };
   }, [following, stats]);
 
-  const recent = stats?.recent_matches || [];
   const topTournamentWinners = stats?.top_tournament_winners || [];
-  const rivalryIndex = stats?.rivalry_index || [];
   const upsetTracker = stats?.upset_tracker || [];
   const singleTournamentOverperformers = stats?.single_tournament_overperformers || [];
   const anniversary = stats?.anniversary_matches || {};
