@@ -6,6 +6,8 @@ export const API = STATIC_DATA ? "" : `${BACKEND_URL}/api`;
 
 let cachePromise = null;
 let versionPromise = null;
+let playersIndexPromise = null;
+let tournamentsIndexPromise = null;
 const filePromises = new Map();
 
 const appendAssetVersion = (path, version) => {
@@ -58,6 +60,38 @@ const loadDataFile = (path) => {
   return filePromises.get(path);
 };
 
+const loadPlayersIndex = async (cache) => {
+  if (cache.players && cache.data_files?.players) {
+    return {
+      players: cache.players,
+      files: cache.data_files.players,
+    };
+  }
+  if (!playersIndexPromise) {
+    playersIndexPromise = loadDataFile(cache.data_files?.players_index).then((payload) => ({
+      players: payload?.players || [],
+      files: payload?.files || {},
+    }));
+  }
+  return playersIndexPromise;
+};
+
+const loadTournamentsIndex = async (cache) => {
+  if (cache.tournaments && cache.data_files?.tournaments) {
+    return {
+      tournaments: cache.tournaments,
+      files: cache.data_files.tournaments,
+    };
+  }
+  if (!tournamentsIndexPromise) {
+    tournamentsIndexPromise = loadDataFile(cache.data_files?.tournaments_index).then((payload) => ({
+      tournaments: payload?.tournaments || [],
+      files: payload?.files || {},
+    }));
+  }
+  return tournamentsIndexPromise;
+};
+
 const loadSeasonStandings = async (cache) => {
   if (cache.season_standings) return cache.season_standings;
   const file = cache.data_files?.season_standings;
@@ -103,10 +137,11 @@ const notFound = (detail = "Not found") => {
 const decodePathPart = (value = "") => decodeURIComponent(value.replace(/\+/g, "%20"));
 const nameKey = (value = "") => String(value).trim().toLocaleLowerCase();
 
-const resolvePlayerName = (cache, name) => {
+const resolvePlayerName = async (cache, name) => {
   const key = nameKey(name);
-  if (cache.player_details?.[name] || cache.data_files?.players?.[name]) return name;
-  return cache.players.find((player) => nameKey(player.name) === key)?.name || null;
+  const playersIndex = await loadPlayersIndex(cache);
+  if (cache.player_details?.[name] || playersIndex.files?.[name]) return name;
+  return playersIndex.players.find((player) => nameKey(player.name) === key)?.name || null;
 };
 
 const expectedElo = (ratingA = 1500, ratingB = 1500) =>
@@ -140,8 +175,8 @@ const parseRackScore = (score = "") => {
   };
 };
 
-const resolvePlayerFiles = (cache, canonicalName) => {
-  const fileEntry = cache.data_files?.players?.[canonicalName];
+const resolvePlayerFiles = (playersIndex, canonicalName) => {
+  const fileEntry = playersIndex?.files?.[canonicalName];
   if (!fileEntry) return null;
   if (typeof fileEntry === "string") {
     return {
@@ -156,12 +191,14 @@ const resolvePlayerFiles = (cache, canonicalName) => {
 
 const loadTournamentDetail = async (cache, id) => {
   if (cache.tournament_details?.[id]) return cache.tournament_details[id];
-  const file = cache.data_files?.tournaments?.[id];
+  const tournamentsIndex = await loadTournamentsIndex(cache);
+  const file = tournamentsIndex.files?.[id];
   return (file && await loadDataFile(file)) || null;
 };
 
 const loadPlayerBundle = async (cache, name) => {
-  const canonicalName = resolvePlayerName(cache, name);
+  const playersIndex = await loadPlayersIndex(cache);
+  const canonicalName = await resolvePlayerName(cache, name);
   if (!canonicalName) return null;
   if (cache.player_details?.[canonicalName] || cache.player_extras?.[canonicalName]) {
     return {
@@ -169,7 +206,7 @@ const loadPlayerBundle = async (cache, name) => {
       extras: cache.player_extras?.[canonicalName],
     };
   }
-  const files = resolvePlayerFiles(cache, canonicalName);
+  const files = resolvePlayerFiles(playersIndex, canonicalName);
   if (!files) return null;
   if (files.bundle) return loadDataFile(files.bundle);
 
@@ -181,12 +218,13 @@ const loadPlayerBundle = async (cache, name) => {
 };
 
 const loadPlayerMatches = async (cache, name) => {
-  const canonicalName = resolvePlayerName(cache, name);
+  const playersIndex = await loadPlayersIndex(cache);
+  const canonicalName = await resolvePlayerName(cache, name);
   if (!canonicalName) return null;
   if (cache.player_details?.[canonicalName]?.matches) {
     return cache.player_details[canonicalName].matches;
   }
-  const files = resolvePlayerFiles(cache, canonicalName);
+  const files = resolvePlayerFiles(playersIndex, canonicalName);
   if (!files) return null;
   if (files.bundle) {
     const bundle = await loadDataFile(files.bundle);
@@ -196,10 +234,11 @@ const loadPlayerMatches = async (cache, name) => {
 };
 
 const comparePlayers = async (cache, a, b) => {
-  const canonicalA = resolvePlayerName(cache, a);
-  const canonicalB = resolvePlayerName(cache, b);
-  const pa = canonicalA ? cache.players.find((p) => p.name === canonicalA) : null;
-  const pb = canonicalB ? cache.players.find((p) => p.name === canonicalB) : null;
+  const playersIndex = await loadPlayersIndex(cache);
+  const canonicalA = await resolvePlayerName(cache, a);
+  const canonicalB = await resolvePlayerName(cache, b);
+  const pa = canonicalA ? playersIndex.players.find((p) => p.name === canonicalA) : null;
+  const pb = canonicalB ? playersIndex.players.find((p) => p.name === canonicalB) : null;
   if (!pa || !pb) notFound("One or both players not found");
   const [matchesA, matchesB] = await Promise.all([
     loadPlayerMatches(cache, canonicalA),
@@ -290,19 +329,20 @@ const staticGet = async (path, config = {}) => {
   if (path === "/analytics/rivalry-index") return { data: await loadRivalryIndex(cache) };
   if (path === "/analytics/tournament-duration-groups") return { data: await loadTournamentDurationGroups(cache) };
   if (path === "/analytics/single-tournament-overperformers") return { data: await loadSingleTournamentOverperformers(cache) };
-  if (path === "/tournaments") return { data: cache.tournaments };
+  if (path === "/tournaments") return { data: (await loadTournamentsIndex(cache)).tournaments };
   if (path.startsWith("/tournaments/")) {
     const id = decodePathPart(path.split("/")[2]);
     return { data: (await loadTournamentDetail(cache, id)) || notFound("Tournament not found") };
   }
   if (path === "/players") {
+    const playersIndex = await loadPlayersIndex(cache);
     const q = (params.q || "").toLowerCase();
     const players = q
-      ? cache.players.filter((p) =>
+      ? playersIndex.players.filter((p) =>
           p.name.toLowerCase().includes(q)
           || (p.nickname || "").toLowerCase().includes(q)
         )
-      : cache.players;
+      : playersIndex.players;
     return { data: players };
   }
   if (path.startsWith("/players/") && path.endsWith("/extras")) {
@@ -323,22 +363,26 @@ const staticGet = async (path, config = {}) => {
     return { data: bundle?.detail || notFound("Player not found") };
   }
   if (path === "/leaderboard") {
-    return { data: cache.players.slice(0, params.limit || 25) };
+    return { data: (await loadPlayersIndex(cache)).players.slice(0, params.limit || 25) };
   }
   if (path === "/search") {
+    const [playersIndex, tournamentsIndex] = await Promise.all([
+      loadPlayersIndex(cache),
+      loadTournamentsIndex(cache),
+    ]);
     const q = (params.q || "").trim().toLowerCase();
     const limit = params.limit || 10;
     if (!q) return { data: { players: [], tournaments: [] } };
     return {
       data: {
-        players: cache.players
+        players: playersIndex.players
           .filter((p) =>
             p.name.toLowerCase().includes(q)
             || (p.nickname || "").toLowerCase().includes(q)
           )
           .slice(0, limit)
           .map(({ name, nickname, wins, losses, fargo }) => ({ name, nickname, wins, losses, fargo })),
-        tournaments: cache.tournaments
+        tournaments: tournamentsIndex.tournaments
           .filter((t) => (t.name || "").toLowerCase().includes(q))
           .slice(0, limit)
           .map(({ id, name, game, state }) => ({ id, name, game, state })),

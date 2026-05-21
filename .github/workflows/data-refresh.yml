@@ -135,12 +135,14 @@ jobs:
             frontend/public/data/refresh-summary.md \
             frontend/public/data/version.json \
             frontend/public/data/h2h-heatmap.json \
+            frontend/public/data/players-index.json \
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \
             frontend/public/data/single-tournament-overperformers.json \
             frontend/public/data/tournament-duration-groups.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
+            frontend/public/data/tournaments-index.json \
             frontend/public/data/tournaments; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "- Data changes: none" >> "$GITHUB_STEP_SUMMARY"
@@ -163,12 +165,14 @@ jobs:
             frontend/public/data/refresh-summary.md \
             frontend/public/data/version.json \
             frontend/public/data/h2h-heatmap.json \
+            frontend/public/data/players-index.json \
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \
             frontend/public/data/single-tournament-overperformers.json \
             frontend/public/data/tournament-duration-groups.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
+            frontend/public/data/tournaments-index.json \
             frontend/public/data/tournaments
           cat > /tmp/refresh-commit-message.txt <<'EOF'
           [JFL][Agent-GitHub-Actions] Refresh static tournament data

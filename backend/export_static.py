@@ -2403,9 +2403,38 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         encoding="utf-8",
     )
 
+    tournaments_index_rel_path = "data/tournaments-index.json"
+    (public_root / tournaments_index_rel_path).write_text(
+        json.dumps(
+            {
+                "tournaments": cache["tournaments"],
+                "files": tournament_files,
+            },
+            default=_json_default,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+    players_index_rel_path = "data/players-index.json"
+    (public_root / players_index_rel_path).write_text(
+        json.dumps(
+            {
+                "players": cache["players"],
+                "files": player_files,
+            },
+            default=_json_default,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+
+    cache.pop("players", None)
+    cache.pop("tournaments", None)
     cache["data_files"] = {
-        "tournaments": tournament_files,
-        "players": player_files,
+        "tournaments_index": tournaments_index_rel_path,
+        "players_index": players_index_rel_path,
         "season_standings": season_rel_path,
         "h2h_heatmap": heatmap_rel_path,
         "recent_matches": recent_matches_rel_path,
@@ -2453,7 +2482,7 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     )
     print(
         f"Wrote static cache: {out} "
-        f"({len(cache['players'])} players, {len(cache['tournaments'])} tournaments, "
+        f"({len(player_files)} players, {len(tournament_files)} tournaments, "
         f"{len(player_files)} player bundle entries, {len(player_files) * 3} player JSON files, "
         f"{len(tournament_files)} tournament files)"
     )

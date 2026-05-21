@@ -1,5 +1,14 @@
 # Agent Session Notes
 
+## 2026-05-20 - Split player and tournament indexes out of cache boot
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then attempted live GitHub issue visibility; both local `gh` and direct GitHub API access are still blocked in this sandbox, so this slice used the repo backlog/session notes as the current source of truth and could not close a live issue from here.
+- Moved the heavy player and tournament directory payloads plus their static file maps out of `frontend/public/data/cache.json` into dedicated generated files at `frontend/public/data/players-index.json` and `frontend/public/data/tournaments-index.json`.
+- Updated `frontend/src/lib/api.js` so the static loader now lazily fetches those indexes for `/players`, `/tournaments`, `/search`, leaderboard reads, compare resolution, and detail-file lookup instead of carrying those arrays in the initial boot cache.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so scheduled refreshes track and commit the new generated index files with the rest of the static export surface.
+- Verified with `backend\\.venv\\Scripts\\python.exe export_static.py` from `backend\\`, `\\.venv\\Scripts\\pytest.exe backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-cache-index`, and `\\.tools\\node-v24.15.0-win-x64\\npm.cmd run build --prefix frontend`.
+- Post-change `frontend/public/data/cache.json` is `184,647` bytes instead of `964,121`, while the heavier directory data now lives in `players-index.json` (`512,575` bytes) and `tournaments-index.json` (`266,985` bytes) that only load when those surfaces are actually used.
+
 ## 2026-05-20 - Node 24 workflow action refresh
 
 - Reviewed the static-demo ops surface against `docs/agents/ops-reviewer.md`, the existing `.run-logs/ops-review/latest.*` snapshot, and the live public Actions page.
