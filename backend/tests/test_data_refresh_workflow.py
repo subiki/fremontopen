@@ -11,6 +11,7 @@ def test_scheduled_refresh_tracks_split_static_bundles():
     assert "frontend/public/data/data-size-report.json" in workflow
     assert "frontend/public/data/refresh-change-report.json" in workflow
     assert "frontend/public/data/refresh-summary.md" in workflow
+    assert "frontend/public/data/version.json" in workflow
     assert "frontend/public/data/h2h-heatmap.json" in workflow
     assert "frontend/public/data/recent-matches.json" in workflow
     assert "frontend/public/data/rivalry-index.json" in workflow

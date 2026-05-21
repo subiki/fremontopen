@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Added static JSON asset versioning
+
+- Added `frontend/public/data/version.json` generation in `backend/export_static.py`, with a deterministic `asset_version` derived from the current static size snapshot.
+- Updated `frontend/src/lib/api.js` so static JSON loads now fetch `version.json` with `cache: "no-cache"` and append `?v=<asset_version>` to `cache.json` and all split data-file requests.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so automated refreshes track `version.json` along with the other generated static artifacts.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-versioning`, and `npm run build --prefix frontend`.
+- This keeps the loader repo-contained and static-first while giving DreamHost-hosted JSON a deterministic cache-busting key after each refresh.
+
 ## 2026-05-20 - Added static change report since previous refresh
 
 - Added `frontend/public/data/refresh-change-report.json` generation in `backend/export_static.py` by reading the previous committed `data-size-report.json` before overwrite and computing deltas against the new export.

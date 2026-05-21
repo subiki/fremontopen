@@ -5,15 +5,38 @@ const STATIC_DATA = process.env.REACT_APP_STATIC_DATA === "true";
 export const API = STATIC_DATA ? "" : `${BACKEND_URL}/api`;
 
 let cachePromise = null;
+let versionPromise = null;
 const filePromises = new Map();
+
+const appendAssetVersion = (path, version) => {
+  if (!version) return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}v=${encodeURIComponent(version)}`;
+};
+
+const loadAssetVersion = () => {
+  if (!versionPromise) {
+    const base = process.env.PUBLIC_URL || "";
+    versionPromise = fetch(`${base}/data/version.json`, { cache: "no-cache" })
+      .then((response) => {
+        if (!response.ok) return "";
+        return response.json();
+      })
+      .then((payload) => payload?.asset_version || payload?.generated_at || "")
+      .catch(() => "");
+  }
+  return versionPromise;
+};
 
 const loadCache = () => {
   if (!cachePromise) {
     const base = process.env.PUBLIC_URL || "";
-    cachePromise = fetch(`${base}/data/cache.json`).then((response) => {
-      if (!response.ok) throw new Error("Static data cache is missing");
-      return response.json();
-    });
+    cachePromise = loadAssetVersion().then((version) =>
+      fetch(`${base}/${appendAssetVersion("data/cache.json", version)}`).then((response) => {
+        if (!response.ok) throw new Error("Static data cache is missing");
+        return response.json();
+      })
+    );
   }
   return cachePromise;
 };
@@ -24,10 +47,12 @@ const loadDataFile = (path) => {
     const base = process.env.PUBLIC_URL || "";
     filePromises.set(
       path,
-      fetch(`${base}/${path}`).then((response) => {
-        if (!response.ok) throw new Error(`Static data file is missing: ${path}`);
-        return response.json();
-      })
+      loadAssetVersion().then((version) =>
+        fetch(`${base}/${appendAssetVersion(path, version)}`).then((response) => {
+          if (!response.ok) throw new Error(`Static data file is missing: ${path}`);
+          return response.json();
+        })
+      )
     );
   }
   return filePromises.get(path);

@@ -191,6 +191,11 @@ def _build_change_report(previous: Dict[str, Any] | None, current: Dict[str, Any
     }
 
 
+def _build_asset_version(size_report: Dict[str, Any]) -> str:
+    payload = json.dumps(size_report, default=_json_default, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+
 def _build_refresh_summary(report: Dict[str, Any], change_report: Dict[str, Any] | None = None) -> str:
     totals = report.get("totals") or {}
     cache = report.get("cache") or {}
@@ -2288,6 +2293,20 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     size_report = _build_data_size_report(public_root, cache)
     size_report_path.write_text(
         json.dumps(size_report, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    asset_version = _build_asset_version(size_report)
+    version_path = out.parent / "version.json"
+    version_path.write_text(
+        json.dumps(
+            {
+                "generated_at": size_report.get("generated_at"),
+                "asset_version": asset_version,
+            },
+            default=_json_default,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
         encoding="utf-8",
     )
     change_report_path = out.parent / "refresh-change-report.json"
