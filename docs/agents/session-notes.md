@@ -490,3 +490,11 @@
 - Implemented `_sync_issues` inside `scripts/ops_review.py` to reconcile active findings with open issues labeled `ops`. It creates new issues prefixed with `[Ops]` and labeled with their priority (`jfl`, `P0`, `P1`, `P2`, `P3`), and comments on and closes issues for findings that are no longer active.
 - Added comprehensive unit test coverage in `backend/tests/test_ops_review.py` validating the reconciliation logic.
 - Pushed all changes directly to `main` so the workflow is active and executable on GitHub.
+
+## 2026-05-20 - Placement-aware ranking filters and backlog truth cleanup
+
+- Re-read `BACKLOG.md` and the existing session notes against the live checkout, then confirmed placement metrics were already exported and linked from player profiles but the `/rankings/:stat` page still lacked sample-size filters and placement context.
+- Updated `frontend/src/pages/StatRankings.jsx` so ranking pages now support minimum match and tournament filters for every metric, and placement-based rankings also default to a minimum of three counted placements with an explicit placement-sample filter.
+- Added per-row context on the rankings page so placement metrics show counted placements and top-4 totals instead of a bare single number, which makes low-sample average-placement rows easier to interpret.
+- Cleaned the stale unchecked acceptance boxes inside the JFL detail sections of `BACKLOG.md` so the source-of-truth backlog matches the already-shipped tournament and placement analytics work.
+- Verified with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
