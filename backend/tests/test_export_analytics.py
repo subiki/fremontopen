@@ -29,6 +29,7 @@ from export_static import (
     _recent_activity_summary,
     _rivalry_index,
     _season_standings,
+    _season_standings_preview,
     _strength_of_schedule,
     _tournament_difficulty,
     _tournament_prize_payouts,
@@ -760,6 +761,30 @@ def test_season_standings_group_matches_by_tournament_date():
     assert seasons[1]["players"][0]["points"] == 6
     assert seasons[1]["players"][0]["attendance"] == 1
     assert seasons[1]["attendance_leaders"][0]["player"] == "A"
+
+
+def test_season_standings_preview_trims_player_rows_and_season_count():
+    seasons = [
+        {
+            "season": f"2026 Season {index}",
+            "season_key": f"2026-s{index}",
+            "points_config": {"win_points": 3, "loss_points": 1},
+            "matches": 10 + index,
+            "tournaments": 2 + index,
+            "players": [
+                {"player": f"Player {player}", "points": 20 - player}
+                for player in range(8)
+            ],
+        }
+        for index in range(5)
+    ]
+
+    preview = _season_standings_preview(seasons, season_limit=4, player_limit=3)
+
+    assert len(preview) == 4
+    assert preview[0]["season_key"] == "2026-s0"
+    assert len(preview[0]["players"]) == 3
+    assert preview[0]["players"][0]["player"] == "Player 0"
 
 
 def test_load_side_match_rows_defaults_manual_bucket(tmp_path):

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
-import { fetchStats, fetchPlayers } from "../lib/api";
+import { fetchStats, fetchPlayers, fetchLeaderboard } from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
@@ -10,6 +10,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [topPlayers, setTopPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -17,7 +18,12 @@ export default function Dashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      setStats(await fetchStats());
+      const [statsData, topPlayersData] = await Promise.all([
+        fetchStats(),
+        fetchLeaderboard(5),
+      ]);
+      setStats(statsData);
+      setTopPlayers(topPlayersData);
     } finally {
       setLoading(false);
     }
@@ -56,7 +62,6 @@ export default function Dashboard() {
     };
   }, [following, stats]);
 
-  const topPlayers = (stats?.players || []).slice(0, 5);
   const recent = stats?.recent_matches || [];
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const rivalryIndex = stats?.rivalry_index || [];

@@ -1393,6 +1393,24 @@ def _season_standings(
     return sorted_rows
 
 
+def _season_standings_preview(
+    seasons: List[Dict[str, Any]],
+    season_limit: int = 4,
+    player_limit: int = 6,
+) -> List[Dict[str, Any]]:
+    return [
+        {
+            "season": season["season"],
+            "season_key": season["season_key"],
+            "points_config": season.get("points_config") or {},
+            "matches": season["matches"],
+            "tournaments": season["tournaments"],
+            "players": (season.get("players") or [])[:player_limit],
+        }
+        for season in seasons[:season_limit]
+    ]
+
+
 async def _last_sync(conn) -> Optional[Dict[str, Any]]:
     row = (await conn.execute(
         select(T.sync_meta).where(T.sync_meta.c.key == "last")
@@ -1846,6 +1864,7 @@ async def build_cache() -> Dict[str, Any]:
         upset_tracker = _upset_tracker(singles_matches)
         anniversary = _anniversary_matches(singles_matches)
         season_standings = _season_standings(tournaments, singles_matches, season_points)
+        season_standings_preview = _season_standings_preview(season_standings)
         generated_at = datetime.now(timezone.utc).isoformat()
         stats = {
             "total_tournaments": len(tournaments),
@@ -1905,7 +1924,7 @@ async def build_cache() -> Dict[str, Any]:
                 ],
                 key=lambda row: (-row["count"], row["series"].casefold()),
             ),
-            "season_standings": season_standings,
+            "season_standings": season_standings_preview,
             "rivalry_index": rivalry_index,
             "h2h_heatmap": h2h_heatmap,
             "upset_tracker": upset_tracker,
@@ -1919,7 +1938,6 @@ async def build_cache() -> Dict[str, Any]:
                 ),
             )[:8],
             "anniversary_matches": anniversary,
-            "players": players,
             "recent_matches": [
                 m for m in matches
                 if m.get("winner_name") and m.get("loser_name")
@@ -1943,6 +1961,7 @@ async def build_cache() -> Dict[str, Any]:
             "tournament_details": tournament_details,
             "tournament_analytics": tournament_analytics,
             "players": players,
+            "season_standings": season_standings,
             "player_details": player_details,
             "player_extras": player_extras,
             "matches": matches,
@@ -1971,6 +1990,7 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         detail_dir.mkdir(parents=True, exist_ok=True)
 
     tournament_details = cache.pop("tournament_details", {})
+    season_standings = cache.pop("season_standings", [])
     player_details = cache.pop("player_details", {})
     player_extras = cache.pop("player_extras", {})
     cache.pop("matches", None)
@@ -2015,9 +2035,16 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
             "extras": extras_rel_path,
         }
 
+    season_rel_path = "data/season-standings.json"
+    (public_root / season_rel_path).write_text(
+        json.dumps(season_standings, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+
     cache["data_files"] = {
         "tournaments": tournament_files,
         "players": player_files,
+        "season_standings": season_rel_path,
     }
     out.write_text(
         json.dumps(cache, default=_json_default, ensure_ascii=False, separators=(",", ":")),

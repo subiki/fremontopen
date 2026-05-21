@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Slimmed cache.json by moving full seasons out of stats
+
+- Removed duplicated `stats.players` from the dashboard payload and switched `frontend/src/pages/Dashboard.jsx` to load its top-five leaderboard rows through `fetchLeaderboard(5)` instead.
+- Split full season standings into a dedicated static file at `frontend/public/data/season-standings.json` via `backend/export_static.py`, while keeping a compact `stats.season_standings` preview for the dashboard chart/cards.
+- Added `/seasons` to the static API in `frontend/src/lib/api.js` and updated `frontend/src/pages/Seasons.jsx` to fetch the full season table from that file instead of pulling it through `/stats`.
+- Added `backend/tests/test_export_analytics.py` coverage for the season preview helper and verified with `python backend/export_static.py` from `backend/`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-json-slim`, and `npm run build --prefix frontend`.
+- Post-change `frontend/public/data/cache.json` is `996,246` bytes instead of about `1.53 MiB`, and the full season standings now live in a separate `181,959` byte static file that only loads on the Seasons page.
+
 ## 2026-05-20 - Player JSON split and cache-friendly loading
 
 - Removed forced `cache: "no-cache"` fetches from the static loader in `frontend/src/lib/api.js` so normal browser/CDN caching can work for generated JSON.

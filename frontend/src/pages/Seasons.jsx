@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarBlank, Trophy } from "@phosphor-icons/react";
 import { Topbar } from "../components/Topbar";
-import { fetchStats } from "../lib/api";
+import { fetchSeasonStandings } from "../lib/api";
 
 export default function Seasons() {
-  const [stats, setStats] = useState(null);
+  const [seasons, setSeasons] = useState([]);
   const [selectedKey, setSelectedKey] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -14,10 +14,10 @@ export default function Seasons() {
     (async () => {
       setLoading(true);
       try {
-        const data = await fetchStats();
+        const data = await fetchSeasonStandings();
         if (cancelled) return;
-        setStats(data);
-        setSelectedKey((current) => current || data.season_standings?.[0]?.season_key || "");
+        setSeasons(data);
+        setSelectedKey((current) => current || data[0]?.season_key || "");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -27,7 +27,6 @@ export default function Seasons() {
     };
   }, []);
 
-  const seasons = useMemo(() => stats?.season_standings || [], [stats?.season_standings]);
   const selected = useMemo(
     () => seasons.find((season) => season.season_key === selectedKey) || seasons[0],
     [seasons, selectedKey]
