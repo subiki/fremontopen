@@ -1984,18 +1984,36 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         )
         tournament_files[str(tournament_id)] = rel_path
 
-    player_files: Dict[str, str] = {}
+    player_files: Dict[str, Dict[str, str]] = {}
     for player_name, detail in player_details.items():
-        rel_path = _detail_file_name("players", str(player_name))
-        payload = {
-            "detail": detail,
-            "extras": player_extras.get(player_name, {}),
-        }
-        (public_root / rel_path).write_text(
-            json.dumps(payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        player_dir = players_dir / hashlib.sha256(str(player_name).encode("utf-8")).hexdigest()[:12]
+        player_dir.mkdir(parents=True, exist_ok=True)
+
+        detail_payload = dict(detail)
+        matches_payload = detail_payload.pop("matches", [])
+        extras_payload = player_extras.get(player_name, {})
+
+        detail_rel_path = str(player_dir.relative_to(public_root) / "detail.json").replace("\\", "/")
+        matches_rel_path = str(player_dir.relative_to(public_root) / "matches.json").replace("\\", "/")
+        extras_rel_path = str(player_dir.relative_to(public_root) / "extras.json").replace("\\", "/")
+
+        (public_root / detail_rel_path).write_text(
+            json.dumps(detail_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
-        player_files[player_name] = rel_path
+        (public_root / matches_rel_path).write_text(
+            json.dumps(matches_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        (public_root / extras_rel_path).write_text(
+            json.dumps(extras_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        player_files[player_name] = {
+            "detail": detail_rel_path,
+            "matches": matches_rel_path,
+            "extras": extras_rel_path,
+        }
 
     cache["data_files"] = {
         "tournaments": tournament_files,
@@ -2008,7 +2026,8 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     print(
         f"Wrote static cache: {out} "
         f"({len(cache['players'])} players, {len(cache['tournaments'])} tournaments, "
-        f"{len(player_files)} player files, {len(tournament_files)} tournament files)"
+        f"{len(player_files)} player bundle entries, {len(player_files) * 3} player JSON files, "
+        f"{len(tournament_files)} tournament files)"
     )
 
 

@@ -37,6 +37,8 @@ export default function PlayerDetail() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [following, setFollowing] = useState(isFollowing(decoded));
   const [extras, setExtras] = useState(null);
+  const [matches, setMatches] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
 
   useEffect(() => {
     setFollowing(isFollowing(decoded));
@@ -64,6 +66,25 @@ export default function PlayerDetail() {
   }, [decoded]);
 
   useEffect(() => {
+    let cancelled = false;
+    setMatches([]);
+    setMatchesLoading(true);
+    api.get(`/players/${encodeURIComponent(decoded)}/matches`)
+      .then((r) => {
+        if (!cancelled) setMatches(r.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setMatches([]);
+      })
+      .finally(() => {
+        if (!cancelled) setMatchesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [decoded]);
+
+  useEffect(() => {
     (async () => {
       try {
         const lb = await fetchLeaderboard(1000);
@@ -83,7 +104,6 @@ export default function PlayerDetail() {
 
   const p = data?.player;
   const canonicalName = p?.name || decoded;
-  const matches = useMemo(() => data?.matches || [], [data?.matches]);
   const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
   const placements = extras?.placements;
   const topFinishes = placements?.top_finishes || {};
@@ -93,7 +113,10 @@ export default function PlayerDetail() {
   const biggestCashWin = cash?.biggest_win || null;
   const bestEventAboveElo = extras?.best_event_above_elo || null;
   const form = extras?.form || {};
-  const coreResults = useMemo(() => summarizeCoreResults(matches, canonicalName), [matches, canonicalName]);
+  const coreResults = useMemo(
+    () => summarizeCoreResults(extras?.results, matches, canonicalName),
+    [extras?.results, matches, canonicalName]
+  );
   const rankSummary = useMemo(() => summarizePlayerRanks(leaderboard, canonicalName), [leaderboard, canonicalName]);
 
   useEffect(() => {
@@ -467,7 +490,9 @@ export default function PlayerDetail() {
               <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">
                 Match History
               </h2>
-              {matches.length === 0 ? (
+              {matchesLoading ? (
+                <div className="text-[#6B7280] text-sm">Loading matches...</div>
+              ) : matches.length === 0 ? (
                 <div className="text-[#6B7280] text-sm">No matches.</div>
               ) : (
                 <ul className="space-y-3">
@@ -640,7 +665,21 @@ const InsightCard = ({ title, value, detail, meta, to }) => {
   );
 };
 
-const summarizeCoreResults = (matches, playerName) => {
+const summarizeCoreResults = (results, matches, playerName) => {
+  if (results) {
+    const racksWon = results.racks_won ?? 0;
+    const racksLost = results.racks_lost ?? 0;
+    return {
+      racesWon: results.races_won ?? 0,
+      racesLost: results.races_lost ?? 0,
+      racesPlayed: results.races_played ?? 0,
+      racksWon,
+      racksLost,
+      racksPlayed: results.racks_played ?? (racksWon + racksLost),
+      scoredRaces: results.scored_races ?? 0,
+      rackDiff: racksWon - racksLost,
+    };
+  }
   const summary = {
     racesWon: 0,
     racesLost: 0,

@@ -10,7 +10,7 @@ const filePromises = new Map();
 const loadCache = () => {
   if (!cachePromise) {
     const base = process.env.PUBLIC_URL || "";
-    cachePromise = fetch(`${base}/data/cache.json`, { cache: "no-cache" }).then((response) => {
+    cachePromise = fetch(`${base}/data/cache.json`).then((response) => {
       if (!response.ok) throw new Error("Static data cache is missing");
       return response.json();
     });
@@ -24,7 +24,7 @@ const loadDataFile = (path) => {
     const base = process.env.PUBLIC_URL || "";
     filePromises.set(
       path,
-      fetch(`${base}/${path}`, { cache: "no-cache" }).then((response) => {
+      fetch(`${base}/${path}`).then((response) => {
         if (!response.ok) throw new Error(`Static data file is missing: ${path}`);
         return response.json();
       })
@@ -79,6 +79,20 @@ const parseRackScore = (score = "") => {
   };
 };
 
+const resolvePlayerFiles = (cache, canonicalName) => {
+  const fileEntry = cache.data_files?.players?.[canonicalName];
+  if (!fileEntry) return null;
+  if (typeof fileEntry === "string") {
+    return {
+      bundle: fileEntry,
+      detail: fileEntry,
+      extras: fileEntry,
+      matches: fileEntry,
+    };
+  }
+  return fileEntry;
+};
+
 const loadTournamentDetail = async (cache, id) => {
   if (cache.tournament_details?.[id]) return cache.tournament_details[id];
   const file = cache.data_files?.tournaments?.[id];
@@ -94,8 +108,30 @@ const loadPlayerBundle = async (cache, name) => {
       extras: cache.player_extras?.[canonicalName],
     };
   }
-  const file = cache.data_files?.players?.[canonicalName];
-  return file ? loadDataFile(file) : null;
+  const files = resolvePlayerFiles(cache, canonicalName);
+  if (!files) return null;
+  if (files.bundle) return loadDataFile(files.bundle);
+
+  const [detail, extras] = await Promise.all([
+    loadDataFile(files.detail),
+    loadDataFile(files.extras),
+  ]);
+  return { detail, extras };
+};
+
+const loadPlayerMatches = async (cache, name) => {
+  const canonicalName = resolvePlayerName(cache, name);
+  if (!canonicalName) return null;
+  if (cache.player_details?.[canonicalName]?.matches) {
+    return cache.player_details[canonicalName].matches;
+  }
+  const files = resolvePlayerFiles(cache, canonicalName);
+  if (!files) return null;
+  if (files.bundle) {
+    const bundle = await loadDataFile(files.bundle);
+    return bundle?.detail?.matches || [];
+  }
+  return loadDataFile(files.matches);
 };
 
 const comparePlayers = async (cache, a, b) => {
@@ -104,15 +140,13 @@ const comparePlayers = async (cache, a, b) => {
   const pa = canonicalA ? cache.players.find((p) => p.name === canonicalA) : null;
   const pb = canonicalB ? cache.players.find((p) => p.name === canonicalB) : null;
   if (!pa || !pb) notFound("One or both players not found");
-  const [bundleA, bundleB] = await Promise.all([
-    loadPlayerBundle(cache, canonicalA),
-    loadPlayerBundle(cache, canonicalB),
+  const [matchesA, matchesB] = await Promise.all([
+    loadPlayerMatches(cache, canonicalA),
+    loadPlayerMatches(cache, canonicalB),
   ]);
-  const detailA = bundleA?.detail;
-  const detailB = bundleB?.detail;
-  if (!detailA || !detailB) notFound("One or both players not found");
+  if (!matchesA || !matchesB) notFound("One or both players not found");
 
-  const h2hMatches = (detailA.matches || [])
+  const h2hMatches = (matchesA || [])
     .filter(
       (m) =>
         (m.winner_name === canonicalA && m.loser_name === canonicalB) ||
@@ -144,7 +178,7 @@ const comparePlayers = async (cache, a, b) => {
 
   const opponentRecord = (name, detail) => {
     const record = {};
-    (detail?.matches || []).forEach((match) => {
+    (detail || []).forEach((match) => {
       const opponent = match.winner_name === name ? match.loser_name : match.winner_name;
       if (!opponent) return;
       record[opponent] ||= { w: 0, l: 0 };
@@ -154,8 +188,8 @@ const comparePlayers = async (cache, a, b) => {
     return record;
   };
 
-  const recA = opponentRecord(canonicalA, detailA);
-  const recB = opponentRecord(canonicalB, detailB);
+  const recA = opponentRecord(canonicalA, matchesA);
+  const recB = opponentRecord(canonicalB, matchesB);
   const common = Object.keys(recA)
     .filter((opponent) => opponent !== canonicalA && opponent !== canonicalB && recB[opponent])
     .sort();
@@ -208,6 +242,10 @@ const staticGet = async (path, config = {}) => {
     const name = decodePathPart(path.slice("/players/".length, -"/extras".length));
     const bundle = await loadPlayerBundle(cache, name);
     return { data: bundle?.extras || notFound("Player not found") };
+  }
+  if (path.startsWith("/players/") && path.endsWith("/matches")) {
+    const name = decodePathPart(path.slice("/players/".length, -"/matches".length));
+    return { data: (await loadPlayerMatches(cache, name)) || notFound("Player not found") };
   }
   if (path.startsWith("/players/") && path.endsWith("/claim-info")) {
     return { data: { claimed: false } };

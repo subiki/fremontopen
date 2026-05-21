@@ -1,5 +1,14 @@
 # Agent Session Notes
 
+## 2026-05-20 - Player JSON split and cache-friendly loading
+
+- Removed forced `cache: "no-cache"` fetches from the static loader in `frontend/src/lib/api.js` so normal browser/CDN caching can work for generated JSON.
+- Split each exported player bundle into separate `detail.json`, `extras.json`, and `matches.json` files in `backend/export_static.py`, while keeping tournament bundles unchanged.
+- Updated the static API loader so compare pages can load player match history directly, and player detail pages now fetch matches separately instead of requiring the full match history inside the primary player detail payload.
+- Updated `frontend/src/pages/PlayerDetail.jsx` to use `extras.results` for the core-results summary and lazy-load match history through `/players/:name/matches`.
+- Verified with `python backend/export_static.py` from `backend/`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-json-opt`, and `npm run build --prefix frontend`.
+- Post-change static JSON footprint is still about `30.72 MiB` total, but the largest per-player route payloads are now separated into smaller detail/matches/extras files instead of one monolithic player bundle.
+
 ## 2026-05-20 - Ops review fallback closeout
 
 - Finished the previously uncommitted ops-review fallback slice in `scripts/ops_review.py` and `backend/tests/test_ops_review.py`.
