@@ -88,6 +88,22 @@ def _json_size_bytes(value: Any) -> int:
     return len(json.dumps(value, default=_json_default, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
 
 
+def _split_player_extras_payload(extras_payload: Dict[str, Any]) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    light_payload = json.loads(
+        json.dumps(extras_payload, default=_json_default, ensure_ascii=False)
+    )
+    history_payload = {
+        "wins_over_time": light_payload.pop("wins_over_time", []),
+        "elo_history": (light_payload.get("elo") or {}).pop("history", []),
+        "form": {
+            "window": ((light_payload.get("form") or {}).get("window")),
+            "history": ((light_payload.get("form") or {}).pop("history", [])),
+            "latest": ((light_payload.get("form") or {}).get("latest")),
+        },
+    }
+    return light_payload, history_payload
+
+
 def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[str, Any]:
     data_root = public_root / "data"
     json_files = sorted(data_root.rglob("*.json"))
@@ -2348,11 +2364,12 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
 
         detail_payload = dict(detail)
         matches_payload = detail_payload.pop("matches", [])
-        extras_payload = player_extras.get(player_name, {})
+        extras_payload, history_payload = _split_player_extras_payload(player_extras.get(player_name, {}))
 
         detail_rel_path = str(player_dir.relative_to(public_root) / "detail.json").replace("\\", "/")
         matches_rel_path = str(player_dir.relative_to(public_root) / "matches.json").replace("\\", "/")
         extras_rel_path = str(player_dir.relative_to(public_root) / "extras.json").replace("\\", "/")
+        history_rel_path = str(player_dir.relative_to(public_root) / "history.json").replace("\\", "/")
 
         (public_root / detail_rel_path).write_text(
             json.dumps(detail_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
@@ -2366,10 +2383,15 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
             json.dumps(extras_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
+        (public_root / history_rel_path).write_text(
+            json.dumps(history_payload, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
         player_files[player_name] = {
             "detail": detail_rel_path,
             "matches": matches_rel_path,
             "extras": extras_rel_path,
+            "history": history_rel_path,
         }
 
     season_rel_path = "data/season-standings.json"
@@ -2483,7 +2505,7 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     print(
         f"Wrote static cache: {out} "
         f"({len(player_files)} players, {len(tournament_files)} tournaments, "
-        f"{len(player_files)} player bundle entries, {len(player_files) * 3} player JSON files, "
+        f"{len(player_files)} player bundle entries, {len(player_files) * 4} player JSON files, "
         f"{len(tournament_files)} tournament files)"
     )
 

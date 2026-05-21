@@ -31,6 +31,7 @@ from export_static import (
     _rivalry_index,
     _season_standings,
     _season_standings_preview,
+    _split_player_extras_payload,
     _strength_of_schedule,
     _tournament_difficulty,
     _tournament_prize_payouts,
@@ -169,6 +170,39 @@ def test_peer_group_summary_falls_back_to_elo():
     assert summary["band_label"] == "1500-1599 ELO"
     assert summary["expanded"] is True
     assert summary["average_peer_win_rate"] == 49.5
+
+
+def test_split_player_extras_payload_moves_heavy_chart_histories():
+    light, history = _split_player_extras_payload({
+        "wins_over_time": [{"label": "Week 1", "wins": 1}],
+        "elo": {
+            "rating": 1532,
+            "peak": 1601,
+            "history": [{"label": "May", "rating": 1532}],
+        },
+        "form": {
+            "window": 10,
+            "history": [{"wins": 6, "losses": 4, "win_rate": 60.0}],
+            "latest": {"wins": 6, "losses": 4, "win_rate": 60.0},
+        },
+        "peer_group": {"available": True},
+    })
+
+    assert light["elo"]["rating"] == 1532
+    assert "history" not in light["elo"]
+    assert light["form"]["latest"]["win_rate"] == 60.0
+    assert "history" not in light["form"]
+    assert "wins_over_time" not in light
+
+    assert history == {
+        "wins_over_time": [{"label": "Week 1", "wins": 1}],
+        "elo_history": [{"label": "May", "rating": 1532}],
+        "form": {
+            "window": 10,
+            "history": [{"wins": 6, "losses": 4, "win_rate": 60.0}],
+            "latest": {"wins": 6, "losses": 4, "win_rate": 60.0},
+        },
+    }
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():

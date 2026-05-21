@@ -184,6 +184,7 @@ const resolvePlayerFiles = (playersIndex, canonicalName) => {
       detail: fileEntry,
       extras: fileEntry,
       matches: fileEntry,
+      history: fileEntry,
     };
   }
   return fileEntry;
@@ -231,6 +232,23 @@ const loadPlayerMatches = async (cache, name) => {
     return bundle?.detail?.matches || [];
   }
   return loadDataFile(files.matches);
+};
+
+const loadPlayerHistory = async (cache, name) => {
+  const playersIndex = await loadPlayersIndex(cache);
+  const canonicalName = await resolvePlayerName(cache, name);
+  if (!canonicalName) return null;
+  const files = resolvePlayerFiles(playersIndex, canonicalName);
+  if (!files) return null;
+  if (files.bundle) {
+    const bundle = await loadDataFile(files.bundle);
+    return {
+      wins_over_time: bundle?.extras?.wins_over_time || [],
+      elo_history: bundle?.extras?.elo?.history || [],
+      form: bundle?.extras?.form || { window: null, history: [], latest: null },
+    };
+  }
+  return loadDataFile(files.history);
 };
 
 const comparePlayers = async (cache, a, b) => {
@@ -354,6 +372,10 @@ const staticGet = async (path, config = {}) => {
     const name = decodePathPart(path.slice("/players/".length, -"/matches".length));
     return { data: (await loadPlayerMatches(cache, name)) || notFound("Player not found") };
   }
+  if (path.startsWith("/players/") && path.endsWith("/history")) {
+    const name = decodePathPart(path.slice("/players/".length, -"/history".length));
+    return { data: (await loadPlayerHistory(cache, name)) || notFound("Player not found") };
+  }
   if (path.startsWith("/players/") && path.endsWith("/claim-info")) {
     return { data: { claimed: false } };
   }
@@ -417,6 +439,8 @@ export const fetchPlayers = (q = "") =>
   api.get("/players", { params: q ? { q } : {} }).then((r) => r.data);
 export const fetchPlayer = (name) =>
   api.get(`/players/${encodeURIComponent(name)}`).then((r) => r.data);
+export const fetchPlayerHistory = (name) =>
+  api.get(`/players/${encodeURIComponent(name)}/history`).then((r) => r.data);
 export const fetchLeaderboard = (limit = 25) =>
   api.get("/leaderboard", { params: { limit } }).then((r) => r.data);
 export const fetchSyncStatus = () => api.get("/sync/status").then((r) => r.data);

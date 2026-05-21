@@ -7,7 +7,7 @@ import { WinsOverTimeChart } from "../components/charts/WinsOverTimeChart";
 import { EloRatingChart } from "../components/charts/EloRatingChart";
 import { PlayerFormChart } from "../components/charts/PlayerFormChart";
 import { FargoEditor } from "../components/FargoEditor";
-import { fetchPlayer, fetchLeaderboard, api } from "../lib/api";
+import { fetchPlayer, fetchPlayerHistory, fetchLeaderboard, api } from "../lib/api";
 import { isFollowing, toggleFollow, onFollowingChange } from "../lib/follow";
 import { rankingPath } from "./StatRankings";
 import { toast } from "sonner";
@@ -39,17 +39,38 @@ export default function PlayerDetail() {
   const [extras, setExtras] = useState(null);
   const [matches, setMatches] = useState([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
+  const [history, setHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     setFollowing(isFollowing(decoded));
     return onFollowingChange(() => setFollowing(isFollowing(decoded)));
   }, [decoded]);
 
-  // Load extras (streaks, titles, perf, wins-over-time)
+  // Load lightweight extras first so the top of the profile can render before chart histories.
   useEffect(() => {
     api.get(`/players/${encodeURIComponent(decoded)}/extras`)
       .then((r) => setExtras(r.data))
       .catch(() => setExtras(null));
+  }, [decoded]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHistory(null);
+    setHistoryLoading(true);
+    fetchPlayerHistory(decoded)
+      .then((data) => {
+        if (!cancelled) setHistory(data);
+      })
+      .catch(() => {
+        if (!cancelled) setHistory(null);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [decoded]);
 
   useEffect(() => {
@@ -113,7 +134,9 @@ export default function PlayerDetail() {
   const biggestCashWin = cash?.biggest_win || null;
   const bestEventAboveElo = extras?.best_event_above_elo || null;
   const peerGroup = extras?.peer_group || null;
-  const form = extras?.form || {};
+  const form = history?.form || extras?.form || {};
+  const winsOverTime = history?.wins_over_time || [];
+  const eloHistory = history?.elo_history || [];
   const coreResults = useMemo(
     () => summarizeCoreResults(extras?.results, matches, canonicalName),
     [extras?.results, matches, canonicalName]
@@ -435,11 +458,19 @@ export default function PlayerDetail() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="chart-card">
                 <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">Wins over time</h2>
-                <WinsOverTimeChart data={extras?.wins_over_time || []} />
+                {historyLoading && winsOverTime.length === 0 ? (
+                  <div className="text-sm text-[#6B7280]">Loading chart history...</div>
+                ) : (
+                  <WinsOverTimeChart data={winsOverTime} />
+                )}
               </section>
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="elo-chart-card">
                 <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">ELO rating history</h2>
-                <EloRatingChart data={elo.history || []} />
+                {historyLoading && eloHistory.length === 0 ? (
+                  <div className="text-sm text-[#6B7280]">Loading chart history...</div>
+                ) : (
+                  <EloRatingChart data={eloHistory} />
+                )}
               </section>
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="player-form-chart-card">
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -451,7 +482,11 @@ export default function PlayerDetail() {
                     </div>
                   ) : null}
                 </div>
-                <PlayerFormChart data={form.history || []} />
+                {historyLoading && (form.history || []).length === 0 ? (
+                  <div className="text-sm text-[#6B7280]">Loading chart history...</div>
+                ) : (
+                  <PlayerFormChart data={form.history || []} />
+                )}
               </section>
             </div>
 

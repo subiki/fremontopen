@@ -1,5 +1,15 @@
 # Agent Session Notes
 
+## 2026-05-21 - Split player chart history out of extras payloads
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then rechecked the live checkout and current static size report before continuing the cache-efficiency path.
+- Split the heaviest player-profile chart history fields out of each generated `extras.json`: `wins_over_time`, `elo.history`, and `form.history` now live in per-player `history.json` files written by `backend/export_static.py`.
+- Updated `frontend/src/lib/api.js` with a new static `/players/:name/history` route and fallback handling so player pages can lazy-load chart history without bloating the lighter profile extras payload.
+- Updated `frontend/src/pages/PlayerDetail.jsx` so the top profile cards still render from lightweight extras while the three history charts load separately with explicit loading copy.
+- Added targeted export coverage in `backend/tests/test_export_analytics.py` for the new extras/history payload split helper.
+- Verified with `python export_static.py` from `backend\\`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-player-history-split`, and `npm run build --prefix frontend`.
+- Current artifact snapshot: `cache.json` stayed flat at `184,647` bytes; a previously heavy player extras file such as `frontend/public/data/players/a5ac7684edbf/extras.json` is now `13,666` bytes while its new deferred `history.json` is `464,994` bytes.
+
 ## 2026-05-20 - Split player and tournament indexes out of cache boot
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then attempted live GitHub issue visibility; both local `gh` and direct GitHub API access are still blocked in this sandbox, so this slice used the repo backlog/session notes as the current source of truth and could not close a live issue from here.
