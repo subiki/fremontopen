@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
   CalendarBlank,
@@ -26,6 +26,41 @@ const baseLinks = [
 export const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const quickLinks = baseLinks.slice(0, 4);
+  const location = useLocation();
+  const menuButtonRef = useRef(null);
+  const drawerCloseButtonRef = useRef(null);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      if (wasOpenRef.current) {
+        menuButtonRef.current?.focus();
+      }
+      wasOpenRef.current = false;
+      return undefined;
+    }
+
+    wasOpenRef.current = true;
+    document.body.style.overflow = "hidden";
+    drawerCloseButtonRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
     <>
@@ -43,7 +78,7 @@ export const Sidebar = () => {
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-5 space-y-1">
+        <nav className="flex-1 px-3 py-5 space-y-1" aria-label="Primary">
           {baseLinks.map((l) => (
             <NavLink
               key={l.to}
@@ -77,7 +112,12 @@ export const Sidebar = () => {
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute bottom-0 left-0 right-0 rounded-t-lg border-t border-[#273041] bg-[#0B0E14] shadow-2xl">
+          <aside
+            className="absolute bottom-0 left-0 right-0 rounded-t-lg border-t border-[#273041] bg-[#0B0E14] shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-nav-title"
+          >
             <div className="flex items-center justify-between gap-3 border-b border-[#273041] px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-md bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center">
@@ -85,10 +125,11 @@ export const Sidebar = () => {
                 </div>
                 <div>
                   <div className="font-[Outfit] font-bold text-[#F3F4F6] text-lg leading-none">CueStats</div>
-                  <div className="text-xs tracking-[0.16em] uppercase text-[#6B7280] mt-1">Menu</div>
+                  <div id="mobile-nav-title" className="text-xs tracking-[0.16em] uppercase text-[#6B7280] mt-1">Menu</div>
                 </div>
               </div>
               <button
+                ref={drawerCloseButtonRef}
                 type="button"
                 onClick={() => setOpen(false)}
                 className="w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6]"
@@ -98,7 +139,7 @@ export const Sidebar = () => {
                 <X size={18} />
               </button>
             </div>
-            <nav className="grid grid-cols-1 gap-1 px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+5.25rem)]">
+            <nav className="grid grid-cols-1 gap-1 px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+5.25rem)]" aria-label="Mobile primary">
               {baseLinks.map((l) => (
                 <NavLink
                   key={l.to}
@@ -126,6 +167,7 @@ export const Sidebar = () => {
       <nav
         className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-[#273041] bg-[#0B0E14]/95 backdrop-blur-xl px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
         data-testid="mobile-bottom-nav"
+        aria-label="Mobile quick navigation"
       >
         <div className="grid grid-cols-5 gap-1">
         {quickLinks.map((l) => (
@@ -147,6 +189,7 @@ export const Sidebar = () => {
           </NavLink>
         ))}
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
             className="min-h-14 flex flex-col items-center justify-center gap-1 rounded-md text-xs text-[#9CA3AF] transition-colors hover:bg-[#141923] hover:text-[#F3F4F6]"

@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Improved accessibility and mobile navigation
+
+- Added a real skip link in `frontend/src/components/Layout.jsx` with supporting styles in `frontend/src/App.css` so keyboard users can jump directly to the app content.
+- Tightened `frontend/src/components/Sidebar.jsx` mobile navigation with labeled landmarks, dialog semantics, Escape-to-close, scroll locking, route-change close behavior, and focus restoration back to the menu trigger.
+- Updated `frontend/src/components/Topbar.jsx` to expose a small-screen search toggle so mobile users can reach player and tournament search without relying on the desktop-only inline search slot.
+- Added search labeling in `frontend/src/components/SearchBar.jsx` so the main site search has explicit accessible naming and announces its results container consistently.
+- Verification target for this slice is `npm run build --prefix frontend`.
+
 ## 2026-05-20 - Added peer-group player comparisons
 
 - Added `peer_group` summaries in `backend/export_static.py` so each player `extras` payload now includes a nearby-rating comparison set that prefers Fargo bands, falls back to ELO bands, and expands to nearest-rated peers when a base band is too sparse.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, Moon, Sun, WarningCircle } from "@phosphor-icons/react";
+import { CheckCircle, MagnifyingGlass, Moon, Sun, WarningCircle, X } from "@phosphor-icons/react";
 import { fetchSyncStatus } from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { SearchBar } from "./SearchBar";
@@ -8,6 +8,7 @@ import { getTheme, onThemeChange, toggleTheme } from "../lib/theme";
 export const Topbar = ({ title, subtitle, actions }) => {
   const [status, setStatus] = useState(null);
   const [theme, setTheme] = useState(getTheme());
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -60,6 +61,17 @@ export const Topbar = ({ title, subtitle, actions }) => {
           {actions}
           <button
             type="button"
+            onClick={() => setMobileSearchOpen((value) => !value)}
+            className="lg:hidden w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
+            aria-label={mobileSearchOpen ? "Close search" : "Open search"}
+            aria-expanded={mobileSearchOpen}
+            aria-controls="mobile-search-panel"
+            data-testid="mobile-search-toggle"
+          >
+            {mobileSearchOpen ? <X size={18} weight="duotone" /> : <MagnifyingGlass size={18} weight="duotone" />}
+          </button>
+          <button
+            type="button"
             onClick={() => setTheme(toggleTheme())}
             className="w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -105,6 +117,15 @@ export const Topbar = ({ title, subtitle, actions }) => {
           ) : null}
         </div>
       </div>
+      {mobileSearchOpen ? (
+        <div
+          id="mobile-search-panel"
+          className="lg:hidden border-t border-[#273041] px-6 sm:px-8 pb-4"
+          data-testid="mobile-search-panel"
+        >
+          <SearchBar />
+        </div>
+      ) : null}
     </header>
   );
 };

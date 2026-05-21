@@ -2,3 +2,25 @@
 .App {
     min-height: 100vh;
 }
+
+.skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 80;
+    transform: translateY(-160%);
+    border: 1px solid #10B981;
+    background: #0B0E14;
+    color: #F3F4F6;
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+    outline: 2px solid #10B981;
+    outline-offset: 2px;
+}
