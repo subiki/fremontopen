@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Node 24 workflow action refresh
+
+- Reviewed the static-demo ops surface against `docs/agents/ops-reviewer.md`, the existing `.run-logs/ops-review/latest.*` snapshot, and the live public Actions page.
+- Identified a repo-side maintenance risk in the GitHub Actions layer: the static refresh, deploy, backlog, seed, ops-review, and Codacy workflows still pinned Node 20-era action majors (`actions/checkout@v4`, `actions/setup-node@v4`, `actions/setup-python@v5`, and `github/codeql-action/upload-sarif@v3`).
+- Updated those workflow references to the current Node 24-capable majors (`actions/checkout@v6`, `actions/setup-node@v6`, `actions/setup-python@v6`, and `github/codeql-action/upload-sarif@v4`) without changing the product scope or deploy model.
+- Added `backend/tests/test_workflow_action_versions.py` to keep the repo from drifting back to the older action pins.
+- Verified with `pytest backend/tests/test_data_refresh_workflow.py backend/tests/test_ops_review.py backend/tests/test_workflow_action_versions.py --basetemp .pytest-tmp-ops-node24`.
+
 ## 2026-05-20 - Improved accessibility and mobile navigation
 
 - Added a real skip link in `frontend/src/components/Layout.jsx` with supporting styles in `frontend/src/App.css` so keyboard users can jump directly to the app content.
