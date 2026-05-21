@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-20 - Ops review fallback closeout
+
+- Finished the previously uncommitted ops-review fallback slice in `scripts/ops_review.py` and `backend/tests/test_ops_review.py`.
+- The reviewer now preserves the last non-blocker actionable findings from prior `.run-logs/ops-review/*.json` history when a local run can only see GitHub visibility blockers, instead of overwriting the report with sandbox-only noise.
+- Verified with `pytest backend/tests/test_ops_review.py --basetemp .pytest-tmp-closeout` and a fresh `scripts/run-ops-review.ps1` execution.
+
 ## 2026-05-20 - Secret scanner cleanup and export-static lint fix
 
 - Queried live GitHub code-scanning and secret-scanning alerts with authenticated `gh` access instead of relying on the sandboxed ops-review fallback.
