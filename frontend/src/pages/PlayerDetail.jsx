@@ -112,6 +112,7 @@ export default function PlayerDetail() {
   const cash = extras?.cash || {};
   const biggestCashWin = cash?.biggest_win || null;
   const bestEventAboveElo = extras?.best_event_above_elo || null;
+  const peerGroup = extras?.peer_group || null;
   const form = extras?.form || {};
   const coreResults = useMemo(
     () => summarizeCoreResults(extras?.results, matches, canonicalName),
@@ -428,6 +429,8 @@ export default function PlayerDetail() {
               />
               <PerfCard perf={extras?.perf_vs_fargo} />
             </div>
+
+            <PeerGroupCard peerGroup={peerGroup} />
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
               <section className="bg-[#141923] border border-[#273041] rounded-lg p-6" data-testid="chart-card">
@@ -892,5 +895,102 @@ const PerfCard = ({ perf }) => {
         {perf.label} <span className="text-[#6B7280] font-mono">({perf.rated_matches} rated)</span>
       </div>
     </div>
+  );
+};
+
+const PeerGroupCard = ({ peerGroup }) => {
+  if (!peerGroup?.available) {
+    return (
+      <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="peer-group-card">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Peer Group</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              {peerGroup?.note || "Peer comparison needs more rating context first."}
+            </p>
+          </div>
+          <Scales size={18} weight="duotone" className="text-[#6B7280]" />
+        </div>
+      </section>
+    );
+  }
+
+  const rankLabel = peerGroup.player_rank_by_win_rate
+    ? `#${peerGroup.player_rank_by_win_rate}/${peerGroup.group_size}`
+    : "-";
+
+  return (
+    <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 mb-6" data-testid="peer-group-card">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
+        <div>
+          <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Peer Group</h2>
+          <p className="mt-1 text-sm text-[#9CA3AF]">
+            Nearby {peerGroup.basis_label} comparison to keep player context closer to the same tier.
+          </p>
+        </div>
+        <div className="text-xs font-mono text-[#6B7280]">
+          {peerGroup.basis_label} {peerGroup.rating} . {peerGroup.band_label}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+        <SummaryCard
+          label="Band"
+          primary={peerGroup.band_label}
+          secondary={`${peerGroup.peer_count} peer${peerGroup.peer_count === 1 ? "" : "s"}`}
+          detail={peerGroup.expanded ? "Expanded nearest-rated set" : "Base rating band"}
+        />
+        <SummaryCard
+          label="Win Rate Rank"
+          primary={rankLabel}
+          secondary={`${peerGroup.group_size} players in group`}
+          detail="Ranked by win rate within the peer set"
+        />
+        <SummaryCard
+          label="Avg Peer Win Rate"
+          primary={peerGroup.average_peer_win_rate != null ? `${peerGroup.average_peer_win_rate}%` : "-"}
+          secondary={peerGroup.basis_label}
+          detail="Peers only, excluding this player"
+        />
+        <SummaryCard
+          label="Avg Peer Matches"
+          primary={peerGroup.average_peer_matches != null ? String(peerGroup.average_peer_matches) : "-"}
+          secondary="Match volume"
+          detail="Peers only, excluding this player"
+        />
+      </div>
+
+      {peerGroup.note ? (
+        <div className="mb-4 rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 text-sm text-[#9CA3AF]">
+          {peerGroup.note}
+        </div>
+      ) : null}
+
+      {peerGroup.nearest_peers?.length ? (
+        <ul className="divide-y divide-[#273041]/60">
+          {peerGroup.nearest_peers.map((peer) => (
+            <li key={peer.name} className="py-3 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <Link
+                  to={`/players/${encodeURIComponent(peer.name)}`}
+                  className="text-[#F3F4F6] hover:text-[#10B981] font-medium truncate"
+                >
+                  {peer.name}
+                </Link>
+                <div className="mt-1 text-xs font-mono text-[#6B7280]">
+                  {peerGroup.basis_label} {peer.rating} . {peer.rating_delta >= 0 ? "+" : ""}{peer.rating_delta}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="font-mono text-sm text-[#F59E0B]">{peer.win_rate}%</div>
+                <div className="mt-1 text-xs text-[#6B7280]">{peer.wins}-{peer.losses} . {peer.matches} matches</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-sm text-[#6B7280]">No nearby rated peers yet.</div>
+      )}
+    </section>
   );
 };

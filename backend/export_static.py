@@ -289,6 +289,134 @@ def _detail_file_name(prefix: str, key: str) -> str:
     return f"data/{prefix}/{digest}.json"
 
 
+def _rating_band(value: int, size: int) -> tuple[int, int]:
+    low = (int(value) // size) * size
+    return low, low + size - 1
+
+
+def _peer_group_summary(player: Dict[str, Any], all_players: List[Dict[str, Any]]) -> Dict[str, Any]:
+    player_name = player.get("name")
+    if player.get("fargo") is not None:
+        basis = "fargo"
+        basis_label = "Fargo"
+        band_size = 50
+        rating = int(player["fargo"])
+    elif player.get("elo_rating") is not None:
+        basis = "elo"
+        basis_label = "ELO"
+        band_size = 100
+        rating = int(round(player["elo_rating"]))
+    else:
+        return {
+            "available": False,
+            "basis": None,
+            "basis_label": None,
+            "rating": None,
+            "band_label": None,
+            "group_size": 0,
+            "peer_count": 0,
+            "nearest_peers": [],
+            "note": "No rating available for peer comparisons yet.",
+        }
+
+    def rating_for(row: Dict[str, Any]) -> Optional[int]:
+        value = row.get("fargo") if basis == "fargo" else row.get("elo_rating")
+        if value is None:
+            return None
+        return int(round(value))
+
+    rated_players = []
+    for row in all_players:
+        peer_rating = rating_for(row)
+        if peer_rating is None:
+            continue
+        rated_players.append((row, peer_rating))
+
+    band_min, band_max = _rating_band(rating, band_size)
+    band_players = [
+        (row, peer_rating)
+        for row, peer_rating in rated_players
+        if band_min <= peer_rating <= band_max
+    ]
+    expanded = False
+    if len(band_players) < 4 and len(rated_players) > len(band_players):
+        expanded = True
+        band_players = sorted(
+            rated_players,
+            key=lambda item: (
+                abs(item[1] - rating),
+                -float(item[0].get("win_rate") or 0),
+                item[0].get("name", "").casefold(),
+            ),
+        )[:6]
+
+    grouped_players = [row for row, _ in band_players]
+    ranked_group = sorted(
+        grouped_players,
+        key=lambda row: (
+            -float(row.get("win_rate") or 0),
+            -(int(row.get("wins") or 0) + int(row.get("losses") or 0)),
+            row.get("name", "").casefold(),
+        ),
+    )
+    player_rank = next(
+        (index + 1 for index, row in enumerate(ranked_group) if row.get("name") == player_name),
+        None,
+    )
+    peers = [(row, peer_rating) for row, peer_rating in band_players if row.get("name") != player_name]
+    average_peer_win_rate = (
+        round(sum(float(row.get("win_rate") or 0) for row, _ in peers) / len(peers), 1)
+        if peers else None
+    )
+    average_peer_matches = (
+        round(
+            sum(int(row.get("wins") or 0) + int(row.get("losses") or 0) for row, _ in peers) / len(peers),
+            1,
+        )
+        if peers else None
+    )
+    nearest_peers = [
+        {
+            "name": row.get("name"),
+            "rating": peer_rating,
+            "rating_delta": peer_rating - rating,
+            "win_rate": row.get("win_rate"),
+            "wins": row.get("wins"),
+            "losses": row.get("losses"),
+            "matches": int(row.get("wins") or 0) + int(row.get("losses") or 0),
+        }
+        for row, peer_rating in sorted(
+            peers,
+            key=lambda item: (
+                abs(item[1] - rating),
+                -float(item[0].get("win_rate") or 0),
+                item[0].get("name", "").casefold(),
+            ),
+        )[:5]
+    ]
+    note = None
+    if expanded:
+        note = f"Expanded beyond the {band_min}-{band_max} {basis_label} band because the base group was sparse."
+    elif not peers:
+        note = "No nearby rated peers yet."
+
+    return {
+        "available": True,
+        "basis": basis,
+        "basis_label": basis_label,
+        "rating": rating,
+        "band_label": f"{band_min}-{band_max} {basis_label}",
+        "group_size": len(grouped_players),
+        "peer_count": len(peers),
+        "expanded": expanded,
+        "player_rank_by_win_rate": player_rank,
+        "average_peer_win_rate": average_peer_win_rate,
+        "average_peer_matches": average_peer_matches,
+        "nearest_peers": nearest_peers,
+        "note": note,
+    }
+
+
 def _load_season_points(path: Path | None = None) -> Dict[str, int]:
     config_path = path or (ROOT_DIR / "season_points.json")
     values = dict(DEFAULT_SEASON_POINTS)
@@ -2055,6 +2183,9 @@ async def build_cache() -> Dict[str, Any]:
                 "strength_of_schedule": strength_of_schedule,
                 "best_event_above_elo": best_event_by_player.get(name),
             }
+
+        for player in players:
+            player_extras[player["name"]]["peer_group"] = _peer_group_summary(player, players)
 
         sync_status = last_sync or {"status": "never_synced"}
         recent_activity = _recent_activity_summary(singles_matches)

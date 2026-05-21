@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Added peer-group player comparisons
+
+- Added `peer_group` summaries in `backend/export_static.py` so each player `extras` payload now includes a nearby-rating comparison set that prefers Fargo bands, falls back to ELO bands, and expands to nearest-rated peers when a base band is too sparse.
+- Added targeted coverage in `backend/tests/test_export_analytics.py` for both Fargo-based and ELO-fallback peer grouping.
+- Updated `frontend/src/pages/PlayerDetail.jsx` with a new `Peer Group` card that shows the player's rating band, win-rate rank inside that peer set, average peer benchmarks, and quick links to the nearest comparable players.
+- Verification target for this slice is `python backend/export_static.py` from `backend/`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-peer-group`, and `npm run build --prefix frontend`.
+- This closes ranked issue `#89` with a static-first comparison surface that stays off the dashboard boot payload.
+
 ## 2026-05-20 - Added static JSON asset versioning
 
 - Added `frontend/public/data/version.json` generation in `backend/export_static.py`, with a deterministic `asset_version` derived from the current static size snapshot.

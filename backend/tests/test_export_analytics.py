@@ -24,6 +24,7 @@ from export_static import (
     _normalized_duration_minutes,
     _parse_score_totals,
     _performance_above_elo,
+    _peer_group_summary,
     _player_elo_extremes,
     _player_results_summary,
     _recent_activity_summary,
@@ -131,6 +132,43 @@ def test_performance_above_elo_ranks_event_overperformers():
     assert rows[0]["upset_wins"] == 2
     assert rows[0]["place"] == 1
     assert rows[0]["biggest_upset"]["opponent"] == "Favorite"
+
+
+def test_peer_group_summary_prefers_fargo_and_expands_sparse_bands():
+    players = [
+        {"name": "A", "fargo": 612, "elo_rating": 1640, "win_rate": 60.0, "wins": 12, "losses": 8},
+        {"name": "B", "fargo": 618, "elo_rating": 1620, "win_rate": 66.7, "wins": 10, "losses": 5},
+        {"name": "C", "fargo": 645, "elo_rating": 1660, "win_rate": 55.0, "wins": 11, "losses": 9},
+        {"name": "D", "fargo": 689, "elo_rating": 1700, "win_rate": 50.0, "wins": 8, "losses": 8},
+        {"name": "E", "fargo": 590, "elo_rating": 1590, "win_rate": 48.0, "wins": 12, "losses": 13},
+    ]
+
+    summary = _peer_group_summary(players[0], players)
+
+    assert summary["available"] is True
+    assert summary["basis"] == "fargo"
+    assert summary["band_label"] == "600-649 Fargo"
+    assert summary["expanded"] is True
+    assert summary["player_rank_by_win_rate"] == 2
+    assert summary["peer_count"] == 4
+    assert summary["nearest_peers"][0]["name"] == "B"
+    assert "sparse" in summary["note"]
+
+
+def test_peer_group_summary_falls_back_to_elo():
+    players = [
+        {"name": "A", "fargo": None, "elo_rating": 1510, "win_rate": 60.0, "wins": 6, "losses": 4},
+        {"name": "B", "fargo": None, "elo_rating": 1535, "win_rate": 50.0, "wins": 5, "losses": 5},
+        {"name": "C", "fargo": None, "elo_rating": 1580, "win_rate": 55.6, "wins": 5, "losses": 4},
+        {"name": "D", "fargo": None, "elo_rating": 1610, "win_rate": 42.9, "wins": 3, "losses": 4},
+    ]
+
+    summary = _peer_group_summary(players[0], players)
+
+    assert summary["basis"] == "elo"
+    assert summary["band_label"] == "1500-1599 ELO"
+    assert summary["expanded"] is True
+    assert summary["average_peer_win_rate"] == 49.5
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():
