@@ -29,6 +29,11 @@ VISIBILITY_BLOCKER_TITLES = {
     "GitHub code scanning unavailable",
     "GitHub code scanning request failed",
 }
+DEPRECATED_NODE20_ACTION_REFS = {
+    "actions/checkout@v4",
+    "actions/setup-node@v4",
+    "actions/setup-python@v5",
+}
 
 
 def _utc_now() -> datetime:
@@ -147,6 +152,36 @@ def _coerce_finding(row: dict[str, Any]) -> Finding | None:
     )
 
 
+def _workflow_files() -> list[Path]:
+    workflows_dir = ROOT_DIR / ".github" / "workflows"
+    if not workflows_dir.exists():
+        return []
+    return sorted(
+        path
+        for path in workflows_dir.iterdir()
+        if path.is_file() and path.suffix in {".yml", ".yaml"}
+    )
+
+
+def _current_repo_uses_deprecated_node20_actions() -> bool:
+    for path in _workflow_files():
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if any(action_ref in text for action_ref in DEPRECATED_NODE20_ACTION_REFS):
+            return True
+    return False
+
+
+def _is_superseded_node20_finding(finding: Finding) -> bool:
+    return (
+        finding.source == "workflow"
+        and "Node.js 20 actions are deprecated" in finding.summary
+        and not _current_repo_uses_deprecated_node20_actions()
+    )
+
+
 def _fallback_findings(current_findings: list[Finding], previous_payload: dict[str, Any] | None) -> tuple[str | None, list[Finding]]:
     if not current_findings or not all(_is_visibility_blocker(finding) for finding in current_findings):
         return None, []
@@ -157,7 +192,7 @@ def _fallback_findings(current_findings: list[Finding], previous_payload: dict[s
     carried = []
     for row in previous_payload.get("findings") or []:
         finding = _coerce_finding(row)
-        if finding and not _is_visibility_blocker(finding):
+        if finding and not _is_visibility_blocker(finding) and not _is_superseded_node20_finding(finding):
             carried.append(finding)
     return previous_generated_at, carried
 
@@ -239,7 +274,12 @@ def _summarize_failed_workflows(repo: str, token: str | None = None) -> list[Fin
             needed = False
         elif any("Node.js 20 actions are deprecated" in msg for msg in annotation_messages):
             if name not in {"Codacy Security Scan", "CodeQL"}:
-                priority = min(priority, "P2", key=_priority_rank)
+                if _current_repo_uses_deprecated_node20_actions():
+                    priority = min(priority, "P2", key=_priority_rank)
+                else:
+                    root_cause = "Historical Node 20 action warning on an older run; current workflow files already use Node 24-capable action versions"
+                    needed = False
+                    priority = "P3"
 
         findings.append(
             Finding(

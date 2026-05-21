@@ -76,6 +76,38 @@ def test_failed_workflow_summary_treats_challonge_api_key_as_only_required_secre
     assert "CHALLONGE_SUBDOMAIN" not in finding.next_step
 
 
+def test_failed_workflow_summary_downgrades_superseded_node20_warning(monkeypatch):
+    def fake_github_json(url, token=None):
+        if url.endswith("/actions/runs?status=completed&per_page=30"):
+            return {
+                "workflow_runs": [
+                    {
+                        "name": "Scheduled static data refresh",
+                        "conclusion": "failure",
+                        "id": 123,
+                        "created_at": "2026-05-20T00:00:00Z",
+                        "html_url": "https://example.invalid/run/123",
+                    }
+                ]
+            }
+        if url.endswith("/actions/runs/123/jobs"):
+            return {"jobs": [{"id": 456}]}
+        if url.endswith("/check-runs/456/annotations"):
+            return [{"message": "Node.js 20 actions are deprecated"}]
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(ops_review, "_github_json", fake_github_json)
+    monkeypatch.setattr(ops_review, "_current_repo_uses_deprecated_node20_actions", lambda: False)
+
+    findings = ops_review._summarize_failed_workflows("subiki/fremontopen")
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.priority == "P3"
+    assert finding.needed is False
+    assert "current workflow files already use Node 24-capable action versions" in finding.summary
+
+
 def test_sync_issues_reconciles_correctly(monkeypatch):
     requests_made = []
 
@@ -334,3 +366,46 @@ def test_load_last_actionable_report_skips_blocker_only_latest(tmp_path):
 
     assert payload is not None
     assert payload["generated_at"] == "2026-05-20T19:58:38.144694+00:00"
+
+
+def test_fallback_findings_skip_superseded_node20_item(monkeypatch):
+    current_findings = [
+        ops_review.Finding(
+            source="workflow",
+            title="GitHub workflow review unavailable",
+            priority="P2",
+            needed=True,
+            summary="GitHub API access is blocked",
+            next_step="Run elsewhere",
+        ),
+        ops_review.Finding(
+            source="code-scanning",
+            title="GitHub code scanning unavailable",
+            priority="P2",
+            needed=True,
+            summary="Token missing",
+            next_step="Set token",
+        ),
+    ]
+    previous_payload = {
+        "generated_at": "2026-05-20T23:59:33.159885+00:00",
+        "findings": [
+            {
+                "source": "workflow",
+                "title": "Scheduled static data refresh",
+                "priority": "P1",
+                "needed": True,
+                "summary": "1 recent failure(s); latest root cause: Node.js 20 actions are deprecated.",
+                "next_step": "Review the failed run and decide whether it affects the static demo shipping path.",
+                "url": "https://example.invalid/run/123",
+                "metadata": {"run_id": 123},
+            }
+        ],
+    }
+
+    monkeypatch.setattr(ops_review, "_current_repo_uses_deprecated_node20_actions", lambda: False)
+
+    generated_at, fallback_findings = ops_review._fallback_findings(current_findings, previous_payload)
+
+    assert generated_at == "2026-05-20T23:59:33.159885+00:00"
+    assert fallback_findings == []
