@@ -57,6 +57,18 @@ const loadRivalryIndex = async (cache) => {
   return (file && await loadDataFile(file)) || [];
 };
 
+const loadTournamentDurationGroups = async (cache) => {
+  if (cache.tournament_duration_groups) return cache.tournament_duration_groups;
+  const file = cache.data_files?.tournament_duration_groups;
+  return (file && await loadDataFile(file)) || [];
+};
+
+const loadSingleTournamentOverperformers = async (cache) => {
+  if (cache.single_tournament_overperformers) return cache.single_tournament_overperformers;
+  const file = cache.data_files?.single_tournament_overperformers;
+  return (file && await loadDataFile(file)) || [];
+};
+
 const notFound = (detail = "Not found") => {
   const error = new Error(detail);
   error.response = { status: 404, data: { detail } };
@@ -251,6 +263,8 @@ const staticGet = async (path, config = {}) => {
   if (path === "/analytics/h2h-heatmap") return { data: await loadH2HHeatmap(cache) };
   if (path === "/analytics/recent-matches") return { data: await loadRecentMatches(cache) };
   if (path === "/analytics/rivalry-index") return { data: await loadRivalryIndex(cache) };
+  if (path === "/analytics/tournament-duration-groups") return { data: await loadTournamentDurationGroups(cache) };
+  if (path === "/analytics/single-tournament-overperformers") return { data: await loadSingleTournamentOverperformers(cache) };
   if (path === "/tournaments") return { data: cache.tournaments };
   if (path.startsWith("/tournaments/")) {
     const id = decodePathPart(path.split("/")[2]);
@@ -326,6 +340,8 @@ export const fetchSeasonStandings = () => api.get("/seasons").then((r) => r.data
 export const fetchH2HHeatmap = () => api.get("/analytics/h2h-heatmap").then((r) => r.data);
 export const fetchRecentMatches = () => api.get("/analytics/recent-matches").then((r) => r.data);
 export const fetchRivalryIndex = () => api.get("/analytics/rivalry-index").then((r) => r.data);
+export const fetchTournamentDurationGroups = () => api.get("/analytics/tournament-duration-groups").then((r) => r.data);
+export const fetchSingleTournamentOverperformers = () => api.get("/analytics/single-tournament-overperformers").then((r) => r.data);
 export const fetchTournaments = () => api.get("/tournaments").then((r) => r.data);
 export const fetchTournament = (id) => api.get(`/tournaments/${id}`).then((r) => r.data);
 export const fetchPlayers = (q = "") =>

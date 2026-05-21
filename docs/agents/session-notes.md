@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Split duration groups and event overperformers out of boot stats
+
+- Moved `tournament_duration_groups` and `single_tournament_overperformers` out of `stats` into dedicated static files at `frontend/public/data/tournament-duration-groups.json` and `frontend/public/data/single-tournament-overperformers.json`.
+- Added `/analytics/tournament-duration-groups` and `/analytics/single-tournament-overperformers` in `frontend/src/lib/api.js`, and updated `frontend/src/pages/Dashboard.jsx` to fetch those analytics panels separately from the initial `/stats` payload.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so automated refreshes also track the new generated analytics files.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-continue2`, and `npm run build --prefix frontend`.
+- Post-change `frontend/public/data/cache.json` is `964,121` bytes, down another `6,878` bytes, while `tournament-duration-groups.json` is `3,679` bytes and `single-tournament-overperformers.json` is `3,281` bytes.
+
 ## 2026-05-20 - Split recent matches and rivalry index out of boot stats
 
 - Moved `recent_matches` and `rivalry_index` out of `stats` into dedicated static files at `frontend/public/data/recent-matches.json` and `frontend/public/data/rivalry-index.json`.

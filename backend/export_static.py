@@ -1932,7 +1932,6 @@ async def build_cache() -> Dict[str, Any]:
             "duration_outlier_count": duration_outlier_count,
             "duration_outlier_threshold_minutes": MAX_NORMAL_TOURNAMENT_DURATION_MINUTES,
             "tournament_duration_extremes": tournament_analytics["duration_extremes"],
-            "tournament_duration_groups": tournament_analytics["duration_groups"][:8],
             "entry_fee": ENTRY_FEE_DOLLARS,
             "total_prize_pool": sum(t.get("prize_pool") or 0 for t in tournaments),
             "top_tournament_winners": tournament_analytics["winner_leaderboard"][:4],
@@ -1968,15 +1967,6 @@ async def build_cache() -> Dict[str, Any]:
             ),
             "season_standings": season_standings_preview,
             "upset_tracker": upset_tracker,
-            "single_tournament_overperformers": sorted(
-                single_tournament_overperformers,
-                key=lambda row: (
-                    -row["above_expectation"],
-                    -row["wins"],
-                    row["expected_wins"],
-                    row["player"].casefold(),
-                ),
-            )[:8],
             "anniversary_matches": anniversary,
             "last_synced_at": sync_status.get("last_synced_at"),
             "dashboard_trends": {
@@ -2004,6 +1994,16 @@ async def build_cache() -> Dict[str, Any]:
                 if m.get("winner_name") and m.get("loser_name")
             ][:10],
             "rivalry_index": rivalry_index,
+            "tournament_duration_groups": tournament_analytics["duration_groups"][:8],
+            "single_tournament_overperformers": sorted(
+                single_tournament_overperformers,
+                key=lambda row: (
+                    -row["above_expectation"],
+                    -row["wins"],
+                    row["expected_wins"],
+                    row["player"].casefold(),
+                ),
+            )[:8],
             "player_details": player_details,
             "player_extras": player_extras,
             "matches": matches,
@@ -2036,6 +2036,8 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
     h2h_heatmap = cache.pop("h2h_heatmap", {})
     recent_matches = cache.pop("recent_matches", [])
     rivalry_index = cache.pop("rivalry_index", [])
+    tournament_duration_groups = cache.pop("tournament_duration_groups", [])
+    single_tournament_overperformers = cache.pop("single_tournament_overperformers", [])
     player_details = cache.pop("player_details", {})
     player_extras = cache.pop("player_extras", {})
     cache.pop("matches", None)
@@ -2100,6 +2102,16 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         json.dumps(rivalry_index, default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+    duration_groups_rel_path = "data/tournament-duration-groups.json"
+    (public_root / duration_groups_rel_path).write_text(
+        json.dumps(tournament_duration_groups, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    overperformers_rel_path = "data/single-tournament-overperformers.json"
+    (public_root / overperformers_rel_path).write_text(
+        json.dumps(single_tournament_overperformers, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
 
     cache["data_files"] = {
         "tournaments": tournament_files,
@@ -2108,6 +2120,8 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         "h2h_heatmap": heatmap_rel_path,
         "recent_matches": recent_matches_rel_path,
         "rivalry_index": rivalry_index_rel_path,
+        "tournament_duration_groups": duration_groups_rel_path,
+        "single_tournament_overperformers": overperformers_rel_path,
     }
     out.write_text(
         json.dumps(cache, default=_json_default, ensure_ascii=False, separators=(",", ":")),

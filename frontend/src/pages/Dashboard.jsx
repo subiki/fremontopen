@@ -9,6 +9,8 @@ import {
   fetchH2HHeatmap,
   fetchRecentMatches,
   fetchRivalryIndex,
+  fetchTournamentDurationGroups,
+  fetchSingleTournamentOverperformers,
 } from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
@@ -21,6 +23,8 @@ export default function Dashboard() {
   const [h2hHeatmap, setH2HHeatmap] = useState({ players: [], matrix: [], top_pairs: [] });
   const [recentMatches, setRecentMatches] = useState([]);
   const [rivalryIndex, setRivalryIndex] = useState([]);
+  const [durationGroups, setDurationGroups] = useState([]);
+  const [singleTournamentOverperformers, setSingleTournamentOverperformers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -28,18 +32,30 @@ export default function Dashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      const [statsData, topPlayersData, heatmapData, recentMatchesData, rivalryIndexData] = await Promise.all([
+      const [
+        statsData,
+        topPlayersData,
+        heatmapData,
+        recentMatchesData,
+        rivalryIndexData,
+        durationGroupsData,
+        overperformersData,
+      ] = await Promise.all([
         fetchStats(),
         fetchLeaderboard(5),
         fetchH2HHeatmap(),
         fetchRecentMatches(),
         fetchRivalryIndex(),
+        fetchTournamentDurationGroups(),
+        fetchSingleTournamentOverperformers(),
       ]);
       setStats(statsData);
       setTopPlayers(topPlayersData);
       setH2HHeatmap(heatmapData || { players: [], matrix: [], top_pairs: [] });
       setRecentMatches(recentMatchesData || []);
       setRivalryIndex(rivalryIndexData || []);
+      setDurationGroups(durationGroupsData || []);
+      setSingleTournamentOverperformers(overperformersData || []);
     } finally {
       setLoading(false);
     }
@@ -80,11 +96,9 @@ export default function Dashboard() {
 
   const topTournamentWinners = stats?.top_tournament_winners || [];
   const upsetTracker = stats?.upset_tracker || [];
-  const singleTournamentOverperformers = stats?.single_tournament_overperformers || [];
   const anniversary = stats?.anniversary_matches || {};
   const fieldDurationTrend = stats?.tournament_field_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
-  const durationGroups = stats?.tournament_duration_groups || [];
   const dashboardTrends = stats?.dashboard_trends || {};
   const cacheMetadata = stats?.cache_metadata || {};
   const seasonStandings = stats?.season_standings || [];
