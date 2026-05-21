@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-20 - Added static change report since previous refresh
+
+- Added `frontend/public/data/refresh-change-report.json` generation in `backend/export_static.py` by reading the previous committed `data-size-report.json` before overwrite and computing deltas against the new export.
+- Updated `frontend/public/data/refresh-summary.md` so it now includes a `Since Previous Refresh` section with JSON count delta, total byte delta, `cache.json` delta, top-level file deltas, and stats-section deltas.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so automated refreshes track `refresh-change-report.json` alongside the existing summary/report artifacts.
+- Verified with `python backend/export_static.py` from `backend/`, `python scripts/check_static_data_budget.py`, `pytest backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-change-report`, and `npm run build --prefix frontend`.
+- Current no-data-change run correctly shows a near-zero diff with only the summary/report artifact growth called out, which keeps the report useful without inventing changes.
+
 ## 2026-05-20 - Deferred dashboard analytics panel loading
 
 - Updated `frontend/src/pages/Dashboard.jsx` so the dashboard core now loads `fetchStats()` and the top-five leaderboard first, while lower-priority analytics panels fetch afterward in an idle/deferred pass.

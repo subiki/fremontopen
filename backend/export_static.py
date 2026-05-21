@@ -137,7 +137,61 @@ def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[st
     }
 
 
-def _build_refresh_summary(report: Dict[str, Any]) -> str:
+def _delta_rows(
+    previous: Dict[str, Any] | None,
+    current: Dict[str, Any] | None,
+) -> List[Dict[str, Any]]:
+    previous = previous or {}
+    current = current or {}
+    keys = sorted(set(previous) | set(current))
+    rows = []
+    for key in keys:
+        previous_value = int(previous.get(key) or 0)
+        current_value = int(current.get(key) or 0)
+        delta = current_value - previous_value
+        if delta == 0:
+            continue
+        rows.append({
+            "key": key,
+            "previous": previous_value,
+            "current": current_value,
+            "delta": delta,
+        })
+    rows.sort(key=lambda row: (-abs(row["delta"]), row["key"]))
+    return rows
+
+
+def _build_change_report(previous: Dict[str, Any] | None, current: Dict[str, Any]) -> Dict[str, Any]:
+    previous_totals = (previous or {}).get("totals") or {}
+    current_totals = current.get("totals") or {}
+    previous_cache = (previous or {}).get("cache") or {}
+    current_cache = current.get("cache") or {}
+    previous_top_level = {
+        row["path"]: row["bytes"]
+        for row in ((previous or {}).get("top_level_files") or [])
+    }
+    current_top_level = {
+        row["path"]: row["bytes"]
+        for row in (current.get("top_level_files") or [])
+    }
+    previous_stats = previous_cache.get("stats_sections") or {}
+    current_stats = current_cache.get("stats_sections") or {}
+    return {
+        "previous_generated_at": (previous or {}).get("generated_at"),
+        "current_generated_at": current.get("generated_at"),
+        "totals": {
+            "json_files_delta": int(current_totals.get("json_files") or 0) - int(previous_totals.get("json_files") or 0),
+            "bytes_delta": int(current_totals.get("bytes") or 0) - int(previous_totals.get("bytes") or 0),
+        },
+        "cache": {
+            "bytes_delta": int(current_cache.get("bytes") or 0) - int(previous_cache.get("bytes") or 0),
+        },
+        "top_level_file_deltas": _delta_rows(previous_top_level, current_top_level)[:10],
+        "stats_section_deltas": _delta_rows(previous_stats, current_stats)[:10],
+    }
+
+
+def _build_refresh_summary(report: Dict[str, Any], change_report: Dict[str, Any] | None = None) -> str:
     totals = report.get("totals") or {}
     cache = report.get("cache") or {}
     stats_sections = cache.get("stats_sections") or {}
@@ -183,6 +237,44 @@ def _build_refresh_summary(report: Dict[str, Any]) -> str:
         lines.extend([f"- `{row['path']}`: `{row['bytes']}` bytes" for row in top_level_files])
     else:
         lines.append("- None")
+
+    if change_report and change_report.get("previous_generated_at"):
+        totals_delta = change_report.get("totals") or {}
+        cache_delta = (change_report.get("cache") or {}).get("bytes_delta", 0)
+        lines.extend([
+            "",
+            "## Since Previous Refresh",
+            "",
+            f"- Previous generated: `{change_report.get('previous_generated_at')}`",
+            f"- JSON file delta: `{totals_delta.get('json_files_delta', 0):+d}`",
+            f"- Total JSON bytes delta: `{totals_delta.get('bytes_delta', 0):+d}`",
+            f"- cache.json bytes delta: `{cache_delta:+d}`",
+            "",
+            "### Top-Level File Deltas",
+            "",
+        ])
+        file_deltas = change_report.get("top_level_file_deltas") or []
+        if file_deltas:
+            lines.extend([
+                f"- `{row['key']}`: `{row['delta']:+d}` bytes (`{row['previous']}` -> `{row['current']}`)"
+                for row in file_deltas
+            ])
+        else:
+            lines.append("- No top-level file size changes")
+
+        lines.extend([
+            "",
+            "### Stats Section Deltas",
+            "",
+        ])
+        stats_deltas = change_report.get("stats_section_deltas") or []
+        if stats_deltas:
+            lines.extend([
+                f"- `{row['key']}`: `{row['delta']:+d}` bytes (`{row['previous']}` -> `{row['current']}`)"
+                for row in stats_deltas
+            ])
+        else:
+            lines.append("- No stats section size changes")
 
     return "\n".join(lines) + "\n"
 
@@ -2190,14 +2282,23 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         encoding="utf-8",
     )
     size_report_path = out.parent / "data-size-report.json"
+    previous_size_report = None
+    if size_report_path.exists():
+        previous_size_report = json.loads(size_report_path.read_text(encoding="utf-8"))
     size_report = _build_data_size_report(public_root, cache)
     size_report_path.write_text(
         json.dumps(size_report, default=_json_default, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+    change_report_path = out.parent / "refresh-change-report.json"
+    change_report = _build_change_report(previous_size_report, size_report)
+    change_report_path.write_text(
+        json.dumps(change_report, default=_json_default, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
     refresh_summary_path = out.parent / "refresh-summary.md"
     refresh_summary_path.write_text(
-        _build_refresh_summary(size_report),
+        _build_refresh_summary(size_report, change_report),
         encoding="utf-8",
     )
     print(

@@ -131,6 +131,7 @@ jobs:
             backend/player_overrides.json \
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
+            frontend/public/data/refresh-change-report.json \
             frontend/public/data/refresh-summary.md \
             frontend/public/data/h2h-heatmap.json \
             frontend/public/data/recent-matches.json \
@@ -157,6 +158,7 @@ jobs:
             backend/player_overrides.json \
             frontend/public/data/cache.json \
             frontend/public/data/data-size-report.json \
+            frontend/public/data/refresh-change-report.json \
             frontend/public/data/refresh-summary.md \
             frontend/public/data/h2h-heatmap.json \
             frontend/public/data/recent-matches.json \
