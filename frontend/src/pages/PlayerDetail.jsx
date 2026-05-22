@@ -83,16 +83,22 @@ export default function PlayerDetail() {
   }, [decoded]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        setData(await fetchPlayer(decoded));
-      } catch {
-        setData(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    let cancelled = false;
+    setData(null);
+    setLoading(true);
+    fetchPlayer(decoded)
+      .then((playerData) => {
+        if (!cancelled) setData(playerData);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [decoded]);
 
   useEffect(() => {

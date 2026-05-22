@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-21 - Fixed player-profile redirect flapping on in-profile links
+
+- Updated `frontend/src/pages/PlayerDetail.jsx` so the main player fetch now clears stale profile state immediately and ignores late responses after the route changes.
+- This prevents the case-insensitive canonicalization effect from seeing the previous player record and redirecting the page back to the original profile after clicking another player link inside the page.
+- Verified with `C:\\Users\\karmi\\OneDrive\\Documents\\fremontopen\\.tools\\node-v24.15.0-win-x64\\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-21 - Unified timeline chart dates with year context
 
 - Added a shared formatter in `frontend/src/lib/timelineDates.js` for date-based chart labels.
