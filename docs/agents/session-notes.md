@@ -1,5 +1,12 @@
 # Agent Session Notes
 
+## 2026-05-21 - Dashboard anniversary/toppers copy and Jason Lambert Fargo override
+
+- Updated `frontend/src/pages/Dashboard.jsx` so the `On This Week`/`Previous Season` panel now shows the full year in its date label and includes a direct tournament link under each match row.
+- Expanded the dashboard `Top Players` card to show races W-L, racks W-L, and average tournament placement instead of only the simpler single-line summary.
+- Added a file-backed player override in `backend/player_overrides.json` setting `Jason Lambert` to Fargo `450`, then regenerated the static export so that value lands in the public data bundle.
+- Verified with `python export_static.py` from `backend\\`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-dashboard-copy`, and `npm run build --prefix frontend`.
+
 ## 2026-05-21 - Split player chart history out of extras payloads
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then rechecked the live checkout and current static size report before continuing the cache-efficiency path.

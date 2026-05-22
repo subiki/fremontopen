@@ -1,3 +1,7 @@
 {
-  "players": {}
+  "players": {
+    "Jason Lambert": {
+      "fargo": 450
+    }
+  }
 }

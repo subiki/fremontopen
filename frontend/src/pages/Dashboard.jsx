@@ -535,9 +535,19 @@ export default function Dashboard() {
                   <div className="mt-1 text-xs text-[#6B7280] truncate">
                     def. {row.loser}
                   </div>
+                  {row.tournament_id && row.tournament_name ? (
+                    <div className="mt-1 text-xs text-[#6B7280] truncate">
+                      <Link
+                        to={`/tournaments/${row.tournament_id}`}
+                        className="hover:text-[#9CA3AF]"
+                      >
+                        {row.tournament_name}
+                      </Link>
+                    </div>
+                  ) : null}
                 </div>
                 <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
-                  {formatDateTime(row.date)}
+                  {formatDateTimeWithYear(row.date)}
                 </span>
               </>
             )}
@@ -594,7 +604,7 @@ export default function Dashboard() {
                 {topPlayers.map((p, i) => (
                   <li
                     key={p.name}
-                    className="py-3 flex items-center justify-between"
+                    className="py-3 flex items-start justify-between gap-4"
                     data-testid={`top-player-${i}`}
                   >
                     <div className="flex items-center gap-3">
@@ -608,11 +618,22 @@ export default function Dashboard() {
                         {p.name}
                       </Link>
                     </div>
-                    <div className="font-mono text-sm">
-                      <span className="text-[#10B981]">{p.wins}W</span>
-                      <span className="text-[#6B7280] mx-1">.</span>
-                      <span className="text-[#EF4444]">{p.losses}L</span>
-                      <span className="text-[#6B7280] ml-2">{p.win_rate}%</span>
+                    <div className="text-right">
+                      <div className="font-mono text-sm">
+                        <span className="text-[#10B981]">{p.races_won ?? p.wins}W</span>
+                        <span className="text-[#6B7280] mx-1">.</span>
+                        <span className="text-[#EF4444]">{p.races_lost ?? p.losses}L</span>
+                        <span className="text-[#6B7280] ml-2">races</span>
+                      </div>
+                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                        <span className="text-[#10B981]">{p.racks_won ?? "-"}</span>
+                        <span className="text-[#6B7280] mx-1">.</span>
+                        <span className="text-[#EF4444]">{p.racks_lost ?? "-"}</span>
+                        <span className="text-[#6B7280] ml-2">racks</span>
+                      </div>
+                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                        Avg place {p.average_placement ?? "-"}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -673,6 +694,13 @@ const formatDateTime = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const formatDateTimeWithYear = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
 
 const formatMoney = (value) =>
