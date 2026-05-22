@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-05-21 - Unified timeline chart dates with year context
+
+- Added a shared formatter in `frontend/src/lib/timelineDates.js` for date-based chart labels.
+- Updated `WinsOverTimeChart`, `EloRatingChart`, and `PlayerFormChart` so x-axis ticks now show month plus year, and chart tooltips show the full date including year.
+- Verified with `C:\\Users\\karmi\\OneDrive\\Documents\\fremontopen\\.tools\\node-v24.15.0-win-x64\\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-21 - Fixed stale Fargo performance card and clarified the metric
 
 - Updated `frontend/src/pages/PlayerDetail.jsx` so player-profile extras reset on route changes before the next static fetch resolves, which prevents the `Vs Fargo` card from temporarily reusing the previous player's numbers.
