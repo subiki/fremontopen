@@ -1,5 +1,12 @@
 # Agent Session Notes
 
+## 2026-05-21 - Added top-player Fargo overrides
+
+- Updated `backend/player_overrides.json` with file-backed Fargo ratings for `Eddie Robinson` (`535`), `Chad Galera` (`554`), `Paul Alexander` (`493`), `Jeff Nguyen` (`500`), `Sean Keenan` (`512`), and `Mark Smith` (`519`).
+- Regenerated the static export so those Fargo values now flow into the public player index and player detail payloads without any backend scope change.
+- Verified with `python export_static.py` from `backend\\`, `pytest backend/tests/test_export_analytics.py --basetemp .pytest-tmp-fargo-overrides`, and `npm run build --prefix frontend`.
+- The first frontend build attempt hit a transient missing-generated-folder error for `frontend/public/data/players/46872ffd8e1b`; a direct re-run succeeded once the regenerated shard tree was in place.
+
 ## 2026-05-21 - Dashboard anniversary/toppers copy and Jason Lambert Fargo override
 
 - Updated `frontend/src/pages/Dashboard.jsx` so the `On This Week`/`Previous Season` panel now shows the full year in its date label and includes a direct tournament link under each match row.

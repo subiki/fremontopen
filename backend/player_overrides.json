@@ -1,7 +1,25 @@
 {
   "players": {
+    "Chad Galera": {
+      "fargo": 554
+    },
+    "Eddie Robinson": {
+      "fargo": 535
+    },
+    "Jeff Nguyen": {
+      "fargo": 500
+    },
     "Jason Lambert": {
       "fargo": 450
+    },
+    "Mark Smith": {
+      "fargo": 519
+    },
+    "Paul Alexander": {
+      "fargo": 493
+    },
+    "Sean Keenan": {
+      "fargo": 512
     }
   }
 }
