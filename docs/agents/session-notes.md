@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-21 - Fixed stale Fargo performance card and clarified the metric
+
+- Updated `frontend/src/pages/PlayerDetail.jsx` so player-profile extras reset on route changes before the next static fetch resolves, which prevents the `Vs Fargo` card from temporarily reusing the previous player's numbers.
+- Expanded `backend/players_extras.py` Fargo performance output with `wins_above_expected`, `expected_wins`, `actual_wins`, and `average_delta` so the static export explains what the metric is instead of only emitting a vague cumulative score.
+- Updated the player profile `Vs Fargo` card copy to explain that the headline is wins above Fargo expectation against rated opponents, plus actual wins, expected wins, and per-match average context.
+- Added focused export coverage in `backend/tests/test_export_analytics.py` for the new Fargo-performance summary fields.
+- Verified with `backend\\.venv\\Scripts\\python.exe export_static.py` from `backend\\`, `backend\\.venv\\Scripts\\pytest.exe backend/tests/test_export_analytics.py --basetemp .pytest-tmp-fargo-perf-fix`, and `\\.tools\\node-v24.15.0-win-x64\\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-21 - Added top-player Fargo overrides
 
 - Updated `backend/player_overrides.json` with file-backed Fargo ratings for `Eddie Robinson` (`535`), `Chad Galera` (`554`), `Paul Alexander` (`493`), `Jeff Nguyen` (`500`), `Sean Keenan` (`512`), and `Mark Smith` (`519`).

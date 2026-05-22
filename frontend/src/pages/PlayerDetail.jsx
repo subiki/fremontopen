@@ -49,9 +49,18 @@ export default function PlayerDetail() {
 
   // Load lightweight extras first so the top of the profile can render before chart histories.
   useEffect(() => {
+    let cancelled = false;
+    setExtras(null);
     api.get(`/players/${encodeURIComponent(decoded)}/extras`)
-      .then((r) => setExtras(r.data))
-      .catch(() => setExtras(null));
+      .then((r) => {
+        if (!cancelled) setExtras(r.data);
+      })
+      .catch(() => {
+        if (!cancelled) setExtras(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [decoded]);
 
   useEffect(() => {
@@ -917,8 +926,12 @@ const PerfCard = ({ perf }) => {
   const below = perf.label === "below rating";
   const Icon = above ? TrendUp : below ? TrendDown : Scales;
   const color = above ? "text-[#10B981]" : below ? "text-[#EF4444]" : "text-[#9CA3AF]";
-  const score = perf.performance_score;
+  const score = Number(perf.wins_above_expected ?? perf.performance_score ?? 0);
+  const avgDelta = Number(perf.average_delta ?? 0);
+  const expectedWins = Number(perf.expected_wins ?? 0);
+  const actualWins = Number(perf.actual_wins ?? 0);
   const display = perf.rated_matches ? `${score >= 0 ? "+" : ""}${score.toFixed(2)}` : "-";
+  const avgDisplay = perf.rated_matches ? `${avgDelta >= 0 ? "+" : ""}${avgDelta.toFixed(3)}` : "-";
   return (
     <div className="bg-[#141923] border border-[#273041] rounded-lg p-5" data-testid="perf-card">
       <div className="flex items-center justify-between">
@@ -927,7 +940,13 @@ const PerfCard = ({ perf }) => {
       </div>
       <div className={`mt-2 font-mono text-3xl font-semibold ${color}`}>{display}</div>
       <div className={`text-xs mt-2 font-medium ${color}`}>
-        {perf.label} <span className="text-[#6B7280] font-mono">({perf.rated_matches} rated)</span>
+        wins above expected <span className="text-[#6B7280] font-mono">({perf.rated_matches} rated matches)</span>
+      </div>
+      <div className="mt-2 text-xs text-[#9CA3AF]">
+        {actualWins} actual wins vs {expectedWins.toFixed(2)} expected from Fargo odds.
+      </div>
+      <div className="mt-1 text-xs text-[#6B7280]">
+        Per-match average: <span className={`font-mono ${color}`}>{avgDisplay}</span>. +1.00 means roughly one extra race win above expectation.
       </div>
     </div>
   );

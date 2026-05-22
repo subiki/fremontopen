@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from players_extras import compute_elo_ratings, rolling_match_form
+from players_extras import compute_elo_ratings, compute_perf_vs_fargo, rolling_match_form
 from import_side_matches import load_side_match_rows
 from export_static import (
     _anniversary_matches,
@@ -673,6 +673,29 @@ def test_compute_elo_ratings_rewards_winners_and_tracks_history():
     assert ratings["peaks"]["A"] == ratings["ratings"]["A"]
     assert len(ratings["history"]["A"]) == 2
     assert ratings["history"]["A"][0]["delta"] > 0
+
+
+def test_perf_vs_fargo_reports_expected_and_actual_wins():
+    perf = compute_perf_vs_fargo(
+        [
+            match(1, "A", "B", "2026-05-01T17:00:00-07:00"),
+            match(2, "B", "A", "2026-05-02T17:00:00-07:00"),
+            match(3, "A", "C", "2026-05-03T17:00:00-07:00"),
+        ],
+        "A",
+        500,
+        {"B": 500, "C": 540},
+    )
+
+    assert perf["has_fargo"] is True
+    assert perf["rated_matches"] == 3
+    assert perf["actual_wins"] == 2
+    assert perf["expected_wins"] == 1.39
+    assert perf["wins_above_expected"] == 0.61
+    assert perf["performance_score"] == 0.61
+    assert perf["average_delta"] == 0.204
+    assert perf["label"] == "above rating"
+    assert "Wins above expected" in perf["explanation"]
 
 
 def test_rolling_match_form_tracks_last_ten_win_rate():

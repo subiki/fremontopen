@@ -122,6 +122,8 @@ def compute_perf_vs_fargo(matches: List[Dict[str, Any]], player_name: str, playe
         return {"has_fargo": False, "performance_score": None, "rated_matches": 0, "per_match": []}
     per_match = []
     total_delta = 0.0
+    expected_wins = 0.0
+    actual_wins = 0.0
     rated = 0
     for m in matches:
         if not m.get("winner_name") or not m.get("loser_name"):
@@ -135,6 +137,8 @@ def compute_perf_vs_fargo(matches: List[Dict[str, Any]], player_name: str, playe
         actual = 1.0 if won else 0.0
         delta = actual - expected
         total_delta += delta
+        expected_wins += expected
+        actual_wins += actual
         rated += 1
         per_match.append({
             "match_id": m.get("id"),
@@ -151,12 +155,23 @@ def compute_perf_vs_fargo(matches: List[Dict[str, Any]], player_name: str, playe
             label = "above rating"
         elif avg < -0.10:
             label = "below rating"
+    average_delta = round(total_delta / rated, 3) if rated else 0.0
+    explanation = (
+        "Wins above expected versus rated opponents based on Fargo win probabilities."
+        if rated
+        else "No rated-opponent matches yet."
+    )
     return {
         "has_fargo": True,
         "fargo": player_fargo,
         "performance_score": round(total_delta, 2),
+        "wins_above_expected": round(total_delta, 2),
+        "expected_wins": round(expected_wins, 2),
+        "actual_wins": int(actual_wins),
+        "average_delta": average_delta,
         "rated_matches": rated,
         "label": label,
+        "explanation": explanation,
         "per_match": per_match,
     }
 
