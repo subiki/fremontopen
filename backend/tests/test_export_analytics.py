@@ -30,6 +30,8 @@ from export_static import (
     _prune_boot_cache,
     _recent_activity_summary,
     _rivalry_index,
+    _rivalry_win_counts,
+    _season_for_date,
     _season_standings,
     _season_standings_preview,
     _split_player_extras_payload,
@@ -802,6 +804,20 @@ def test_rivalry_index_scores_volume_closeness_and_swings():
     assert rows[0]["score"] > rows[1]["score"]
 
 
+def test_rivalry_win_counts_scores_qualifying_head_to_head_leaders():
+    counts = _rivalry_win_counts([
+        match(1, "A", "B", "2026-05-01T12:00:00-07:00"),
+        match(2, "A", "B", "2026-05-02T12:00:00-07:00"),
+        match(3, "B", "A", "2026-05-03T12:00:00-07:00"),
+        match(4, "A", "C", "2026-05-01T12:00:00-07:00"),
+        match(5, "C", "A", "2026-05-02T12:00:00-07:00"),
+        match(6, "D", "E", "2026-05-01T12:00:00-07:00"),
+        match(7, "D", "E", "2026-05-02T12:00:00-07:00"),
+    ])
+
+    assert counts == {"A": 1}
+
+
 def test_h2h_heatmap_builds_top_player_matrix():
     heatmap = _h2h_heatmap([
         match(1, "A", "B"),
@@ -890,6 +906,20 @@ def test_season_standings_group_matches_by_tournament_date():
     assert seasons[1]["players"][0]["points"] == 6
     assert seasons[1]["players"][0]["attendance"] == 1
     assert seasons[1]["attendance_leaders"][0]["player"] == "A"
+
+
+def test_season_for_date_rolls_december_into_next_winter():
+    december = _season_for_date("2025-12-06T12:00:00-08:00")
+    january = _season_for_date("2026-01-03T12:00:00-08:00")
+    february = _season_for_date("2026-02-28T12:00:00-08:00")
+    spring = _season_for_date("2026-03-01T12:00:00-08:00")
+
+    assert december["key"] == "2026-1"
+    assert december["label"] == "2026 Winter"
+    assert january["key"] == "2026-1"
+    assert february["key"] == "2026-1"
+    assert spring["key"] == "2026-2"
+    assert spring["label"] == "2026 Spring"
 
 
 def test_season_standings_preview_trims_player_rows_and_season_count():

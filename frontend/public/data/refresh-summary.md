@@ -1,13 +1,13 @@
 # Static Refresh Summary
 
-- Generated: `2026-05-23T16:02:09.727777+00:00`
+- Generated: `2026-05-23T22:23:44.921998+00:00`
 - Total JSON files: `2378`
-- Total JSON bytes: `32343030`
-- cache.json bytes: `17051`
+- Total JSON bytes: `32353995`
+- cache.json bytes: `17054`
 
 ## Heaviest Stats Sections
 
-- `season_standings`: `3609` bytes
+- `season_standings`: `3612` bytes
 - `tournament_field_duration_trend`: `2806` bytes
 - `upset_tracker`: `2735` bytes
 - `anniversary_matches`: `1929` bytes
@@ -20,7 +20,7 @@
 
 - `data/players/a5ac7684edbf/matches.json`: `645247` bytes
 - `data/players/1a328327820c/matches.json`: `593239` bytes
-- `data/players-index.json`: `539598` bytes
+- `data/players-index.json`: `548628` bytes
 - `data/players/40a69d58d4f1/matches.json`: `475009` bytes
 - `data/players/a5ac7684edbf/history.json`: `464994` bytes
 - `data/players/e404c90b8e54/matches.json`: `446308` bytes
@@ -31,29 +31,30 @@
 
 ## Generated Analytics Files
 
-- `data/players-index.json`: `539598` bytes
+- `data/players-index.json`: `548628` bytes
 - `data/tournaments-index.json`: `266985` bytes
-- `data/season-standings.json`: `183983` bytes
+- `data/season-standings.json`: `176957` bytes
 - `data/h2h-heatmap.json`: `13842` bytes
 - `data/recent-matches.json`: `6956` bytes
 - `data/rivalry-index.json`: `4387` bytes
 - `data/tournament-duration-groups.json`: `3679` bytes
 - `data/single-tournament-overperformers.json`: `3281` bytes
 - `data/data-size-report.json`: `2268` bytes
-- `data/refresh-change-report.json`: `486` bytes
+- `data/refresh-change-report.json`: `414` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-05-22T21:21:38.985164+00:00`
+- Previous generated: `2026-05-23T22:20:22.407688+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `+0`
-- cache.json bytes delta: `+0`
+- Total JSON bytes delta: `-6854`
+- cache.json bytes delta: `+3`
 
 ### Top-Level File Deltas
 
-- No top-level file size changes
+- `data/season-standings.json`: `-7026` bytes (`183983` -> `176957`)
+- `data/refresh-change-report.json`: `+169` bytes (`245` -> `414`)
 
 ### Stats Section Deltas
 
-- No stats section size changes
+- `season_standings`: `+3` bytes (`3609` -> `3612`)

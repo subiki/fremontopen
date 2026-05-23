@@ -175,6 +175,7 @@ export default function Leaderboard() {
                       <span className="ml-2">{player.racks_played ?? 0} racks</span>
                     </div>
                     <div className="w-52 shrink-0 flex justify-end gap-2 text-xs font-mono">
+                      <Chip label="Rivalries" value={player.rivalry_wins ?? 0} />
                       <Chip label="Current Attend." value={player.attendance_streak ?? 0} />
                       <Chip label="Best Attend." value={player.best_attendance_streak ?? 0} />
                       <Chip label="Titles" value={player.top_1_finishes ?? 0} accent />

@@ -1,5 +1,18 @@
 # Agent Session Notes
 
+## 2026-05-23 - Fixed winter season rollover
+
+- Updated `backend/export_static.py` so December tournaments are grouped into the following year's Winter season, matching the Jan/Feb half of the same winter period.
+- Regenerated the static export; `2026 Winter` now runs from `2025-12-06T16:32:25.004-05:00` through `2026-02-28T16:28:25.717-05:00` with 13 tournaments.
+- Verified with `.\.venv\Scripts\python.exe -m pytest backend/tests/test_export_analytics.py -k "season_for_date or season_standings or rivalry_win_counts"` and `REACT_APP_STATIC_DATA=true .\node_modules\.bin\craco.cmd build`.
+
+## 2026-05-23 - Added rivalry wins leaderboard metric
+
+- Added `_rivalry_win_counts()` in `backend/export_static.py` so each exported player now gets `rivalry_wins`, counting qualifying head-to-head rivalry pairs with at least 3 matches where the player leads; tied rivalries are intentionally excluded.
+- Added `Rivalries Won` to `frontend/src/lib/leaderboardMetrics.js`, surfaced the metric on the leaderboard chips, and added a player-profile stat card linking to `/rankings/rivalry_wins`.
+- Regenerated the static export; current leaders include Chad Galera with `52`, Eddie Robinson with `49`, and Jason Lambert with `46` rivalry wins.
+- Verified with `.\.venv\Scripts\python.exe -m pytest backend/tests/test_export_analytics.py -k "rivalry_win_counts or rivalry_index"`, `.\.venv\Scripts\python.exe export_static.py` from `backend\`, `REACT_APP_STATIC_DATA=true .\node_modules\.bin\craco.cmd build` from `frontend\`, and a browser smoke check of `/rankings/rivalry_wins`.
+
 ## 2026-05-23 - Seasonal date ranges, active H2H focus, and bracket drag-to-pan
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then inspected the live dirty checkout before continuing so this slice stayed aligned with the actual in-progress export/frontend work instead of stale automation memory.

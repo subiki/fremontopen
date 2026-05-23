@@ -1498,6 +1498,30 @@ def _rivalry_index(matches: List[Dict[str, Any]], limit: int = 20) -> List[Dict[
     )[:limit]
 
 
+def _rivalry_win_counts(matches: List[Dict[str, Any]], min_matches: int = 3) -> Dict[str, int]:
+    pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for match in matches:
+        winner = match.get("winner_name")
+        loser = match.get("loser_name")
+        if match.get("state") != "complete" or not winner or not loser or winner == loser:
+            continue
+        left, right = sorted((winner, loser), key=str.casefold)
+        row = pairs.setdefault((left, right), {"player_a": left, "player_b": right, "a_wins": 0, "b_wins": 0})
+        if winner == left:
+            row["a_wins"] += 1
+        else:
+            row["b_wins"] += 1
+
+    counts: Dict[str, int] = {}
+    for row in pairs.values():
+        total = row["a_wins"] + row["b_wins"]
+        if total < min_matches or row["a_wins"] == row["b_wins"]:
+            continue
+        winner = row["player_a"] if row["a_wins"] > row["b_wins"] else row["player_b"]
+        counts[winner] = counts.get(winner, 0) + 1
+    return counts
+
+
 def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12, active_window_days: int = 90) -> Dict[str, Any]:
     pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
     player_records: Dict[str, Dict[str, int]] = {}
@@ -1666,6 +1690,7 @@ def _season_for_date(value: Optional[str]) -> Optional[Dict[str, Any]]:
     date = _parse_dt(value)
     if not date:
         return None
+    season_year = date.year
     if date.month in (3, 4, 5):
         name = "Spring"
         order = 2
@@ -1678,10 +1703,12 @@ def _season_for_date(value: Optional[str]) -> Optional[Dict[str, Any]]:
     else:
         name = "Winter"
         order = 1
+        if date.month == 12:
+            season_year += 1
     return {
-        "key": f"{date.year}-{order}",
-        "label": f"{date.year} {name}",
-        "sort": date.year * 10 + order,
+        "key": f"{season_year}-{order}",
+        "label": f"{season_year} {name}",
+        "sort": season_year * 10 + order,
     }
 
 
@@ -1886,6 +1913,7 @@ async def build_cache() -> Dict[str, Any]:
         winner_counts: Dict[str, int] = {}
         all_placements: Dict[str, Dict[str, int]] = {}
         all_cash_winnings: Dict[str, Dict[str, Any]] = {}
+        rivalry_win_counts = _rivalry_win_counts(singles_matches)
         single_tournament_overperformers: List[Dict[str, Any]] = []
         best_event_by_player: Dict[str, Dict[str, Any]] = {}
         event_series_counts: Dict[str, int] = {}
@@ -2165,6 +2193,7 @@ async def build_cache() -> Dict[str, Any]:
             player["racks_lost"] = results_summary["racks_lost"]
             player["racks_played"] = results_summary["racks_played"]
             player["scored_races"] = results_summary["scored_races"]
+            player["rivalry_wins"] = rivalry_win_counts.get(name, 0)
             best_upset = elo_extremes["best_upset"]
             worst_loss = elo_extremes["worst_loss"]
             player["best_elo_upset_rating_gap"] = best_upset["rating_gap"] if best_upset else 0

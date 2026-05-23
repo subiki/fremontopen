@@ -24,6 +24,7 @@ export const leaderboardMetrics = {
   strength_of_schedule: { label: "Strength of Schedule", value: (p) => p.strength_of_schedule, format: number, desc: true },
   opponent_win_rate: { label: "Opponent Win Rate", value: (p) => p.opponent_win_rate, format: percent, desc: true },
   opponent_count: { label: "Unique Opponents", value: (p) => p.opponent_count || 0, format: number, desc: true },
+  rivalry_wins: { label: "Rivalries Won", value: (p) => p.rivalry_wins || 0, format: number, desc: true },
   average_placement: { label: "Average Placement", value: (p) => p.average_placement, format: decimal, desc: false },
   placements_counted: { label: "Placements Counted", value: (p) => p.placements_counted || 0, format: number, desc: true },
   cash_won: { label: "Cash Won", value: (p) => p.cash_won || 0, format: money, desc: true },
@@ -56,7 +57,7 @@ export const leaderboardMetricGroups = [
   },
   {
     label: "Streaks and Schedule",
-    metrics: ["attendance_streak", "best_attendance_streak", "strength_of_schedule", "opponent_win_rate", "opponent_count"],
+    metrics: ["attendance_streak", "best_attendance_streak", "strength_of_schedule", "opponent_win_rate", "opponent_count", "rivalry_wins"],
   },
   {
     label: "Cash",

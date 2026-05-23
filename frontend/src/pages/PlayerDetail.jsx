@@ -344,6 +344,14 @@ export default function PlayerDetail() {
                 to={rankingPath("strength_of_schedule")}
               />
               <StatCard
+                label="Rivalries Won"
+                value={p.rivalry_wins ?? 0}
+                accent="text-[#10B981]"
+                icon={Scales}
+                testid="pd-rivalry-wins"
+                to={rankingPath("rivalry_wins")}
+              />
+              <StatCard
                 label="Avg Place"
                 value={placements?.average ?? "-"}
                 accent="text-[#F59E0B]"
