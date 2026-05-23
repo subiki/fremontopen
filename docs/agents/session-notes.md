@@ -1,5 +1,23 @@
 # Agent Session Notes
 
+## 2026-05-23 - Seasonal date ranges, active H2H focus, and bracket drag-to-pan
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then inspected the live dirty checkout before continuing so this slice stayed aligned with the actual in-progress export/frontend work instead of stale automation memory.
+- Updated `backend/export_static.py` so season standings now carry `start_date` and `end_date`, and the H2H heatmap now limits its featured player set to competitors active within the last 90 days while still preserving the same split static-file structure.
+- Added focused regression coverage in `backend/tests/test_export_analytics.py` for the pruned boot cache helper, active-window H2H selection, and the new season date fields.
+- Updated `frontend/src/pages/Dashboard.jsx` so season cards are selectable, recent-match rows show fuller context, stat cards deep-link into relevant surfaces, and the H2H panel explains that it is based on recent activity rather than all-time volume.
+- Updated `frontend/src/pages/Seasons.jsx` to show each season's actual date range, and `frontend/src/pages/TournamentDetail.jsx` to support mouse drag-to-pan on the bracket viewport without changing the static hosting model.
+- Regenerated the static export and confirmed the data budget stayed flat: `frontend/public/data/cache.json` is `17,051` bytes and `frontend/public/data/h2h-heatmap.json` is `13,842` bytes in the current export snapshot.
+- Verified with `.\.venv\Scripts\pytest.exe backend/tests/test_export_analytics.py --basetemp .pytest-tmp-burninator-season-heatmap`, `.\.venv\Scripts\python.exe export_static.py` from `backend\`, and `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-22 - Pruned unused tournament analytics from boot cache
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then verified the live export still inlined a top-level `tournament_analytics` blob into `frontend/public/data/cache.json` even though the static frontend already reads its tournament summaries from `stats` plus the existing split files.
+- Updated `backend/export_static.py` with `_prune_boot_cache()` so the static boot cache now drops the unused top-level `tournament_analytics`, `players`, and `tournaments` sections before writing `cache.json`, while leaving the existing split indexes and analytics files unchanged.
+- Added focused regression coverage in `backend/tests/test_export_analytics.py` to keep that heavy top-level payload out of the boot cache.
+- Regenerated the static export and confirmed `frontend/public/data/cache.json` fell from `184,647` bytes to `16,699` bytes, a `167,948` byte reduction, while total JSON footprint dropped by `168,029` bytes.
+- Verified with `backend\.venv\Scripts\pytest.exe backend/tests/test_export_analytics.py --basetemp .pytest-tmp-prune-cache`, `backend\.venv\Scripts\python.exe export_static.py` from `backend\`, and `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-21 - Fixed player-profile redirect flapping on in-profile links
 
 - Updated `frontend/src/pages/PlayerDetail.jsx` so the main player fetch now clears stale profile state immediately and ignores late responses after the route changes.

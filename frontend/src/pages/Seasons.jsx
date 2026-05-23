@@ -65,6 +65,9 @@ export default function Seasons() {
                     <div className="mt-1 font-mono text-xs text-[#6B7280]">
                       {season.tournaments} tournaments / {season.matches} matches
                     </div>
+                    <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                      {formatSeasonRange(season)}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -78,6 +81,9 @@ export default function Seasons() {
                   </h1>
                   <div className="mt-1 text-sm text-[#9CA3AF]">
                     {seasonScoringLabel(selected?.points_config)}
+                  </div>
+                  <div className="mt-1 font-mono text-xs text-[#6B7280]">
+                    {formatSeasonRange(selected)}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
@@ -161,6 +167,21 @@ const seasonScoringLabel = (config = {}) => {
   const win = config?.win_points ?? 3;
   const loss = config?.loss_points ?? 1;
   return `${win} points per win, ${loss} per loss`;
+};
+
+const formatSeasonRange = (season) => {
+  const start = formatSeasonDate(season?.start_date);
+  const end = formatSeasonDate(season?.end_date);
+  if (start === "-" && end === "-") return "Dates unavailable";
+  if (start === end) return start;
+  return `${start} - ${end}`;
+};
+
+const formatSeasonDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
 
 const SeasonMeta = ({ label, value }) => (

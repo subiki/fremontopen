@@ -27,6 +27,7 @@ from export_static import (
     _peer_group_summary,
     _player_elo_extremes,
     _player_results_summary,
+    _prune_boot_cache,
     _recent_activity_summary,
     _rivalry_index,
     _season_standings,
@@ -203,6 +204,23 @@ def test_split_player_extras_payload_moves_heavy_chart_histories():
             "latest": {"wins": 6, "losses": 4, "win_rate": 60.0},
         },
     }
+
+
+def test_prune_boot_cache_drops_unused_heavy_top_level_sections():
+    slim = _prune_boot_cache({
+        "generated_at": "2026-05-22T00:00:00+00:00",
+        "stats": {"total_tournaments": 1},
+        "tournament_analytics": {"player_count_trend": [{"players": 16}]},
+        "players": [{"name": "A"}],
+        "tournaments": [{"id": 1}],
+        "sync_status": {"status": "ok"},
+    })
+
+    assert "tournament_analytics" not in slim
+    assert "players" not in slim
+    assert "tournaments" not in slim
+    assert slim["stats"]["total_tournaments"] == 1
+    assert slim["sync_status"]["status"] == "ok"
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():
@@ -809,6 +827,20 @@ def test_h2h_heatmap_builds_top_player_matrix():
     assert heatmap["top_pairs"][0]["matches"] == 3
 
 
+def test_h2h_heatmap_only_selects_players_active_in_window():
+    heatmap = _h2h_heatmap([
+        match(1, "Active A", "Active B", "2026-05-09T17:00:00-07:00"),
+        match(2, "Active B", "Active A", "2026-05-10T17:00:00-07:00"),
+        match(3, "Inactive C", "Inactive D", "2026-01-01T17:00:00-07:00"),
+        match(4, "Inactive C", "Active A", "2026-01-02T17:00:00-07:00"),
+    ], player_limit=10)
+
+    assert heatmap["active_window_days"] == 90
+    assert [row["player"] for row in heatmap["players"]] == ["Active A", "Active B"]
+    assert [row["player"] for row in heatmap["matrix"]] == ["Active A", "Active B"]
+    assert [row["label"] for row in heatmap["top_pairs"]] == ["Active A vs Active B"]
+
+
 def test_attendance_stats_tracks_played_and_streaks():
     tournaments = [
         {"id": 1, "name": "One", "started_at": "2026-05-01T12:00:00-07:00"},
@@ -851,6 +883,8 @@ def test_season_standings_group_matches_by_tournament_date():
     assert [season["season"] for season in seasons] == ["2026 Summer", "2026 Spring"]
     assert seasons[1]["matches"] == 2
     assert seasons[1]["tournaments"] == 1
+    assert seasons[1]["start_date"] == "2026-04-01T12:00:00-07:00"
+    assert seasons[1]["end_date"] == "2026-04-01T12:00:00-07:00"
     assert seasons[1]["players"][0]["player"] == "A"
     assert seasons[1]["players"][0]["wins"] == 2
     assert seasons[1]["players"][0]["points"] == 6
@@ -864,6 +898,8 @@ def test_season_standings_preview_trims_player_rows_and_season_count():
             "season": f"2026 Season {index}",
             "season_key": f"2026-s{index}",
             "points_config": {"win_points": 3, "loss_points": 1},
+            "start_date": f"2026-0{index + 1}-01T12:00:00-07:00",
+            "end_date": f"2026-0{index + 1}-28T12:00:00-07:00",
             "matches": 10 + index,
             "tournaments": 2 + index,
             "players": [
@@ -878,6 +914,8 @@ def test_season_standings_preview_trims_player_rows_and_season_count():
 
     assert len(preview) == 4
     assert preview[0]["season_key"] == "2026-s0"
+    assert preview[0]["start_date"] == "2026-01-01T12:00:00-07:00"
+    assert preview[0]["end_date"] == "2026-01-28T12:00:00-07:00"
     assert len(preview[0]["players"]) == 3
     assert preview[0]["players"][0]["player"] == "Player 0"
 

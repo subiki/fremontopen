@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
@@ -16,6 +16,9 @@ import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness"
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { rankingPath } from "./StatRankings";
+
+const EMPTY_SEASON_STANDINGS = [];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -29,13 +32,14 @@ export default function Dashboard() {
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
+  const [selectedSeasonKey, setSelectedSeasonKey] = useState(null);
 
   const loadCore = async () => {
     setLoading(true);
     try {
       const [statsData, topPlayersData] = await Promise.all([
         fetchStats(),
-        fetchLeaderboard(5),
+        fetchLeaderboard(1000),
       ]);
       setStats(statsData);
       setTopPlayers(topPlayersData);
@@ -141,10 +145,32 @@ export default function Dashboard() {
   const durationExtremes = stats?.tournament_duration_extremes;
   const dashboardTrends = stats?.dashboard_trends || {};
   const cacheMetadata = stats?.cache_metadata || {};
-  const seasonStandings = stats?.season_standings || [];
+  const seasonStandings = stats?.season_standings || EMPTY_SEASON_STANDINGS;
   const latestSeason = seasonStandings[0];
+  const selectedSeason = useMemo(() => {
+    if (!seasonStandings.length) return null;
+    return seasonStandings.find((season) => season.season_key === selectedSeasonKey) || latestSeason;
+  }, [latestSeason, seasonStandings, selectedSeasonKey]);
   const eventSeriesSummary = stats?.event_series_summary || [];
   const freshness = assessCacheFreshness(cacheMetadata);
+  const currentAttendanceLeader = useMemo(
+    () => leaderByMetric(topPlayers, "attendance_streak"),
+    [topPlayers],
+  );
+  const bestAttendanceLeader = useMemo(
+    () => leaderByMetric(topPlayers, "best_attendance_streak"),
+    [topPlayers],
+  );
+
+  useEffect(() => {
+    if (!seasonStandings.length) {
+      setSelectedSeasonKey(null);
+      return;
+    }
+    if (!seasonStandings.some((season) => season.season_key === selectedSeasonKey)) {
+      setSelectedSeasonKey(latestSeason?.season_key || null);
+    }
+  }, [latestSeason, seasonStandings, selectedSeasonKey]);
 
   return (
     <>
@@ -162,18 +188,21 @@ export default function Dashboard() {
             value={stats?.total_tournaments ?? "-"}
             icon={Trophy}
             testid="stat-tournaments"
+            to="/tournaments"
           />
           <StatCard
             label="Matches"
             value={stats?.total_matches ?? "-"}
             icon={Target}
             testid="stat-matches"
+            to={rankingPath("total_matches")}
           />
           <StatCard
             label="Players"
             value={stats?.total_players ?? "-"}
             icon={Users}
             testid="stat-players"
+            to="/players"
           />
           <StatCard
             label="Top W-L"
@@ -181,24 +210,28 @@ export default function Dashboard() {
             accent="text-[#10B981]"
             icon={ChartLineUp}
             testid="stat-top-wl"
+            to={rankingPath("wins")}
           />
           <StatCard
             label="Avg Field"
             value={stats?.average_tournament_players ?? "-"}
             icon={Users}
             testid="stat-avg-field"
+            to="/tournaments"
           />
           <StatCard
             label="Avg Duration"
             value={stats?.average_tournament_duration_label ?? "-"}
             icon={Clock}
             testid="stat-avg-duration"
+            to="/tournaments"
           />
           <StatCard
             label="Qualified Players"
             value={stats?.qualified_player_count ?? "-"}
             icon={Users}
             testid="stat-qualified-players"
+            to="/leaderboard"
           />
           <StatCard
             label="Most Titles"
@@ -206,6 +239,7 @@ export default function Dashboard() {
             accent="text-[#F59E0B]"
             icon={Medal}
             testid="stat-most-titles"
+            to={rankingPath("top_1_finishes")}
           />
           <StatCard
             label="Prize Pool"
@@ -213,6 +247,23 @@ export default function Dashboard() {
             accent="text-[#F59E0B]"
             icon={CurrencyDollar}
             testid="stat-prize-pool"
+            to={rankingPath("cash_won")}
+          />
+          <StatCard
+            label="Current Attend."
+            value={currentAttendanceLeader ? `${currentAttendanceLeader.attendance_streak}` : "-"}
+            accent="text-[#10B981]"
+            icon={Fire}
+            testid="stat-current-attendance-streak"
+            to={rankingPath("attendance_streak")}
+          />
+          <StatCard
+            label="Best Attend."
+            value={bestAttendanceLeader ? `${bestAttendanceLeader.best_attendance_streak}` : "-"}
+            accent="text-[#10B981]"
+            icon={Fire}
+            testid="stat-best-attendance-streak"
+            to={rankingPath("best_attendance_streak")}
           />
         </section>
 
@@ -299,24 +350,35 @@ export default function Dashboard() {
                 Season Standings
               </h2>
               <div className="mt-1 text-sm text-[#9CA3AF]">
-                {latestSeason
-                  ? `${latestSeason.season} - ${seasonScoringLabel(latestSeason.points_config)}`
+                {selectedSeason
+                  ? `${selectedSeason.season} - ${seasonScoringLabel(selectedSeason.points_config)}`
                   : "No season data yet"}
               </div>
               <div className="mt-4 space-y-2">
-                {seasonStandings.slice(0, 4).map((season) => (
-                  <div
-                    key={season.season_key}
-                    className="flex items-center justify-between rounded-md border border-[#273041] bg-[#0B0E14] px-3 py-2 text-sm"
-                  >
-                    <span className="text-[#F3F4F6]">{season.season}</span>
-                    <span className="font-mono text-xs text-[#9CA3AF]">{season.matches} matches</span>
-                  </div>
-                ))}
+                {seasonStandings.slice(0, 4).map((season) => {
+                  const active = season.season_key === selectedSeason?.season_key;
+                  return (
+                    <button
+                      type="button"
+                      key={season.season_key}
+                      onClick={() => setSelectedSeasonKey(season.season_key)}
+                      className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                        active
+                          ? "border-[#10B981]/70 bg-[#063B32] text-[#F3F4F6]"
+                          : "border-[#273041] bg-[#0B0E14] hover:border-[#10B981]/50"
+                      }`}
+                      aria-pressed={active}
+                      data-testid={`season-selector-${season.season_key}`}
+                    >
+                      <span className="text-[#F3F4F6]">{season.season}</span>
+                      <span className="font-mono text-xs text-[#9CA3AF]">{season.matches} matches</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <SeasonStandingsChart season={latestSeason} />
+              <SeasonStandingsChart season={selectedSeason} />
             </div>
           </div>
         </section>
@@ -601,7 +663,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <ul className="divide-y divide-[#273041]/60">
-                {topPlayers.map((p, i) => (
+                {topPlayers.slice(0, 5).map((p, i) => (
                   <li
                     key={p.name}
                     className="py-3 flex items-start justify-between gap-4"
@@ -657,19 +719,24 @@ export default function Dashboard() {
                 {recentMatches.map((m) => (
                   <li
                     key={m.id}
-                    className="flex items-center justify-between text-sm"
+                    className="flex items-start justify-between gap-4 text-sm"
                     data-testid={`recent-match-${m.id}`}
                   >
-                    <div className="min-w-0 truncate pr-3">
-                      <RecentMatchName name={m.winner_name} entryType={m.winner_entry_type} tone="winner" />
-                      <span className="text-[#6B7280] mx-2">def.</span>
-                      <RecentMatchName name={m.loser_name} entryType={m.loser_entry_type} tone="loser" />
+                    <div className="min-w-0">
+                      <div className="truncate">
+                        <RecentMatchName name={m.winner_name} entryType={m.winner_entry_type} tone="winner" />
+                        <span className="text-[#6B7280] mx-2">def.</span>
+                        <RecentMatchName name={m.loser_name} entryType={m.loser_entry_type} tone="loser" />
+                      </div>
+                      <div className="mt-1 font-mono text-xs text-[#6B7280]">
+                        {formatDateTimeWithYear(m.completed_at)} . {formatWinnerOdds(m)} odds
+                      </div>
                     </div>
-                    <div className="font-mono text-xs text-[#9CA3AF] shrink-0">
-                      <span className="hidden sm:inline text-[#6B7280] mr-2">
+                    <div className="font-mono text-xs text-[#9CA3AF] shrink-0 text-right">
+                      <div className="text-[#6B7280]">
                         {m.tournament_game || "Game TBD"}
-                      </span>
-                      {m.scores || "-"}
+                      </div>
+                      <div className="mt-1">{m.scores || "-"}</div>
                     </div>
                   </li>
                 ))}
@@ -689,6 +756,16 @@ const ordinal = (rank) => {
   return `${rank}th`;
 };
 
+const leaderByMetric = (players, metric) => {
+  return [...players]
+    .filter((player) => Number(player?.[metric] || 0) > 0)
+    .sort((a, b) => {
+      const diff = Number(b?.[metric] || 0) - Number(a?.[metric] || 0);
+      if (diff !== 0) return diff;
+      return a.name.localeCompare(b.name);
+    })[0];
+};
+
 const formatDateTime = (value) => {
   if (!value) return "-";
   const date = new Date(value);
@@ -701,6 +778,11 @@ const formatDateTimeWithYear = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+
+const formatWinnerOdds = (match) => {
+  const value = match?.elo_odds?.winner_probability;
+  return typeof value === "number" ? `${value}%` : "-%";
 };
 
 const formatMoney = (value) =>
@@ -896,6 +978,7 @@ const SeasonStandingsChart = ({ season }) => {
 const H2HHeatmap = ({ heatmap, loading = false }) => {
   const players = (heatmap?.players || []).map((row) => row.player);
   const matrix = heatmap?.matrix || [];
+  const activeWindowDays = heatmap?.active_window_days || 90;
 
   return (
     <section
@@ -908,7 +991,7 @@ const H2HHeatmap = ({ heatmap, loading = false }) => {
             H2H Heatmap
           </h2>
           <div className="mt-1 text-sm text-[#9CA3AF]">
-            Top active players by cached head-to-head volume
+            Players active in the last {activeWindowDays} days by cached head-to-head volume
           </div>
         </div>
         <div className="min-w-0 flex-1">

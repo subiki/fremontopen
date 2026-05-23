@@ -104,6 +104,16 @@ def _split_player_extras_payload(extras_payload: Dict[str, Any]) -> tuple[Dict[s
     return light_payload, history_payload
 
 
+def _prune_boot_cache(cache: Dict[str, Any]) -> Dict[str, Any]:
+    slim_cache = dict(cache)
+    # The static client reads these tournament summaries from `stats` and split files,
+    # so the full exporter-side analytics blob should not inflate the boot cache.
+    slim_cache.pop("tournament_analytics", None)
+    slim_cache.pop("players", None)
+    slim_cache.pop("tournaments", None)
+    return slim_cache
+
+
 def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[str, Any]:
     data_root = public_root / "data"
     json_files = sorted(data_root.rglob("*.json"))
@@ -1488,15 +1498,20 @@ def _rivalry_index(matches: List[Dict[str, Any]], limit: int = 20) -> List[Dict[
     )[:limit]
 
 
-def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[str, Any]:
+def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12, active_window_days: int = 90) -> Dict[str, Any]:
     pairs: Dict[tuple[str, str], Dict[str, Any]] = {}
     player_records: Dict[str, Dict[str, int]] = {}
+    parsed_completed: List[tuple[Dict[str, Any], datetime]] = []
 
     for match in matches:
         winner = match.get("winner_name")
         loser = match.get("loser_name")
         if match.get("state") != "complete" or not winner or not loser or winner == loser:
             continue
+
+        completed_at = _parse_dt(match.get("completed_at"))
+        if completed_at:
+            parsed_completed.append((match, completed_at))
 
         player_records.setdefault(winner, {"wins": 0, "losses": 0, "matches": 0})
         player_records.setdefault(loser, {"wins": 0, "losses": 0, "matches": 0})
@@ -1512,6 +1527,17 @@ def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[
         else:
             row["b_wins"] += 1
 
+    active_players = set(player_records.keys())
+    if parsed_completed:
+        latest = max(dt for _, dt in parsed_completed)
+        cutoff = latest.timestamp() - (active_window_days * 24 * 60 * 60)
+        active_players = set()
+        for match, completed_at in parsed_completed:
+            if completed_at.timestamp() < cutoff:
+                continue
+            active_players.add(match["winner_name"])
+            active_players.add(match["loser_name"])
+
     players = [
         {
             "player": name,
@@ -1520,9 +1546,11 @@ def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[
             "matches": record["matches"],
         }
         for name, record in player_records.items()
+        if name in active_players
     ]
     players.sort(key=lambda row: (-row["matches"], -row["wins"], row["player"].casefold()))
     selected = [row["player"] for row in players[:player_limit]]
+    selected_set = set(selected)
 
     matrix = []
     for row_player in selected:
@@ -1559,6 +1587,8 @@ def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[
 
     top_pairs = []
     for row in pairs.values():
+        if row["player_a"] not in selected_set or row["player_b"] not in selected_set:
+            continue
         total = row["a_wins"] + row["b_wins"]
         top_pairs.append({
             "player_a": row["player_a"],
@@ -1572,6 +1602,7 @@ def _h2h_heatmap(matches: List[Dict[str, Any]], player_limit: int = 12) -> Dict[
 
     return {
         "player_limit": player_limit,
+        "active_window_days": active_window_days,
         "players": players[:player_limit],
         "matrix": matrix,
         "top_pairs": top_pairs[:10],
@@ -1684,10 +1715,17 @@ def _season_standings(
                 "sort": season["sort"],
                 "matches": 0,
                 "tournament_ids": set(),
+                "start_date": None,
+                "end_date": None,
                 "players": {},
             },
         )
         bucket["matches"] += 1
+        if match_date:
+            if bucket["start_date"] is None or match_date < bucket["start_date"]:
+                bucket["start_date"] = match_date
+            if bucket["end_date"] is None or match_date > bucket["end_date"]:
+                bucket["end_date"] = match_date
         if match.get("tournament_id") is not None:
             bucket["tournament_ids"].add(match.get("tournament_id"))
 
@@ -1722,6 +1760,8 @@ def _season_standings(
             "season_key": bucket["season_key"],
             "points_config": scoring,
             "_sort": bucket["sort"],
+            "start_date": bucket["start_date"],
+            "end_date": bucket["end_date"],
             "matches": bucket["matches"],
             "tournaments": len(bucket["tournament_ids"]),
             "players": players,
@@ -1747,6 +1787,8 @@ def _season_standings_preview(
             "season": season["season"],
             "season_key": season["season_key"],
             "points_config": season.get("points_config") or {},
+            "start_date": season.get("start_date"),
+            "end_date": season.get("end_date"),
             "matches": season["matches"],
             "tournaments": season["tournaments"],
             "players": (season.get("players") or [])[:player_limit],
@@ -2452,8 +2494,7 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         encoding="utf-8",
     )
 
-    cache.pop("players", None)
-    cache.pop("tournaments", None)
+    cache = _prune_boot_cache(cache)
     cache["data_files"] = {
         "tournaments_index": tournaments_index_rel_path,
         "players_index": players_index_rel_path,

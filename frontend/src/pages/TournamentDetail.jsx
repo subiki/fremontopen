@@ -17,8 +17,10 @@ export default function TournamentDetail() {
   const [loading, setLoading] = useState(true);
   const [bracketZoom, setBracketZoom] = useState(1);
   const [bracketSize, setBracketSize] = useState({ width: 0, height: 0 });
+  const [isBracketDragging, setIsBracketDragging] = useState(false);
   const pinchDistanceRef = useRef(null);
   const bracketContentRef = useRef(null);
+  const bracketDragRef = useRef(null);
 
   const adjustBracketZoom = useCallback((delta) => {
     setBracketZoom((value) => clampBracketZoom(value + delta));
@@ -53,6 +55,64 @@ export default function TournamentDetail() {
       pinchDistanceRef.current = nextDistance;
     }
   }, [adjustBracketZoom]);
+
+  const handleBracketPointerDown = useCallback((event) => {
+    if (event.pointerType === "touch" || event.button !== 0) return;
+
+    bracketDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: event.currentTarget.scrollLeft,
+      scrollTop: event.currentTarget.scrollTop,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setIsBracketDragging(true);
+  }, []);
+
+  const handleBracketPointerMove = useCallback((event) => {
+    const drag = bracketDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      drag.moved = true;
+    }
+
+    event.preventDefault();
+    event.currentTarget.scrollLeft = drag.scrollLeft - deltaX;
+    event.currentTarget.scrollTop = drag.scrollTop - deltaY;
+  }, []);
+
+  const finishBracketPointerDrag = useCallback((event) => {
+    const drag = bracketDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    setIsBracketDragging(false);
+    if (!drag.moved) {
+      bracketDragRef.current = null;
+      return;
+    }
+    window.setTimeout(() => {
+      if (bracketDragRef.current?.pointerId === event.pointerId) {
+        bracketDragRef.current = null;
+      }
+    }, 0);
+  }, []);
+
+  const handleBracketClickCapture = useCallback((event) => {
+    if (!bracketDragRef.current?.moved) {
+      bracketDragRef.current = null;
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    bracketDragRef.current = null;
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -289,9 +349,16 @@ export default function TournamentDetail() {
                 <div className="text-[#6B7280] text-sm">No bracket matches available.</div>
               ) : (
                 <div
-                  className="overflow-auto overscroll-contain rounded-md border border-[#273041] bg-[#0B0E14] p-3"
+                  className={`overflow-auto overscroll-contain rounded-md border border-[#273041] bg-[#0B0E14] p-3 ${
+                    isBracketDragging ? "cursor-grabbing select-none" : "cursor-grab"
+                  }`}
                   data-testid="bracket-zoom-viewport"
                   onWheel={handleBracketWheel}
+                  onPointerDown={handleBracketPointerDown}
+                  onPointerMove={handleBracketPointerMove}
+                  onPointerUp={finishBracketPointerDrag}
+                  onPointerCancel={finishBracketPointerDrag}
+                  onClickCapture={handleBracketClickCapture}
                   onTouchStart={handleBracketTouchStart}
                   onTouchMove={handleBracketTouchMove}
                   onTouchEnd={() => {
