@@ -4,7 +4,7 @@ import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
 import {
   fetchStats,
-  fetchPlayers,
+  fetchPlayerLookup,
   fetchLeaderboard,
   fetchH2HHeatmap,
   fetchRecentMatches,
@@ -122,7 +122,7 @@ export default function Dashboard() {
         return;
       }
       try {
-        const all = await fetchPlayers();
+        const all = await fetchPlayerLookup();
         if (cancelled) return;
         const map = new Map(all.map((p) => [p.name, p]));
         setFollowedPlayers(

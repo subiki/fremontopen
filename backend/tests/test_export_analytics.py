@@ -26,6 +26,7 @@ from export_static import (
     _performance_above_elo,
     _peer_group_summary,
     _player_elo_extremes,
+    _player_search_index_rows,
     _player_results_summary,
     _prune_boot_cache,
     _recent_activity_summary,
@@ -38,6 +39,7 @@ from export_static import (
     _strength_of_schedule,
     _tournament_difficulty,
     _tournament_prize_payouts,
+    _tournament_search_index_rows,
     _titles_from_placements,
     _upset_tracker,
 )
@@ -223,6 +225,55 @@ def test_prune_boot_cache_drops_unused_heavy_top_level_sections():
     assert "tournaments" not in slim
     assert slim["stats"]["total_tournaments"] == 1
     assert slim["sync_status"]["status"] == "ok"
+
+
+def test_player_search_index_rows_keep_only_lookup_fields():
+    rows = _player_search_index_rows([
+        {
+            "name": "Alice Example",
+            "nickname": "Ace",
+            "wins": 14,
+            "losses": 6,
+            "fargo": 512,
+            "elo_rating": 1540,
+            "matches": ["heavy"],
+        },
+        {"name": "", "wins": 1, "losses": 2},
+    ])
+
+    assert rows == [
+        {
+            "name": "Alice Example",
+            "nickname": "Ace",
+            "wins": 14,
+            "losses": 6,
+            "fargo": 512,
+        },
+    ]
+
+
+def test_tournament_search_index_rows_keep_only_lookup_fields():
+    rows = _tournament_search_index_rows([
+        {
+            "id": "abc123",
+            "name": "Friday 9 Ball",
+            "game": "9 ball",
+            "state": "complete",
+            "winner": "Alice Example",
+            "matches": ["heavy"],
+        },
+        {"id": None, "name": "Skip me"},
+    ])
+
+    assert rows == [
+        {
+            "id": "abc123",
+            "name": "Friday 9 Ball",
+            "game": "9 ball",
+            "state": "complete",
+            "winner": "Alice Example",
+        },
+    ]
 
 
 def test_normalized_duration_excludes_likely_left_open_tournaments():

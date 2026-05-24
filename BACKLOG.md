@@ -91,6 +91,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Printable tournament bracket/detail pages
 - [x] Equipment/custom cue fields from local player overrides
 - [x] Split static cache for faster weak-signal loads
+- [x] Lean static search/lookup indexes for topbar search, compare picker, and followed-player cards
 - [x] Accessibility readability pass with larger small labels and improved gray-on-dark contrast
 - [x] Desktop bracket scrolling fix for tournament detail pages
 - [x] Remove tournament match State column and print button from single-tournament views

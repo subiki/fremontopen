@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
-import { api, fetchPlayers } from "../lib/api";
+import { api, fetchPlayerLookup } from "../lib/api";
 import { CaretLeft, Scales, MagnifyingGlass, ArrowsLeftRight } from "@phosphor-icons/react";
 
 export default function Compare() {
@@ -21,7 +21,7 @@ export default function Compare() {
     (async () => {
       setPlayerLoading(true);
       try {
-        const rows = await fetchPlayers();
+        const rows = await fetchPlayerLookup();
         if (!cancelled) setPlayers(rows);
       } finally {
         if (!cancelled) setPlayerLoading(false);

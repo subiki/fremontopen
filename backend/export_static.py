@@ -11,7 +11,7 @@ import math
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from dotenv import load_dotenv
 from sqlalchemy import func, select
@@ -112,6 +112,34 @@ def _prune_boot_cache(cache: Dict[str, Any]) -> Dict[str, Any]:
     slim_cache.pop("players", None)
     slim_cache.pop("tournaments", None)
     return slim_cache
+
+
+def _player_search_index_rows(players: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [
+        {
+            "name": player.get("name"),
+            "nickname": player.get("nickname"),
+            "wins": player.get("wins", 0),
+            "losses": player.get("losses", 0),
+            "fargo": player.get("fargo"),
+        }
+        for player in players
+        if player.get("name")
+    ]
+
+
+def _tournament_search_index_rows(tournaments: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [
+        {
+            "id": tournament.get("id"),
+            "name": tournament.get("name"),
+            "game": tournament.get("game"),
+            "state": tournament.get("state"),
+            "winner": tournament.get("winner"),
+        }
+        for tournament in tournaments
+        if tournament.get("id") is not None and tournament.get("name")
+    ]
 
 
 def _build_data_size_report(public_root: Path, cache: Dict[str, Any]) -> Dict[str, Any]:
@@ -2522,11 +2550,33 @@ async def write_cache(out: Path = DEFAULT_OUT) -> None:
         ),
         encoding="utf-8",
     )
+    player_search_index_rel_path = "data/players-search-index.json"
+    (public_root / player_search_index_rel_path).write_text(
+        json.dumps(
+            _player_search_index_rows(cache["players"]),
+            default=_json_default,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+    tournament_search_index_rel_path = "data/tournaments-search-index.json"
+    (public_root / tournament_search_index_rel_path).write_text(
+        json.dumps(
+            _tournament_search_index_rows(cache["tournaments"]),
+            default=_json_default,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
 
     cache = _prune_boot_cache(cache)
     cache["data_files"] = {
         "tournaments_index": tournaments_index_rel_path,
         "players_index": players_index_rel_path,
+        "player_search_index": player_search_index_rel_path,
+        "tournament_search_index": tournament_search_index_rel_path,
         "season_standings": season_rel_path,
         "h2h_heatmap": heatmap_rel_path,
         "recent_matches": recent_matches_rel_path,

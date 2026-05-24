@@ -8,6 +8,8 @@ let cachePromise = null;
 let versionPromise = null;
 let playersIndexPromise = null;
 let tournamentsIndexPromise = null;
+let playerLookupPromise = null;
+let tournamentSearchPromise = null;
 const filePromises = new Map();
 
 const appendAssetVersion = (path, version) => {
@@ -90,6 +92,42 @@ const loadTournamentsIndex = async (cache) => {
     }));
   }
   return tournamentsIndexPromise;
+};
+
+const loadPlayerLookup = async (cache) => {
+  if (cache.player_lookup) return cache.player_lookup;
+  const file = cache.data_files?.player_search_index;
+  if (file) {
+    if (!playerLookupPromise) {
+      playerLookupPromise = loadDataFile(file).then((payload) => payload || []);
+    }
+    return playerLookupPromise;
+  }
+  return (await loadPlayersIndex(cache)).players.map(({ name, nickname, wins, losses, fargo }) => ({
+    name,
+    nickname,
+    wins,
+    losses,
+    fargo,
+  }));
+};
+
+const loadTournamentSearchIndex = async (cache) => {
+  if (cache.tournament_search) return cache.tournament_search;
+  const file = cache.data_files?.tournament_search_index;
+  if (file) {
+    if (!tournamentSearchPromise) {
+      tournamentSearchPromise = loadDataFile(file).then((payload) => payload || []);
+    }
+    return tournamentSearchPromise;
+  }
+  return (await loadTournamentsIndex(cache)).tournaments.map(({ id, name, game, state, winner }) => ({
+    id,
+    name,
+    game,
+    state,
+    winner,
+  }));
 };
 
 const loadSeasonStandings = async (cache) => {
@@ -363,6 +401,9 @@ const staticGet = async (path, config = {}) => {
       : playersIndex.players;
     return { data: players };
   }
+  if (path === "/players/lookup") {
+    return { data: await loadPlayerLookup(cache) };
+  }
   if (path.startsWith("/players/") && path.endsWith("/extras")) {
     const name = decodePathPart(path.slice("/players/".length, -"/extras".length));
     const bundle = await loadPlayerBundle(cache, name);
@@ -388,23 +429,23 @@ const staticGet = async (path, config = {}) => {
     return { data: (await loadPlayersIndex(cache)).players.slice(0, params.limit || 25) };
   }
   if (path === "/search") {
-    const [playersIndex, tournamentsIndex] = await Promise.all([
-      loadPlayersIndex(cache),
-      loadTournamentsIndex(cache),
+    const [playerLookup, tournamentSearch] = await Promise.all([
+      loadPlayerLookup(cache),
+      loadTournamentSearchIndex(cache),
     ]);
     const q = (params.q || "").trim().toLowerCase();
     const limit = params.limit || 10;
     if (!q) return { data: { players: [], tournaments: [] } };
     return {
       data: {
-        players: playersIndex.players
+        players: playerLookup
           .filter((p) =>
             p.name.toLowerCase().includes(q)
             || (p.nickname || "").toLowerCase().includes(q)
           )
           .slice(0, limit)
           .map(({ name, nickname, wins, losses, fargo }) => ({ name, nickname, wins, losses, fargo })),
-        tournaments: tournamentsIndex.tournaments
+        tournaments: tournamentSearch
           .filter((t) => (t.name || "").toLowerCase().includes(q))
           .slice(0, limit)
           .map(({ id, name, game, state }) => ({ id, name, game, state })),
@@ -437,6 +478,8 @@ export const fetchTournaments = () => api.get("/tournaments").then((r) => r.data
 export const fetchTournament = (id) => api.get(`/tournaments/${id}`).then((r) => r.data);
 export const fetchPlayers = (q = "") =>
   api.get("/players", { params: q ? { q } : {} }).then((r) => r.data);
+export const fetchPlayerLookup = () =>
+  api.get("/players/lookup").then((r) => r.data);
 export const fetchPlayer = (name) =>
   api.get(`/players/${encodeURIComponent(name)}`).then((r) => r.data);
 export const fetchPlayerHistory = (name) =>

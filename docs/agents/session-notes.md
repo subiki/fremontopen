@@ -1,5 +1,13 @@
 # Agent Session Notes
 
+## 2026-05-24 - Split lean search and lookup indexes out of the player directory payload
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live checkout and current static size report before continuing so this slice stayed anchored to the actual cache shape rather than stale automation memory.
+- Added generated `frontend/public/data/players-search-index.json` and `frontend/public/data/tournaments-search-index.json` in `backend/export_static.py` so global search, the compare picker, and followed-player lookups can use lean static rows instead of loading the full directory indexes.
+- Updated `frontend/src/lib/api.js` static fallbacks plus `frontend/src/pages/Compare.jsx` and `frontend/src/pages/Dashboard.jsx` so those lookup surfaces now read the new lean indexes, while the existing full directory pages still use `players-index.json` and `tournaments-index.json`.
+- Updated `.github/workflows/data-refresh.yml` and `backend/tests/test_data_refresh_workflow.py` so scheduled refreshes track and commit the new generated search-index files with the rest of the static export surface.
+- Verified with `.\.venv\Scripts\python.exe export_static.py` from `backend\`, `.\.venv\Scripts\python.exe -m pytest backend/tests/test_export_analytics.py backend/tests/test_data_refresh_workflow.py --basetemp .pytest-tmp-search-index-verify-2`, and `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-23 - Fixed winter season rollover
 
 - Updated `backend/export_static.py` so December tournaments are grouped into the following year's Winter season, matching the Jan/Feb half of the same winter period.
