@@ -1,13 +1,13 @@
 # Static Refresh Summary
 
-- Generated: `2026-05-24T19:24:23.366097+00:00`
+- Generated: `2026-05-26T20:31:10.848435+00:00`
 - Total JSON files: `2381`
-- Total JSON bytes: `32547045`
-- cache.json bytes: `17211`
+- Total JSON bytes: `32546754`
+- cache.json bytes: `17212`
 
 ## Heaviest Stats Sections
 
-- `season_standings`: `3612` bytes
+- `season_standings`: `3613` bytes
 - `tournament_field_duration_trend`: `2822` bytes
 - `upset_tracker`: `2734` bytes
 - `anniversary_matches`: `1931` bytes
@@ -33,7 +33,7 @@
 
 - `data/players-index.json`: `548642` bytes
 - `data/tournaments-index.json`: `268108` bytes
-- `data/season-standings.json`: `177174` bytes
+- `data/season-standings.json`: `176977` bytes
 - `data/players-search-index.json`: `39054` bytes
 - `data/tournaments-search-index.json`: `25996` bytes
 - `data/h2h-heatmap.json`: `13850` bytes
@@ -41,22 +41,23 @@
 - `data/rivalry-index.json`: `4384` bytes
 - `data/tournament-duration-groups.json`: `3679` bytes
 - `data/single-tournament-overperformers.json`: `3289` bytes
-- `data/data-size-report.json`: `2385` bytes
-- `data/refresh-change-report.json`: `506` bytes
+- `data/data-size-report.json`: `2384` bytes
+- `data/refresh-change-report.json`: `412` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-05-24T16:05:07.103625+00:00`
+- Previous generated: `2026-05-24T19:24:23.366097+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `-633`
-- cache.json bytes delta: `+0`
+- Total JSON bytes delta: `-291`
+- cache.json bytes delta: `+1`
 
 ### Top-Level File Deltas
 
-- `data/refresh-change-report.json`: `-750` bytes (`1256` -> `506`)
-- `data/data-size-report.json`: `+117` bytes (`2268` -> `2385`)
+- `data/season-standings.json`: `-197` bytes (`177174` -> `176977`)
+- `data/refresh-change-report.json`: `-94` bytes (`506` -> `412`)
+- `data/data-size-report.json`: `-1` bytes (`2385` -> `2384`)
 
 ### Stats Section Deltas
 
-- No stats section size changes
+- `season_standings`: `+1` bytes (`3612` -> `3613`)
