@@ -614,3 +614,10 @@
 - Ran three more guarded local batches (`30 + 30 + 24` searched) with the same human-paced delays and coffee breaks. Results across those 84 attempts: 70 updates, 14 normal skips, 4 screened-out names, and 0 request/backoff errors.
 - Removed two bad `-90` sentinel matches from tracked data before export and left them as local failures so they back off instead of reappearing immediately.
 - Re-exported the static data snapshot and increased exported Fargo coverage from 69 players to 137 players.
+
+## 2026-05-26 - Searchable Fargo queue drained
+
+- Continued the same local-only guarded refresh flow until the current searchable queue was exhausted; the hydrator reported `next_pending 0` after the final pass.
+- Added 13 more sequential guarded batches for `350` searched names total, yielding `262` updates, `88` normal skips, `17` screened-out names, and `0` request/backoff errors.
+- Re-exported the static snapshot again and confirmed the live export now carries Fargo ratings for `392 / 530` players.
+- The remaining uncovered players for this pass are non-searchable partial names, typo variants, or ambiguous matches that need alias-quality handling rather than more exact-name lookups.
