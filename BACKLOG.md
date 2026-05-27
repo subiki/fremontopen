@@ -101,6 +101,7 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Remove player equipment panel
 - [x] Player profile core results summary
 - [x] Leaderboard filters for tournaments and racks played
+- [x] Player directory filters for tournaments, racks, and richer stat sorting
 - [x] Biggest single tournament pot won per player
 - [x] Clarify leaderboard current and best columns
 - [x] Single-tournament performance above ELO view

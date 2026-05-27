@@ -1,5 +1,15 @@
 # Agent Session Notes
 
+## 2026-05-25 - Expanded player-directory stat sorting and sample filters
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live checkout state before choosing work because the static-demo backlog is otherwise complete and this slice needed to come from a real current UI gap rather than stale automation memory.
+- Updated `frontend/src/pages/Players.jsx` to reuse the existing leaderboard metric registry so the player directory can now sort by the broader shipped stat set instead of only a narrow fixed subset.
+- Added player-directory sample filters for minimum matches, tournaments, racks, and placement samples, keeping placement sorting honest without introducing any backend or export change.
+- Reworked the player table so it shows a dynamic selected-stat column plus better record and rack context, making the directory more useful as a browsing surface instead of only a name list.
+- Added a clear-filters action so the expanded controls are easier to unwind on mobile and after deeper stat browsing.
+- Updated `BACKLOG.md` so the source-of-truth done list reflects the new player-directory sorting/filtering capability.
+- Verification target for this slice is the production frontend build with the repo-local portable Node path.
+
 ## 2026-05-24 - Split lean search and lookup indexes out of the player directory payload
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live checkout and current static size report before continuing so this slice stayed anchored to the actual cache shape rather than stale automation memory.
