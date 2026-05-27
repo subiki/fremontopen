@@ -7,8 +7,10 @@ an authorized URL that permits crawling.
 import argparse
 import csv
 import html
+import ipaddress
 import json
 import re
+import socket
 import sys
 import time
 import urllib.parse
@@ -87,6 +89,44 @@ def _load_player_names(path: Path) -> List[str]:
     return [p["name"] for p in data.get("players", []) if p.get("name")]
 
 
+def _validate_public_source_url(url: str) -> urllib.parse.ParseResult:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("Source URL must use http or https")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Source URL must include a hostname")
+
+    blocked_names = {"localhost", "localhost.localdomain"}
+    if hostname.casefold() in blocked_names:
+        raise ValueError("Source URL must not target a local host")
+
+    try:
+        addresses = {ipaddress.ip_address(hostname)}
+    except ValueError:
+        try:
+            addresses = {
+                ipaddress.ip_address(info[4][0])
+                for info in socket.getaddrinfo(hostname, parsed.port or 443, proto=socket.IPPROTO_TCP)
+            }
+        except socket.gaierror as exc:
+            raise RuntimeError(f"Could not resolve source host {hostname}") from exc
+
+    for address in addresses:
+        if (
+            address.is_private
+            or address.is_loopback
+            or address.is_link_local
+            or address.is_multicast
+            or address.is_reserved
+            or address.is_unspecified
+        ):
+            raise ValueError(f"Source URL host {hostname} resolved to a non-public address")
+
+    return parsed
+
+
 def _read_source(path: Path | None, url: str | None, delay: float) -> tuple[str, str]:
     if path:
         return path.read_text(encoding="utf-8"), path.suffix.lower().lstrip(".")
@@ -94,7 +134,7 @@ def _read_source(path: Path | None, url: str | None, delay: float) -> tuple[str,
     if not url:
         raise ValueError("Provide --source-file or --source-url")
 
-    parsed = urllib.parse.urlparse(url)
+    parsed = _validate_public_source_url(url)
     robots_url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, "/robots.txt", "", "", ""))
     parser = urllib.robotparser.RobotFileParser()
     parser.set_url(robots_url)

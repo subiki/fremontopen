@@ -62,7 +62,7 @@ export default function Info() {
                   key={link.href}
                   href={link.href}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   data-testid={link.testid}
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-[#10B981]/30 bg-[#10B981]/10 px-4 py-3 text-sm font-semibold text-[#D1FAE5] hover:bg-[#10B981]/20 transition-colors"
                 >

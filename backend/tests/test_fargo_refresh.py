@@ -4,8 +4,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import json
+import socket
 
-from fargo_refresh import refresh_fargo_overrides
+from fargo_refresh import _validate_public_source_url, refresh_fargo_overrides
 from player_overrides import apply_player_overrides, load_player_overrides
 
 
@@ -91,3 +92,33 @@ def test_refresh_fargo_dry_run_does_not_write(tmp_path):
 
     assert report["matched_count"] == 1
     assert not overrides.exists()
+
+
+def test_validate_public_source_url_rejects_localhost():
+    try:
+        _validate_public_source_url("http://localhost/export.csv")
+    except ValueError as exc:
+        assert "local host" in str(exc)
+    else:
+        raise AssertionError("Expected localhost URL to be rejected")
+
+
+def test_validate_public_source_url_rejects_private_ip():
+    try:
+        _validate_public_source_url("https://192.168.1.15/export.csv")
+    except ValueError as exc:
+        assert "non-public address" in str(exc)
+    else:
+        raise AssertionError("Expected private IP URL to be rejected")
+
+
+def test_validate_public_source_url_allows_public_host(monkeypatch):
+    def fake_getaddrinfo(host, port, proto):
+        assert host == "ratings.example.com"
+        return [(socket.AF_INET, socket.SOCK_STREAM, proto, "", ("93.184.216.34", port))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", fake_getaddrinfo)
+
+    parsed = _validate_public_source_url("https://ratings.example.com/export.csv")
+
+    assert parsed.hostname == "ratings.example.com"
