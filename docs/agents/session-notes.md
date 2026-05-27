@@ -1,5 +1,14 @@
 # Agent Session Notes
 
+## 2026-05-26 - Branch merge and prune troubleshooting
+
+- Started from clean `main` at `32c05f06` after the Dependabot merge and verified the DreamHost deploy had already succeeded for that head.
+- Replayed the safe non-workflow portion of `origin/codex/p0-static-refresh-hardening`: Fargo source URL public-host validation, validation-report table allowlisting, related tests, and `noopener noreferrer` on the Info page. Committed as `58b8bd8c`.
+- Replayed the safe issue-sync portion of `origin/codex/continuity-sync-playerdetail`: explicit legacy issue title closure from `BACKLOG.md` and normalized issue title matching in `scripts/create_github_issues.sh`. Committed as `a4cf41fd`.
+- Confirmed `d412c6b3` is an empty/no-op replay against current `main`.
+- Left the remaining workflow-preflight commits blocked because `d0565b87`, `d62ee2b6`, and `a55df242` conflict in `.github/workflows/data-refresh.yml`; local `codex/backup-static-demo-ship` also remains unsafe because it conflicts across generated data, exporter/tests, and frontend pages.
+- Added the exact branch/prune handoff to `BACKLOG.md` so parallel or future agents do not delete unmerged work blindly.
+
 ## 2026-05-25 - Expanded player-directory stat sorting and sample filters
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live checkout state before choosing work because the static-demo backlog is otherwise complete and this slice needed to come from a real current UI gap rather than stale automation memory.

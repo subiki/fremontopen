@@ -174,6 +174,18 @@ All current static-demo backlog items are complete. Remaining `EPIC 9` items sta
 
 ---
 
+## Branch Merge And Prune Handoff
+
+2026-05-26 local cleanup pass:
+
+- Pushed `main` through production deploy at `32c05f06` before this handoff, then replayed safe branch commits onto `main`.
+- Cleanly replayed `1692bf67` as `58b8bd8c` for Fargo/source URL hardening, validation table allowlisting, and external-link `noopener`.
+- Cleanly replayed `715f1ee4` as `a4cf41fd` for explicit legacy issue title closure in `scripts/create_github_issues.sh` and the backlog legacy-title list.
+- `d412c6b3` from `origin/codex/continuity-sync-playerdetail` applied as an empty/no-op patch against current `main`; current player fallback/backlog state already contains the useful changes.
+- Do not prune `origin/codex/issue-85-preflight`, `origin/codex/continuity-sync-playerdetail`, or `origin/codex/p0-static-refresh-hardening` until their remaining workflow commits are intentionally resolved or declared obsolete. `d0565b87`, `d62ee2b6`, and `a55df242` all conflict in `.github/workflows/data-refresh.yml` and stale session notes.
+- Do not merge or prune local `codex/backup-static-demo-ship` automatically. It conflicts across generated static data, exporter/tests, backlog/session notes, and multiple frontend pages; treat it as a stale backup branch unless a human wants to salvage a specific patch.
+- Safe prune rule for the next agent: delete only branches listed by `git branch -r --merged main` or after a clean replay plus validation confirms no unique patch remains.
+
 ## JFL Issue Details
 
 ### Tournament analytics: player count, duration, and winner leaderboard
