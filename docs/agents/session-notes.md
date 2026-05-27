@@ -621,3 +621,10 @@
 - Added 13 more sequential guarded batches for `350` searched names total, yielding `262` updates, `88` normal skips, `17` screened-out names, and `0` request/backoff errors.
 - Re-exported the static snapshot again and confirmed the live export now carries Fargo ratings for `392 / 530` players.
 - The remaining uncovered players for this pass are non-searchable partial names, typo variants, or ambiguous matches that need alias-quality handling rather than more exact-name lookups.
+
+## 2026-05-27 - Local operations console boundary
+
+- Continued the admin/operations-console cleanup as a local-only boundary slice rather than a public static-site admin UI.
+- Added `docs/ops-console-local.md` and linked it from the docs index so console experiments stay under ignored `.local/` space with no public backend, login, browser write path, or third-party browser calls.
+- Added `scripts/check_public_boundary.py` plus regression coverage to catch private orchestration markers, model-vendor scaffolding, and secret-shaped values in tracked and untracked non-ignored files.
+- Wired the boundary check into deploy and scheduled-refresh workflows with tracked-only CI mode, and ignored root-level local FairMatch capture files.

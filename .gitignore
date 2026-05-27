@@ -32,6 +32,9 @@ node_modules
 !.vscode/extensions.json
 
 # misc
+.env.local
+src/fremontopen-bridge.json
+/fairmatch-*
 frontend/.env
 backend/alias_suggestions.json
 backend/single_name_aliases.json
@@ -44,6 +47,9 @@ backend/fargo_refresh_report.json
 /connect.lock
 /coverage
 /libpeerconnection.log
+*.db-journal
+*.db-shm
+*.db-wal
 npm-debug.log
 yarn-error.log
 testem.log

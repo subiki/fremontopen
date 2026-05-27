@@ -20,6 +20,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check public repo boundary
+        run: python scripts/check_public_boundary.py --tracked-only
+
       - name: Preflight secrets
         env:
           CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
