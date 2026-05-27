@@ -1,7 +1,57 @@
 {
   "players": {
+    "AZ Flynn": {
+      "fargo": 283,
+      "fargo_confidence": "0.94",
+      "fargo_id": "DFF30A56-B724-4AFD-9BB9-AF8F0139D692",
+      "fargo_robustness": "53",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:30.217308+00:00",
+      "name": "AZ Flynn"
+    },
+    "Angela Daniels": {
+      "fargo": 378,
+      "fargo_confidence": "0.94",
+      "fargo_id": "AB688792-3581-4CF7-B568-AEFB01632B18",
+      "fargo_robustness": "412",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:06.832754+00:00",
+      "name": "Angela Daniels"
+    },
+    "Bradley Wiesner": {
+      "fargo": 377,
+      "fargo_confidence": "0.94",
+      "fargo_id": "7BA6E22B-1338-42C9-902E-AE53016A3D9F",
+      "fargo_robustness": "28",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:44.098638+00:00",
+      "name": "Bradley Wiesner"
+    },
     "Chad Galera": {
       "fargo": 554
+    },
+    "Chas Hyatt": {
+      "fargo": 468,
+      "fargo_confidence": "0.98",
+      "fargo_id": "29F3EA99-9CB2-4FC8-B3ED-AD1800E3BDAF",
+      "fargo_robustness": "117",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:02:07.096059+00:00",
+      "name": "Chas Hyatt"
+    },
+    "Dan McGuire": {
+      "fargo": 410,
+      "fargo_confidence": "0.96",
+      "fargo_id": "73AD98A7-5042-4C75-A6B9-B33C01849F87",
+      "fargo_robustness": "423",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:02:04.122797+00:00",
+      "name": "Dan McGuire"
     },
     "Daniel Doctor": {
       "fargo": 509,
@@ -32,6 +82,36 @@
     "Jeff Nguyen": {
       "fargo": 500
     },
+    "John Pacheco": {
+      "fargo": 387,
+      "fargo_confidence": "0.94",
+      "fargo_id": "AF596522-AB00-4106-AD2D-B40401440F0C",
+      "fargo_robustness": "98",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:04.137246+00:00",
+      "name": "John Pacheco"
+    },
+    "Justin Do": {
+      "fargo": 375,
+      "fargo_confidence": "0.98",
+      "fargo_id": "540C5163-70FF-428B-A3BA-AFC100142FA1",
+      "fargo_robustness": "211",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:40.386433+00:00",
+      "name": "Justin Do"
+    },
+    "Leo Davila": {
+      "fargo": 477,
+      "fargo_confidence": "0.94",
+      "fargo_id": "E2A8A1D9-2EF2-4E22-933E-AB5300C0695E",
+      "fargo_robustness": "533",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:00:55.066490+00:00",
+      "name": "Leo Davila"
+    },
     "Luis Sandiga": {
       "fargo": 327,
       "fargo_confidence": "0.94",
@@ -44,6 +124,26 @@
     },
     "Mark Smith": {
       "fargo": 519
+    },
+    "Monica Gonzalez": {
+      "fargo": 372,
+      "fargo_confidence": "0.98",
+      "fargo_id": "25D2809C-7685-4940-9115-AE53016A3D9F",
+      "fargo_robustness": "1082",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:01:36.094187+00:00",
+      "name": "Monica Gonzalez"
+    },
+    "Nirmal Peter": {
+      "fargo": 513,
+      "fargo_confidence": "0.94",
+      "fargo_id": "002CC5CE-F29E-4D86-88CA-AE8B016412B8",
+      "fargo_robustness": "98",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T04:00:51.435830+00:00",
+      "name": "Nirmal Peter"
     },
     "Paul Alexander": {
       "fargo": 493
