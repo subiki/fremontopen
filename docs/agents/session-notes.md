@@ -607,3 +607,10 @@
 - The guarded matcher updated 50 players, skipped 10 ambiguous or no-exact-name cases, and increased exported Fargo coverage from 20 players to 69 players.
 - Found and fixed a local-only WA-location bug where `Washington PA` could be misread as Washington state; the bad `John Miller` assignment was removed before export so ambiguous multi-match names remain unassigned.
 - Re-exported static data and kept the local scheduler code/settings under `.local/` so the repo only tracks the refreshed player data artifacts.
+
+## 2026-05-26 - Fargo matcher refinement and continued hydration
+
+- Tightened the local-only FairMatch hydrator under `.local/` so obviously low-value names are screened before any network call, exact non-WA matches now need a usable rating plus reported robustness, and negative sentinel ratings are rejected instead of being exported.
+- Ran three more guarded local batches (`30 + 30 + 24` searched) with the same human-paced delays and coffee breaks. Results across those 84 attempts: 70 updates, 14 normal skips, 4 screened-out names, and 0 request/backoff errors.
+- Removed two bad `-90` sentinel matches from tracked data before export and left them as local failures so they back off instead of reappearing immediately.
+- Re-exported the static data snapshot and increased exported Fargo coverage from 69 players to 137 players.
