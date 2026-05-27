@@ -3,14 +3,44 @@
     "Chad Galera": {
       "fargo": 554
     },
+    "Daniel Doctor": {
+      "fargo": 509,
+      "fargo_confidence": "0.94",
+      "fargo_id": "2D6CB7B6-BE66-4119-BCDE-AFC100142FA1",
+      "fargo_robustness": "34",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T03:58:33.441585+00:00",
+      "name": "Daniel Doctor"
+    },
     "Eddie Robinson": {
       "fargo": 535
+    },
+    "Everette Cummings": {
+      "fargo": 451,
+      "fargo_confidence": "0.94",
+      "fargo_id": "3310762D-E147-4F29-9AA5-A72900E9EF5F",
+      "fargo_robustness": "117",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T03:58:33.027976+00:00",
+      "name": "Everette Cummings"
+    },
+    "Jason Lambert": {
+      "fargo": 450
     },
     "Jeff Nguyen": {
       "fargo": 500
     },
-    "Jason Lambert": {
-      "fargo": 450
+    "Luis Sandiga": {
+      "fargo": 327,
+      "fargo_confidence": "0.94",
+      "fargo_id": "D76570AC-BB79-4588-9C72-AFEA0108EEC2",
+      "fargo_robustness": "77",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-05-27T03:58:32.579451+00:00",
+      "name": "Luis Sandiga"
     },
     "Mark Smith": {
       "fargo": 519
