@@ -600,3 +600,10 @@
 - Added per-row context on the rankings page so placement metrics show counted placements and top-4 totals instead of a bare single number, which makes low-sample average-placement rows easier to interpret.
 - Cleaned the stale unchecked acceptance boxes inside the JFL detail sections of `BACKLOG.md` so the source-of-truth backlog matches the already-shipped tournament and placement analytics work.
 - Verified with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-26 - Guarded Fargo hydration expansion
+
+- Ran two additional human-paced local FairMatch lookup batches of 30 names each against the exported Fremont Open player list, with zero request/backoff errors across all 60 attempts.
+- The guarded matcher updated 50 players, skipped 10 ambiguous or no-exact-name cases, and increased exported Fargo coverage from 20 players to 69 players.
+- Found and fixed a local-only WA-location bug where `Washington PA` could be misread as Washington state; the bad `John Miller` assignment was removed before export so ambiguous multi-match names remain unassigned.
+- Re-exported static data and kept the local scheduler code/settings under `.local/` so the repo only tracks the refreshed player data artifacts.
