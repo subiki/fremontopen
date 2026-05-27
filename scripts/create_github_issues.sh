@@ -33,6 +33,12 @@
 
 set -euo pipefail
 
+normalize_title() {
+  local value="$1"
+  value="$(printf '%s' "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  printf '%s' "$value"
+}
+
 # ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
@@ -325,7 +331,7 @@ fi
 # Note: --limit 2000 covers any realistic project size. If your repo grows
 # beyond that, raise the limit here or switch to paginated gh api calls.
 while IFS= read -r ttl; do
-  [[ -n "$ttl" ]] && existing_issue_titles["$ttl"]=1
+  [[ -n "$ttl" ]] && existing_issue_titles["$(normalize_title "$ttl")"]=1
 done < <(
   gh issue list \
     --repo "$REPO" \
@@ -350,6 +356,34 @@ in_table=false
 # Associative array used as a set: active_titles[title]=1
 # Populated during parsing so Step 4 can check membership.
 declare -A active_titles=()
+declare -A legacy_close_titles=()
+
+# Optional tracking section for older manual issue titles that should now be
+# auto-closed even though they predate the current epic-label automation.
+in_legacy_close_section=false
+while IFS= read -r raw_line; do
+  line="${raw_line%$'\r'}"
+
+  if [[ "$line" =~ ^###[[:space:]]+Legacy[[:space:]]+Issue[[:space:]]+Titles[[:space:]]+To[[:space:]]+Close ]]; then
+    in_legacy_close_section=true
+    continue
+  fi
+
+  if $in_legacy_close_section && [[ "$line" =~ ^##[[:space:]]+ ]]; then
+    break
+  fi
+
+  if $in_legacy_close_section && [[ "$line" =~ ^###[[:space:]]+ && ! "$line" =~ ^###[[:space:]]+Legacy[[:space:]]+Issue[[:space:]]+Titles[[:space:]]+To[[:space:]]+Close ]]; then
+    break
+  fi
+
+  $in_legacy_close_section || continue
+
+  if [[ "$line" =~ ^-[[:space:]]+(.+) ]]; then
+    legacy_title="$(normalize_title "${BASH_REMATCH[1]}")"
+    [[ -n "$legacy_title" ]] && legacy_close_titles["$legacy_title"]=1
+  fi
+done < "$BACKLOG"
 
 # Strip CRLF, then process line by line
 while IFS= read -r raw_line; do
@@ -418,7 +452,8 @@ while IFS= read -r raw_line; do
     title="$title_raw"
 
     # Record this title as active so --close-done can check membership later
-    active_titles["$title"]=1
+    normalized_title="$(normalize_title "$title")"
+    active_titles["$normalized_title"]=1
 
     # Map effort code to human label
     case "$effort" in
@@ -457,14 +492,14 @@ ${effort_label}"
     # Check against pre-fetched set (works in both normal and --dry-run mode).
     # After creating, mark the title as seen so repeated titles within one run
     # (e.g. a duplicate row accidentally added to BACKLOG.md) are not created twice.
-    if [[ -n "${existing_issue_titles[$title]+_}" ]]; then
+    if [[ -n "${existing_issue_titles[$normalized_title]+_}" ]]; then
       if ! $DRY_RUN; then
         echo "  Skipped (exists): $title"
       fi
       ISSUES_SKIPPED=$((ISSUES_SKIPPED + 1))
     else
       create_issue "$title" "$labels" "$body"
-      existing_issue_titles["$title"]=1
+      existing_issue_titles["$normalized_title"]=1
     fi
   fi
 
@@ -485,15 +520,15 @@ if $CLOSE_DONE; then
   echo "=== Step 4: Close completed issues (--close-done) ==="
 
   # Fetch open issues for each epic label, accumulate unique number→title pairs.
-  declare -A seen_issues=()
+  declare -A epic_seen_issues=()
 
   close_label_slugs=("${EPIC_SLUGS[@]}" "${LEGACY_EPIC_SLUGS[@]}")
   for slug in "${close_label_slugs[@]}"; do
     while IFS= read -r entry; do
       num="$(echo "$entry" | sed 's/|.*//')"
       ttl="$(echo "$entry" | sed 's/^[^|]*|//')"
-      if [[ -n "$num" && -z "${seen_issues[$num]+_}" ]]; then
-        seen_issues["$num"]="$ttl"
+      if [[ -n "$num" && -z "${epic_seen_issues[$num]+_}" ]]; then
+        epic_seen_issues["$num"]="$ttl"
       fi
     done < <(
       gh issue list \
@@ -507,10 +542,46 @@ if $CLOSE_DONE; then
     )
   done
 
-  # Close (or report) any issue whose title is not in the active backlog.
-  for num in "${!seen_issues[@]}"; do
-    issue_title="${seen_issues[$num]}"
-    if [[ -z "${active_titles[$issue_title]+_}" ]]; then
+  declare -A legacy_seen_issues=()
+  while IFS= read -r entry; do
+    num="$(echo "$entry" | sed 's/|.*//')"
+    ttl="$(echo "$entry" | sed 's/^[^|]*|//')"
+    if [[ -n "$num" && -z "${legacy_seen_issues[$num]+_}" ]]; then
+      legacy_seen_issues["$num"]="$ttl"
+    fi
+  done < <(
+    gh issue list \
+      --repo "$REPO" \
+      --state open \
+      --limit 500 \
+      --json number,title \
+      --jq '.[] | "\(.number)|\(.title)"' \
+      2>/dev/null || true
+  )
+
+  # Close explicitly-listed legacy titles first.
+  for num in "${!legacy_seen_issues[@]}"; do
+    issue_title="${legacy_seen_issues[$num]}"
+    normalized_issue_title="$(normalize_title "$issue_title")"
+    if [[ -z "${active_titles[$normalized_issue_title]+_}" && -n "${legacy_close_titles[$normalized_issue_title]+_}" ]]; then
+      if $DRY_RUN; then
+        echo "[DRY RUN] Would close #${num}: ${issue_title}"
+      else
+        gh issue close "$num" \
+          --repo "$REPO" \
+          --comment "Automatically closed by sync script: this older issue title is explicitly marked as shipped in BACKLOG.md under Legacy Issue Titles To Close." \
+          2>/dev/null
+        echo "  Closed #${num}: ${issue_title}"
+      fi
+      ISSUES_CLOSED=$((ISSUES_CLOSED + 1))
+    fi
+  done
+
+  # Then close current epic-managed issues whose titles are no longer active.
+  for num in "${!epic_seen_issues[@]}"; do
+    issue_title="${epic_seen_issues[$num]}"
+    normalized_issue_title="$(normalize_title "$issue_title")"
+    if [[ -z "${active_titles[$normalized_issue_title]+_}" ]]; then
       if $DRY_RUN; then
         echo "[DRY RUN] Would close #${num}: ${issue_title}"
       else
