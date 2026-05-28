@@ -15,7 +15,6 @@ import {
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { rankingPath } from "./StatRankings";
 
 const EMPTY_SEASON_STANDINGS = [];
@@ -1340,28 +1339,24 @@ const WeirdMiniChart = ({ title, subtitle, data, dataKey }) => {
           );
         })}
       </div>
-      <div className="mt-4 h-44">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={150}>
-          <BarChart data={data} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
-            <CartesianGrid stroke="#273041" strokeDasharray="3 3" />
-            <XAxis dataKey="name" stroke="#6B7280" tick={{ fontSize: 11 }} />
-            <YAxis stroke="#6B7280" tick={{ fontSize: 11 }} allowDecimals={false} />
-            <Tooltip
-              contentStyle={{
-                background: "#141923",
-                border: "1px solid #6247AA",
-                borderRadius: 6,
-                fontSize: 12,
-                color: "#F3F4F6",
-              }}
-            />
-            <Bar dataKey={dataKey} fill="#33F4C7" radius={[5, 5, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell key={`${entry.name}-${index}`} fill={WEIRD_COLORS[index % WEIRD_COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="weird-native-bars mt-4" role="img" aria-label={`${title} bar chart`}>
+        {data.map((entry, index) => {
+          const value = Number(entry[dataKey] || 0);
+          return (
+            <div key={`native-bar-${entry.name}`} className="weird-native-bar-row">
+              <span>{entry.name}</span>
+              <div className="weird-native-bar-track">
+                <i
+                  style={{
+                    "--bar-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+                    width: `${Math.max(3, Math.round((value / maxValue) * 100))}%`,
+                  }}
+                />
+              </div>
+              <strong>{value}</strong>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1670,37 +1665,31 @@ const SeasonStandingsChart = ({ season }) => {
   if (data.length === 0) {
     return <div className="text-[#6B7280] text-sm">No season standings available.</div>;
   }
+  const maxPoints = Math.max(1, ...data.map((player) => Number(player.points || 0)));
 
   return (
-    <div className="h-72 w-full" data-testid="season-standings-chart">
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-          <CartesianGrid stroke="#273041" strokeDasharray="3 3" />
-          <XAxis
-            dataKey="player"
-            stroke="#6B7280"
-            tick={{ fontSize: 11 }}
-            interval={0}
-            tickFormatter={(value) => shortName(value)}
-          />
-          <YAxis stroke="#6B7280" tick={{ fontSize: 11 }} />
-          <Tooltip
-            contentStyle={{
-              background: "#141923",
-              border: "1px solid #273041",
-              borderRadius: 6,
-              fontSize: 12,
-              color: "#F3F4F6",
-            }}
-            formatter={(value, name, row) => {
-              if (name === "points") return [`${value} points`, row.payload.player];
-              if (name === "wins") return [`${value} wins`, row.payload.player];
-              return [`${value} losses`, row.payload.player];
-            }}
-          />
-          <Bar dataKey="points" fill="#10B981" radius={[4, 4, 0, 0]} name="points" />
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="weird-season-bars" data-testid="season-standings-chart" role="img" aria-label="Season standings bar chart">
+      {data.map((player, index) => (
+        <Link
+          key={player.player}
+          to={`/players/${encodeURIComponent(player.player)}`}
+          className="weird-season-bar-row"
+          style={{
+            "--season-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+            "--season-power": `${Math.max(4, Math.round((Number(player.points || 0) / maxPoints) * 100))}%`,
+          }}
+          title={`${player.player}: ${player.points} points, ${player.wins}-${player.losses}`}
+        >
+          <div className="weird-season-player">
+            <span>{player.player}</span>
+            <small>{player.wins}-{player.losses} races</small>
+          </div>
+          <div className="weird-season-track">
+            <span />
+          </div>
+          <strong>{player.points}</strong>
+        </Link>
+      ))}
     </div>
   );
 };

@@ -1134,6 +1134,131 @@ h1, h2, h3, h4, h5, h6 {
     white-space: nowrap;
 }
 
+.weird-native-bars {
+    display: grid;
+    gap: 0.68rem;
+}
+
+.weird-native-bar-row {
+    display: grid;
+    grid-template-columns: 3.8rem minmax(0, 1fr) 2.2rem;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.weird-native-bar-row > span {
+    overflow: hidden;
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.weird-native-bar-track {
+    height: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 12px),
+        rgba(255, 255, 255, 0.05);
+}
+
+.weird-native-bar-track i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, var(--bar-color), color-mix(in srgb, var(--bar-color) 48%, #FFFFFF));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--bar-color) 34%, transparent);
+}
+
+.weird-native-bar-row strong {
+    color: #F3F4F6;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.weird-season-bars {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.weird-season-bar-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.55fr) minmax(0, 1fr) 3.4rem;
+    align-items: center;
+    gap: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 0.55rem;
+    padding: 0.75rem;
+    color: #F3F4F6 !important;
+    text-decoration: none;
+    background:
+        radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--season-color) 18%, transparent), transparent 9rem),
+        rgba(7, 5, 15, 0.56);
+}
+
+.weird-season-bar-row:hover {
+    border-color: color-mix(in srgb, var(--season-color) 70%, rgba(255, 255, 255, 0.2));
+    transform: translateY(-1px);
+}
+
+.weird-season-player {
+    min-width: 0;
+}
+
+.weird-season-player span,
+.weird-season-player small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.weird-season-player span {
+    color: #F3F4F6;
+    font-weight: 700;
+}
+
+.weird-season-player small {
+    margin-top: 0.2rem;
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.68rem;
+}
+
+.weird-season-track {
+    height: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 14px),
+        rgba(255, 255, 255, 0.06);
+}
+
+.weird-season-track span {
+    display: block;
+    width: var(--season-power);
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, var(--season-color), color-mix(in srgb, var(--season-color) 46%, #FFFFFF));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--season-color) 35%, transparent);
+}
+
+.weird-season-bar-row strong {
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 1.1rem;
+    text-align: right;
+}
+
 .weird-trend-card {
     --weird-trend-a: rgba(51, 244, 199, 0.24);
     --weird-trend-b: rgba(255, 79, 216, 0.18);
@@ -1811,6 +1936,19 @@ h1, h2, h3, h4, h5, h6 {
 
     .weird-rift-glyph:hover {
         transform: none;
+    }
+
+    .weird-native-bar-row {
+        grid-template-columns: 3rem minmax(0, 1fr) 2rem;
+    }
+
+    .weird-season-bar-row {
+        grid-template-columns: minmax(0, 1fr) 3rem;
+    }
+
+    .weird-season-track {
+        grid-column: 1 / -1;
+        grid-row: 2;
     }
 }
 
