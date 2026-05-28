@@ -15,10 +15,11 @@ import {
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { rankingPath } from "./StatRankings";
 
 const EMPTY_SEASON_STANDINGS = [];
+const EMPTY_DASHBOARD_ARRAY = [];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -138,8 +139,8 @@ export default function Dashboard() {
     };
   }, [following, stats]);
 
-  const topTournamentWinners = stats?.top_tournament_winners || [];
-  const upsetTracker = stats?.upset_tracker || [];
+  const topTournamentWinners = stats?.top_tournament_winners || EMPTY_DASHBOARD_ARRAY;
+  const upsetTracker = stats?.upset_tracker || EMPTY_DASHBOARD_ARRAY;
   const anniversary = stats?.anniversary_matches || {};
   const fieldDurationTrend = stats?.tournament_field_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
@@ -151,7 +152,7 @@ export default function Dashboard() {
     if (!seasonStandings.length) return null;
     return seasonStandings.find((season) => season.season_key === selectedSeasonKey) || latestSeason;
   }, [latestSeason, seasonStandings, selectedSeasonKey]);
-  const eventSeriesSummary = stats?.event_series_summary || [];
+  const eventSeriesSummary = stats?.event_series_summary || EMPTY_DASHBOARD_ARRAY;
   const freshness = assessCacheFreshness(cacheMetadata);
   const currentAttendanceLeader = useMemo(
     () => leaderByMetric(topPlayers, "attendance_streak"),
@@ -160,6 +161,16 @@ export default function Dashboard() {
   const bestAttendanceLeader = useMemo(
     () => leaderByMetric(topPlayers, "best_attendance_streak"),
     [topPlayers],
+  );
+  const weirdSignals = useMemo(
+    () => buildWeirdSignals({
+      recentMatches,
+      topPlayers,
+      rivalryIndex,
+      upsetTracker,
+      stats,
+    }),
+    [recentMatches, rivalryIndex, stats, topPlayers, upsetTracker],
   );
 
   useEffect(() => {
@@ -180,7 +191,7 @@ export default function Dashboard() {
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
         <section
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
+          className="weird-stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
           data-testid="stats-grid"
         >
           <StatCard
@@ -276,12 +287,14 @@ export default function Dashboard() {
             value={formatDateTime(dashboardTrends.latest_sync)}
             detail={`${stats?.total_tournaments ?? "-"} tournaments cached`}
             icon={Clock}
+            to="/info"
           />
           <TrendCard
             label="Active Players"
             value={dashboardTrends.active_players ?? "-"}
             detail={`${dashboardTrends.activity_match_count ?? 0} recent matches`}
             icon={Users}
+            to="/players"
           />
           <TrendCard
             label="Hottest Player"
@@ -311,6 +324,8 @@ export default function Dashboard() {
           />
         </section>
 
+        <WeirdSignalsPanel signals={weirdSignals} loading={analyticsLoading && recentMatches.length === 0} />
+
         <section
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
           data-testid="tournament-timing-panel"
@@ -328,7 +343,11 @@ export default function Dashboard() {
               <TimingExtremeCard label="Fastest Overall" row={durationExtremes?.shortest} />
               <TimingExtremeCard label="Slowest Overall" row={durationExtremes?.longest} />
               {durationGroups.slice(0, 2).map((group) => (
-                <TimingGroupCard key={`${group.game}-${group.player_count}`} group={group} />
+                <TimingGroupCard
+                  key={`${group.game}-${group.player_count}`}
+                  group={group}
+                  to={tournamentArchivePath({ game: group.game, sort: "duration" })}
+                />
               ))}
               {analyticsLoading && durationGroups.length === 0 ? (
                 <>
@@ -401,10 +420,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:min-w-[680px]">
-                <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} />
-                <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} />
-                <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} />
-                <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} />
+                <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} to="/info" />
+                <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} to="/info" />
+                <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} to="/tournaments" />
+                <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} to="/players" />
               </dl>
             </div>
           </div>
@@ -426,9 +445,10 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:min-w-[620px]">
                 {eventSeriesSummary.map((row) => (
-                  <div
+                  <Link
                     key={row.series}
-                    className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3"
+                    to={tournamentArchivePath({ series: row.series })}
+                    className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 hover:border-[#10B981]/40 transition-colors"
                   >
                     <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
                       {row.series}
@@ -437,7 +457,7 @@ export default function Dashboard() {
                       {row.count}
                     </div>
                     <div className="mt-1 text-xs text-[#6B7280]">tournaments</div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -506,7 +526,9 @@ export default function Dashboard() {
                     {row.player}
                   </Link>
                 </div>
-                <span className="font-mono text-sm text-[#F59E0B]">{row.wins} titles</span>
+                <Link to={rankingPath("top_1_finishes")} className="font-mono text-sm text-[#F59E0B] hover:text-[#FBBF24]">
+                  {row.wins} titles
+                </Link>
               </>
             )}
           />
@@ -523,9 +545,12 @@ export default function Dashboard() {
                 >
                   {row.label}
                 </Link>
-                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
+                <Link
+                  to={`/compare/${encodeURIComponent(row.player_a)}/${encodeURIComponent(row.player_b)}`}
+                  className="font-mono text-xs text-[#9CA3AF] shrink-0 hover:text-[#F3F4F6]"
+                >
                   {row.matches} / {row.a_wins}-{row.b_wins}
-                </span>
+                </Link>
               </>
             )}
           />
@@ -552,9 +577,12 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </div>
-                <span className="font-mono text-xs text-[#10B981] shrink-0">
+                <Link
+                  to={`/tournaments/${row.tournament_id}`}
+                  className="font-mono text-xs text-[#10B981] shrink-0 hover:text-[#34D399]"
+                >
                   {row.above_expectation >= 0 ? "+" : ""}{Number(row.above_expectation || 0).toFixed(2)}
-                </span>
+                </Link>
               </>
             )}
           />
@@ -575,9 +603,12 @@ export default function Dashboard() {
                     def. {row.loser}
                   </div>
                 </div>
-                <span className="font-mono text-xs text-[#F59E0B] shrink-0">
+                <Link
+                  to={matchDetailPath(row)}
+                  className="font-mono text-xs text-[#F59E0B] shrink-0 hover:text-[#FBBF24]"
+                >
                   {row.winner_probability}% odds
-                </span>
+                </Link>
               </>
             )}
           />
@@ -608,9 +639,12 @@ export default function Dashboard() {
                     </div>
                   ) : null}
                 </div>
-                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
+                <Link
+                  to={matchDetailPath(row)}
+                  className="font-mono text-xs text-[#9CA3AF] shrink-0 hover:text-[#F3F4F6]"
+                >
                   {formatDateTimeWithYear(row.date)}
-                </span>
+                </Link>
               </>
             )}
           />
@@ -631,9 +665,12 @@ export default function Dashboard() {
                     {row.game || "Unknown"} . {row.players ?? "-"} players . {row.duration_label || "-"}
                   </div>
                 </div>
-                <span className={`font-mono text-xs shrink-0 ${durationPaceTone(row.duration_vs_average?.status)}`}>
+                <Link
+                  to={`/tournaments/${row.tournament_id}`}
+                  className={`font-mono text-xs shrink-0 hover:underline ${durationPaceTone(row.duration_vs_average?.status)}`}
+                >
                   {row.duration_vs_average?.label || "No avg"}
-                </span>
+                </Link>
               </>
             )}
           />
@@ -681,21 +718,21 @@ export default function Dashboard() {
                       </Link>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono text-sm">
+                      <Link to={rankingPath("wins")} className="block font-mono text-sm hover:text-[#F3F4F6]">
                         <span className="text-[#10B981]">{p.races_won ?? p.wins}W</span>
                         <span className="text-[#6B7280] mx-1">.</span>
                         <span className="text-[#EF4444]">{p.races_lost ?? p.losses}L</span>
                         <span className="text-[#6B7280] ml-2">races</span>
-                      </div>
-                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                      </Link>
+                      <Link to={rankingPath("racks_won")} className="mt-1 block font-mono text-xs text-[#9CA3AF] hover:text-[#F3F4F6]">
                         <span className="text-[#10B981]">{p.racks_won ?? "-"}</span>
                         <span className="text-[#6B7280] mx-1">.</span>
                         <span className="text-[#EF4444]">{p.racks_lost ?? "-"}</span>
                         <span className="text-[#6B7280] ml-2">racks</span>
-                      </div>
-                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
+                      </Link>
+                      <Link to={rankingPath("average_placement")} className="mt-1 block font-mono text-xs text-[#9CA3AF] hover:text-[#F3F4F6]">
                         Avg place {p.average_placement ?? "-"}
-                      </div>
+                      </Link>
                     </div>
                   </li>
                 ))}
@@ -732,12 +769,12 @@ export default function Dashboard() {
                         {formatDateTimeWithYear(m.completed_at)} . {formatWinnerOdds(m)} odds
                       </div>
                     </div>
-                    <div className="font-mono text-xs text-[#9CA3AF] shrink-0 text-right">
+                    <Link to={matchDetailPath(m)} className="font-mono text-xs text-[#9CA3AF] shrink-0 text-right hover:text-[#F3F4F6]">
                       <div className="text-[#6B7280]">
                         {m.tournament_game || "Game TBD"}
                       </div>
                       <div className="mt-1">{m.scores || "-"}</div>
-                    </div>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -790,6 +827,266 @@ const formatMoney = (value) =>
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     : "-";
 
+const WEIRD_COLORS = [
+  "#33F4C7",
+  "#FFE156",
+  "#FF4FD8",
+  "#7C5CFF",
+  "#00E0FF",
+  "#FF8A4C",
+  "#9DFF57",
+  "#FF3D71",
+  "#4D7CFF",
+  "#F7B2FF",
+  "#7DFFCB",
+  "#FFB000",
+];
+
+const buildWeirdSignals = ({ recentMatches, topPlayers, rivalryIndex, upsetTracker, stats }) => {
+  const matches = recentMatches || [];
+  const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekdayCounts = weekdayNames.map((name) => ({ name, matches: 0 }));
+  const oddsBins = [
+    { name: "0-35", matches: 0 },
+    { name: "36-45", matches: 0 },
+    { name: "46-55", matches: 0 },
+    { name: "56-70", matches: 0 },
+    { name: "71+", matches: 0 },
+  ];
+  const rackBins = [
+    { name: "tiny", matches: 0 },
+    { name: "normal", matches: 0 },
+    { name: "long", matches: 0 },
+    { name: "marathon", matches: 0 },
+  ];
+  const pairCounts = new Map();
+
+  let afterDark = 0;
+  let coinFlip = 0;
+  let lowOddsWins = 0;
+  let longestNameMatch = null;
+  let weirdestScore = null;
+
+  matches.forEach((match) => {
+    const date = new Date(match.completed_at);
+    if (!Number.isNaN(date.getTime())) {
+      weekdayCounts[date.getDay()].matches += 1;
+      if (date.getHours() >= 21 || date.getHours() < 4) afterDark += 1;
+    }
+
+    const odds = Number(match?.elo_odds?.winner_probability);
+    if (Number.isFinite(odds)) {
+      if (odds <= 35) {
+        oddsBins[0].matches += 1;
+        lowOddsWins += 1;
+      } else if (odds <= 45) {
+        oddsBins[1].matches += 1;
+      } else if (odds <= 55) {
+        oddsBins[2].matches += 1;
+        coinFlip += 1;
+      } else if (odds <= 70) {
+        oddsBins[3].matches += 1;
+      } else {
+        oddsBins[4].matches += 1;
+      }
+    }
+
+    const scoreShape = scoreWeirdness(match.scores);
+    if (scoreShape.racks > 0) {
+      if (scoreShape.racks <= 4) rackBins[0].matches += 1;
+      else if (scoreShape.racks <= 8) rackBins[1].matches += 1;
+      else if (scoreShape.racks <= 12) rackBins[2].matches += 1;
+      else rackBins[3].matches += 1;
+      if (!weirdestScore || scoreShape.weirdness > weirdestScore.weirdness) {
+        weirdestScore = { ...scoreShape, match };
+      }
+    }
+
+    const names = [match.winner_name, match.loser_name].filter(Boolean);
+    if (names.length === 2) {
+      const key = names.map((name) => name.toLowerCase()).sort().join("::");
+      pairCounts.set(key, {
+        count: (pairCounts.get(key)?.count || 0) + 1,
+        players: names,
+      });
+      const letters = names.join("").replace(/[^a-z]/gi, "").length;
+      if (!longestNameMatch || letters > longestNameMatch.letters) {
+        longestNameMatch = { letters, match, players: names };
+      }
+    }
+  });
+
+  const busiestWeekday = [...weekdayCounts].sort((a, b) => b.matches - a.matches)[0];
+  const repeatPair = [...pairCounts.values()].sort((a, b) => b.count - a.count)[0];
+  const bestStreak = [...topPlayers]
+    .filter((player) => Number(player.attendance_streak || 0) > 0)
+    .sort((a, b) => Number(b.attendance_streak || 0) - Number(a.attendance_streak || 0))[0];
+  const topUpset = upsetTracker?.[0];
+  const topRivalry = rivalryIndex?.[0];
+
+  const cards = [
+    {
+      label: "Coin-Flip Victories",
+      value: coinFlip || "-",
+      detail: "Winner odds landed between 46% and 55%.",
+      tone: "cyan",
+      to: "/compare",
+    },
+    {
+      label: "Low-Odds Escapes",
+      value: lowOddsWins || "-",
+      detail: topUpset ? `${topUpset.winner || topUpset.player || "Someone"} broke the model hardest.` : "Upset tracker is quiet.",
+      tone: "pink",
+      to: "/leaderboard",
+    },
+    {
+      label: "After-Dark Matches",
+      value: afterDark || "-",
+      detail: "Completed after 9 PM or before 4 AM.",
+      tone: "gold",
+      to: "/tournaments",
+    },
+    {
+      label: "Repeat Gravity",
+      value: repeatPair?.count || "-",
+      detail: repeatPair ? `${repeatPair.players[0]} vs ${repeatPair.players[1]}` : "No repeated pair in the recent slice.",
+      tone: "violet",
+      to: repeatPair ? `/compare/${encodeURIComponent(repeatPair.players[0])}/${encodeURIComponent(repeatPair.players[1])}` : "/compare",
+    },
+    {
+      label: "Name-Length Collision",
+      value: longestNameMatch?.letters || "-",
+      detail: longestNameMatch ? `${longestNameMatch.players[0]} vs ${longestNameMatch.players[1]}` : "No name collision found.",
+      tone: "blue",
+      to: longestNameMatch ? matchDetailPath(longestNameMatch.match) : "/players",
+    },
+    {
+      label: "Attendance Ritual",
+      value: bestStreak?.attendance_streak || "-",
+      detail: bestStreak ? `${bestStreak.name} keeps showing up.` : "No streak leader found.",
+      tone: "green",
+      to: bestStreak ? `/players/${encodeURIComponent(bestStreak.name)}` : "/players",
+    },
+    {
+      label: "Score Distortion",
+      value: weirdestScore?.scores || "-",
+      detail: weirdestScore ? `${weirdestScore.racks} racks, spread ${weirdestScore.spread}` : "Scores are too normal right now.",
+      tone: "pink",
+      to: weirdestScore ? matchDetailPath(weirdestScore.match) : "/tournaments",
+    },
+    {
+      label: "Rivalry Static",
+      value: topRivalry?.matches || "-",
+      detail: topRivalry?.label || "No rivalry frequency spike.",
+      tone: "cyan",
+      to: topRivalry ? `/compare/${encodeURIComponent(topRivalry.player_a)}/${encodeURIComponent(topRivalry.player_b)}` : "/compare",
+    },
+  ];
+
+  return {
+    cards,
+    questions: buildWeirdQuestions({
+      afterDark,
+      bestStreak,
+      busiestWeekday,
+      coinFlip,
+      lowOddsWins,
+      repeatPair,
+      topRivalry,
+      weirdestScore,
+    }),
+    constellation: cards.slice(0, 6).map((card, index) => ({
+      label: card.label,
+      value: card.value,
+      tone: card.tone,
+      orbit: index + 1,
+    })),
+    weekdayCounts,
+    oddsBins,
+    rackBins,
+    busiestWeekday,
+    totalMatches: matches.length || stats?.total_matches || 0,
+  };
+};
+
+const scoreWeirdness = (score) => {
+  const numbers = String(score || "")
+    .match(/\d+/g)
+    ?.map((value) => Number(value))
+    .filter((value) => Number.isFinite(value)) || [];
+  if (numbers.length === 0) {
+    return { scores: score || "-", racks: 0, spread: 0, weirdness: 0 };
+  }
+  const racks = numbers.reduce((sum, value) => sum + value, 0);
+  const spread = Math.max(...numbers) - Math.min(...numbers);
+  const repeated = new Set(numbers).size < numbers.length ? 4 : 0;
+  const close = spread <= 1 ? 5 : 0;
+  const weirdness = racks + repeated + close;
+  return { scores: score || "-", racks, spread, weirdness };
+};
+
+const buildWeirdQuestions = ({
+  afterDark,
+  bestStreak,
+  busiestWeekday,
+  coinFlip,
+  lowOddsWins,
+  repeatPair,
+  topRivalry,
+  weirdestScore,
+}) => [
+  {
+    question: "Which matches felt like the table decided?",
+    answer: `${coinFlip || 0} recent wins lived in the 46-55% odds fog.`,
+  },
+  {
+    question: "Who keeps bending the calendar?",
+    answer: bestStreak
+      ? `${bestStreak.name} has the active attendance ritual at ${bestStreak.attendance_streak}.`
+      : "No active ritual has enough signal yet.",
+  },
+  {
+    question: "When does the room get strange?",
+    answer: `${busiestWeekday?.name || "No day"} is the current weekday vortex, with ${busiestWeekday?.matches || 0} recent matches.`,
+  },
+  {
+    question: "Which rivalry refuses to cool down?",
+    answer: topRivalry?.label
+      ? `${topRivalry.label} has ${topRivalry.matches} logged collisions.`
+      : "No rivalry is making enough noise yet.",
+  },
+  {
+    question: "How many outcomes ignored the script?",
+    answer: `${lowOddsWins || 0} winners came from 35% odds or lower.`,
+  },
+  {
+    question: "Which score looks least normal?",
+    answer: weirdestScore
+      ? `${weirdestScore.scores} carried ${weirdestScore.racks} racks and a ${weirdestScore.spread}-rack spread.`
+      : "No score has distorted enough to earn a label.",
+  },
+  {
+    question: "Who got pulled back into the same orbit?",
+    answer: repeatPair
+      ? `${repeatPair.players[0]} and ${repeatPair.players[1]} repeated ${repeatPair.count} times recently.`
+      : "No pair is caught in repeat gravity.",
+  },
+  {
+    question: "Did the late-night table speak?",
+    answer: `${afterDark || 0} recent matches finished after 9 PM or before 4 AM.`,
+  },
+];
+
+const tournamentArchivePath = (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (!value || value === "all") return;
+    query.set(key, String(value));
+  });
+  const suffix = query.toString();
+  return suffix ? `/tournaments?${suffix}` : "/tournaments";
+};
+
 const matchAnchorId = (matchId) => `match-${encodeURIComponent(String(matchId || ""))}`;
 
 const matchDetailPath = (row) =>
@@ -814,9 +1111,195 @@ const RecentMatchName = ({ name, entryType, tone }) => {
   );
 };
 
+const WeirdSignalsPanel = ({ signals, loading }) => {
+  const cards = signals?.cards || [];
+  return (
+    <section
+      className="weird-oracle bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
+      data-testid="weird-signals-panel"
+    >
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#F59E0B]">
+              Weird Signal Lab
+            </div>
+            <h2 className="mt-2 font-[Outfit] text-2xl sm:text-3xl font-semibold text-[#F3F4F6]">
+              Questions Nobody Asked, Until Now
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#C9C1F4]">
+              Derived from cached matches: odds weather, score distortion, name collisions, late-night completions, and other useful nonsense.
+            </p>
+          </div>
+          <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 font-mono text-xs text-[#9CA3AF]">
+            {loading ? "warming up" : `${signals?.totalMatches || 0} matches in the signal pool`}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {cards.map((card) => (
+            <WeirdSignalCard key={card.label} card={card} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <WeirdMiniChart
+            title="Weekday Vortex"
+            subtitle={`Busiest recent day: ${signals?.busiestWeekday?.name || "-"}`}
+            data={signals?.weekdayCounts || []}
+            dataKey="matches"
+          />
+          <WeirdMiniChart
+            title="Odds Weather"
+            subtitle="How often the model was barely sure"
+            data={signals?.oddsBins || []}
+            dataKey="matches"
+          />
+          <WeirdMiniChart
+            title="Score Distortion"
+            subtitle="Tiny, normal, long, and marathon rack shapes"
+            data={signals?.rackBins || []}
+            dataKey="matches"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-4">
+          <WeirdQuestionDeck questions={signals?.questions || []} />
+          <WeirdConstellation nodes={signals?.constellation || []} />
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const WeirdSignalCard = ({ card }) => {
+  const body = (
+    <div className={`weird-signal-card weird-signal-${card.tone || "cyan"} h-full rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-4`}>
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#C9C1F4]">
+        {card.label}
+      </div>
+      <div className="mt-3 font-mono text-2xl font-semibold text-[#F3F4F6]">
+        {card.value}
+      </div>
+      <div className="mt-2 text-xs leading-5 text-[#C9C1F4]">
+        {card.detail}
+      </div>
+    </div>
+  );
+  return card.to ? <Link to={card.to} className="block h-full">{body}</Link> : body;
+};
+
+const WeirdMiniChart = ({ title, subtitle, data, dataKey }) => {
+  const maxValue = Math.max(1, ...data.map((entry) => Number(entry[dataKey] || 0)));
+  return (
+    <div className="weird-mini-chart rounded-md border border-[#273041] bg-[#0B0E14] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">{title}</h3>
+          <p className="mt-1 text-xs text-[#C9C1F4]">{subtitle}</p>
+        </div>
+      </div>
+      <div className="weird-color-ribbon mt-4">
+        {data.map((entry, index) => {
+          const value = Number(entry[dataKey] || 0);
+          return (
+            <div key={`ribbon-${entry.name}`} className="weird-ribbon-item">
+              <div
+                className="weird-ribbon-fill"
+                style={{
+                  "--ribbon-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+                  "--ribbon-power": `${Math.max(10, Math.round((value / maxValue) * 100))}%`,
+                }}
+              />
+              <span>{entry.name}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 h-44">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={150}>
+          <BarChart data={data} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+            <CartesianGrid stroke="#273041" strokeDasharray="3 3" />
+            <XAxis dataKey="name" stroke="#6B7280" tick={{ fontSize: 11 }} />
+            <YAxis stroke="#6B7280" tick={{ fontSize: 11 }} allowDecimals={false} />
+            <Tooltip
+              contentStyle={{
+                background: "#141923",
+                border: "1px solid #6247AA",
+                borderRadius: 6,
+                fontSize: 12,
+                color: "#F3F4F6",
+              }}
+            />
+            <Bar dataKey={dataKey} fill="#33F4C7" radius={[5, 5, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`${entry.name}-${index}`} fill={WEIRD_COLORS[index % WEIRD_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const WeirdQuestionDeck = ({ questions }) => (
+  <div className="weird-question-deck rounded-md border border-[#273041] bg-[#0B0E14] p-4">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Question Engine</h3>
+        <p className="mt-1 text-xs text-[#C9C1F4]">The cache asks itself suspiciously specific things.</p>
+      </div>
+      <div className="weird-oracle-eye" aria-hidden="true" />
+    </div>
+    <div className="mt-4 grid grid-cols-1 gap-3">
+      {questions.slice(0, 5).map((item) => (
+        <div key={item.question} className="weird-question-row rounded-md border border-[#273041] bg-[#141923] px-4 py-3">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FFE156]">
+            {item.question}
+          </div>
+          <div className="mt-2 text-sm leading-6 text-[#F3F4F6]">
+            {item.answer}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const WeirdConstellation = ({ nodes }) => (
+  <div className="weird-constellation rounded-md border border-[#273041] bg-[#0B0E14] p-4">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Signal Constellation</h3>
+        <p className="mt-1 text-xs text-[#C9C1F4]">Not scientific. Still strangely useful.</p>
+      </div>
+      <div className="font-mono text-xs text-[#9CA3AF]">{nodes.length} nodes</div>
+    </div>
+    <div className="weird-orbit-map mt-4" aria-label="Weird signal constellation">
+      <div className="weird-orbit-core">
+        <span>FO</span>
+      </div>
+      {nodes.map((node, index) => (
+        <div
+          key={node.label}
+          className={`weird-orbit-node weird-signal-${node.tone || "cyan"}`}
+          style={{
+            "--orbit-angle": `${index * 58 + 12}deg`,
+            "--orbit-radius": `${7.5 + (index % 3) * 2.9}rem`,
+          }}
+        >
+          <span className="font-mono text-sm">{node.value}</span>
+          <span>{node.label.replace(/-/g, " ")}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   const body = (
-    <div className="bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/40 transition-colors h-full">
+    <div className="weird-card weird-trend-card bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/40 transition-colors h-full">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -836,7 +1319,7 @@ const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
     </div>
   );
 
-  return to ? <Link to={to}>{body}</Link> : body;
+  return to ? <Link to={to} className="block h-full">{body}</Link> : body;
 };
 
 const durationPaceTone = (status) => {
@@ -845,16 +1328,25 @@ const durationPaceTone = (status) => {
   return "text-[#9CA3AF]";
 };
 
-const MetadataStat = ({ label, value }) => (
-  <div>
-    <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
-      {label}
-    </dt>
-    <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
-      {value}
-    </dd>
-  </div>
-);
+const MetadataStat = ({ label, value, to }) => {
+  const content = (
+    <>
+      <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+        {label}
+      </dt>
+      <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
+        {value}
+      </dd>
+    </>
+  );
+  return to ? (
+    <Link to={to} className="block rounded-md px-2 py-1 -mx-2 -my-1 hover:bg-[#0B0E14] transition-colors">
+      {content}
+    </Link>
+  ) : (
+    <div>{content}</div>
+  );
+};
 
 const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
   const toneClasses = {
@@ -885,10 +1377,11 @@ const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-3 text-sm lg:min-w-[280px]">
-          <MetadataChip label="Sync status" value={statusLabel} />
+          <MetadataChip label="Sync status" value={statusLabel} to="/info" />
           <MetadataChip
             label="Export lag"
             value={formatExportLag(cacheMetadata.generated_at, cacheMetadata.last_synced_at)}
+            to="/info"
           />
         </dl>
       </div>
@@ -896,12 +1389,22 @@ const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
   );
 };
 
-const MetadataChip = ({ label, value }) => (
-  <div className="rounded-md border border-current/20 bg-black/10 px-3 py-2">
-    <dt className="text-[11px] uppercase tracking-[0.14em] opacity-70">{label}</dt>
-    <dd className="mt-1 font-mono text-sm">{value}</dd>
-  </div>
-);
+const MetadataChip = ({ label, value, to }) => {
+  const className = "rounded-md border border-current/20 bg-black/10 px-3 py-2";
+  const content = (
+    <>
+      <dt className="text-[11px] uppercase tracking-[0.14em] opacity-70">{label}</dt>
+      <dd className="mt-1 font-mono text-sm">{value}</dd>
+    </>
+  );
+  return to ? (
+    <Link to={to} className={`${className} block hover:bg-black/20 transition-colors`}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>{content}</div>
+  );
+};
 
 const TimingExtremeCard = ({ label, row }) => {
   const body = (
@@ -919,21 +1422,24 @@ const TimingExtremeCard = ({ label, row }) => {
   return row?.tournament_id ? <Link to={`/tournaments/${row.tournament_id}`}>{body}</Link> : body;
 };
 
-const TimingGroupCard = ({ group, loading = false }) => (
-  <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
-    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
-      {loading ? "Loading..." : `${group.game} / ${group.player_count} players`}
+const TimingGroupCard = ({ group, loading = false, to }) => {
+  const body = (
+    <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
+      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
+        {loading ? "Loading..." : `${group.game} / ${group.player_count} players`}
+      </div>
+      <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
+        {loading ? "Deferred panel" : `${group.shortest?.duration_label || "-"} - ${group.longest?.duration_label || "-"}`}
+      </div>
+      <div className="mt-1 text-xs text-[#9CA3AF]">
+        {loading
+          ? "Loads after the dashboard core cards."
+          : `Avg ${group.average_label || "-"} across ${group.sample_count} event${group.sample_count === 1 ? "" : "s"}`}
+      </div>
     </div>
-    <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
-      {loading ? "Deferred panel" : `${group.shortest?.duration_label || "-"} - ${group.longest?.duration_label || "-"}`}
-    </div>
-    <div className="mt-1 text-xs text-[#9CA3AF]">
-      {loading
-        ? "Loads after the dashboard core cards."
-        : `Avg ${group.average_label || "-"} across ${group.sample_count} event${group.sample_count === 1 ? "" : "s"}`}
-    </div>
-  </div>
-);
+  );
+  return to && !loading ? <Link to={to} className="block h-full">{body}</Link> : body;
+};
 
 const SeasonStandingsChart = ({ season }) => {
   const data = (season?.players || []).slice(0, 6);

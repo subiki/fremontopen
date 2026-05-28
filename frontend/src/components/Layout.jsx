@@ -1,9 +1,20 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 
+const RouteLoading = () => (
+  <div className="weird-route-loader" role="status" aria-live="polite">
+    <div className="weird-route-loader-core">8</div>
+    <div>
+      <div className="weird-route-loader-title">Racking static signal</div>
+      <div className="weird-route-loader-copy">Loading the next cache-fed view</div>
+    </div>
+  </div>
+);
+
 export const Layout = () => {
   return (
-    <div className="min-h-screen bg-[#0B0E14] flex felt-grain" data-testid="app-layout">
+    <div className="weird-mode min-h-screen bg-[#0B0E14] felt-grain" data-testid="app-layout">
       <a
         href="#main-content"
         className="skip-link"
@@ -15,9 +26,11 @@ export const Layout = () => {
       <div
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0 focus:outline-none"
+        className="weird-main min-w-0 flex flex-col pb-24 md:pb-10 focus:outline-none"
       >
-        <Outlet />
+        <Suspense fallback={<RouteLoading />}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,22 +1,22 @@
 import "@/App.css";
-import { useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/Layout";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { initFollowSync } from "./lib/follow";
 import { getTheme, initTheme, onThemeChange } from "./lib/theme";
-import Dashboard from "./pages/Dashboard";
-import Tournaments from "./pages/Tournaments";
-import TournamentDetail from "./pages/TournamentDetail";
-import Players from "./pages/Players";
-import PlayerDetail from "./pages/PlayerDetail";
-import Leaderboard from "./pages/Leaderboard";
-import Compare from "./pages/Compare";
-import Seasons from "./pages/Seasons";
-import StatRankings from "./pages/StatRankings";
-import Info from "./pages/Info";
-import NotFound from "./pages/NotFound";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Tournaments = lazy(() => import("./pages/Tournaments"));
+const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
+const Players = lazy(() => import("./pages/Players"));
+const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Compare = lazy(() => import("./pages/Compare"));
+const Seasons = lazy(() => import("./pages/Seasons"));
+const StatRankings = lazy(() => import("./pages/StatRankings"));
+const Info = lazy(() => import("./pages/Info"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   const [theme, setTheme] = useState(getTheme());

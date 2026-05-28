@@ -58,7 +58,7 @@ export const SearchBar = () => {
   const total = results.players.length + results.tournaments.length;
 
   return (
-    <div ref={wrapRef} className="relative w-full max-w-sm" data-testid="search-bar">
+    <div ref={wrapRef} className="weird-search relative w-full max-w-sm" data-testid="search-bar">
       <label htmlFor="site-search" className="sr-only">
         Search players or tournaments
       </label>
@@ -75,7 +75,7 @@ export const SearchBar = () => {
         aria-label="Search players or tournaments"
         aria-expanded={open}
         aria-controls="search-results-panel"
-        className="w-full bg-[#141923] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-9 py-2 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
+        className="weird-input w-full bg-[#141923] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-9 py-2 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
       />
       {q && (
         <button
@@ -91,7 +91,7 @@ export const SearchBar = () => {
       {open && q && (
         <div
           id="search-results-panel"
-          className="absolute z-50 mt-2 w-full bg-[#141923] border border-[#273041] rounded-md shadow-xl max-h-96 overflow-y-auto"
+          className="weird-search-panel absolute z-50 mt-2 w-full bg-[#141923] border border-[#273041] rounded-md shadow-xl max-h-96 overflow-y-auto"
           data-testid="search-results"
           role="listbox"
           aria-label="Search results"
