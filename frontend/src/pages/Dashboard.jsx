@@ -188,6 +188,11 @@ export default function Dashboard() {
       <Topbar
         title="Dashboard"
         subtitle="Cached billiards intelligence - Fremont Open"
+        actions={
+          <a href="#weird-rift-panel" className="weird-jump-chip hidden md:inline-flex">
+            Rift {weirdSignals?.rift?.feverScore ?? 0}
+          </a>
+        }
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
         <section
@@ -325,6 +330,7 @@ export default function Dashboard() {
         </section>
 
         <WeirdSignalsPanel signals={weirdSignals} loading={analyticsLoading && recentMatches.length === 0} />
+        <WeirdRiftPanel rift={weirdSignals?.rift} loading={analyticsLoading && recentMatches.length === 0} />
 
         <section
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
@@ -983,6 +989,111 @@ const buildWeirdSignals = ({ recentMatches, topPlayers, rivalryIndex, upsetTrack
     },
   ];
 
+  const feverScore = clampNumber(
+    Math.round(
+      (coinFlip * 2.7)
+        + (lowOddsWins * 4.5)
+        + (afterDark * 1.9)
+        + ((repeatPair?.count || 0) * 9)
+        + ((topRivalry?.matches || 0) * 0.85)
+        + ((weirdestScore?.weirdness || 0) * 1.15)
+        + ((bestStreak?.attendance_streak || 0) * 2.2),
+    ),
+    0,
+    999,
+  );
+  const maxRivalryMatches = Math.max(1, ...rivalryIndex.map((row) => Number(row.matches || 0)));
+  const maxPlayerWins = Math.max(1, ...topPlayers.slice(0, 16).map((player) => Number(player.wins || 0)));
+  const riftFields = [
+    {
+      label: "Chalk Entropy",
+      value: `${clampNumber(Math.round((coinFlip / Math.max(1, matches.length)) * 300), 0, 100)}%`,
+      score: clampNumber(Math.round((coinFlip / Math.max(1, matches.length)) * 300), 0, 100),
+      detail: `${coinFlip || 0} recent matches lived near coin-flip odds.`,
+      tone: "cyan",
+      to: "/compare",
+    },
+    {
+      label: "Table Gravity",
+      value: repeatPair?.count ? `${repeatPair.count}x` : "-",
+      score: clampNumber((repeatPair?.count || 0) * 18, 0, 100),
+      detail: repeatPair ? `${repeatPair.players[0]} and ${repeatPair.players[1]} keep bending back together.` : "No pair is stuck in orbit.",
+      tone: "violet",
+      to: repeatPair ? `/compare/${encodeURIComponent(repeatPair.players[0])}/${encodeURIComponent(repeatPair.players[1])}` : "/compare",
+    },
+    {
+      label: "Ghost Rack Index",
+      value: weirdestScore?.racks || "-",
+      score: clampNumber((weirdestScore?.weirdness || 0) * 4, 0, 100),
+      detail: weirdestScore ? `${weirdestScore.scores} is the current score distortion.` : "Scores are not haunted enough yet.",
+      tone: "pink",
+      to: weirdestScore ? matchDetailPath(weirdestScore.match) : "/tournaments",
+    },
+    {
+      label: "Bracket Fever",
+      value: topUpset?.winner_probability ? `${topUpset.winner_probability}%` : `${lowOddsWins || 0}`,
+      score: clampNumber(lowOddsWins * 14 + (topUpset ? 18 : 0), 0, 100),
+      detail: topUpset ? `${topUpset.winner || "An underdog"} punctured the expected line.` : "The upset field is quiet.",
+      tone: "gold",
+      to: topUpset ? matchDetailPath(topUpset) : "/leaderboard",
+    },
+    {
+      label: "Calendar Static",
+      value: afterDark || "-",
+      score: clampNumber(Math.round((afterDark / Math.max(1, matches.length)) * 420), 0, 100),
+      detail: `${afterDark || 0} matches crossed the late-night rail.`,
+      tone: "blue",
+      to: "/tournaments",
+    },
+    {
+      label: "Ritual Attendance",
+      value: bestStreak?.attendance_streak || "-",
+      score: clampNumber((bestStreak?.attendance_streak || 0) * 9, 0, 100),
+      detail: bestStreak ? `${bestStreak.name} is the current return-to-table signal.` : "No active ritual has enough signal.",
+      tone: "green",
+      to: bestStreak ? `/players/${encodeURIComponent(bestStreak.name)}` : "/players",
+    },
+  ];
+  const riftGlyphs = [
+    ...riftFields.map((field) => ({
+      label: field.label,
+      value: field.value,
+      score: field.score,
+      tone: field.tone,
+      to: field.to,
+    })),
+    ...topPlayers.slice(0, 4).map((player, index) => ({
+      label: player.name,
+      value: `${player.wins || 0}W`,
+      score: clampNumber(Math.round((Number(player.wins || 0) / maxPlayerWins) * 100), 0, 100),
+      tone: ["cyan", "pink", "gold", "violet"][index % 4],
+      to: `/players/${encodeURIComponent(player.name)}`,
+    })),
+    ...rivalryIndex.slice(0, 2).map((row, index) => ({
+      label: row.label,
+      value: `${row.matches || 0}`,
+      score: clampNumber(Math.round((Number(row.matches || 0) / maxRivalryMatches) * 100), 0, 100),
+      tone: ["blue", "green"][index % 2],
+      to: `/compare/${encodeURIComponent(row.player_a)}/${encodeURIComponent(row.player_b)}`,
+    })),
+  ].slice(0, 12);
+  const riftQuestions = [
+    {
+      label: "What would a table whisper first?",
+      answer: [...riftFields].sort((a, b) => b.score - a.score)[0]?.detail || "The cache has not formed a sentence yet.",
+    },
+    {
+      label: "Where is the bracket least normal?",
+      answer: topUpset
+        ? `${topUpset.winner || "The winner"} beat the odds at ${topUpset.winner_probability ?? "-"}%.`
+        : `${lowOddsWins || 0} recent winners came from the low-odds side.`,
+    },
+    {
+      label: "Which stat is pretending to be weather?",
+      answer: `${busiestWeekday?.name || "No day"} has the strongest weekday pressure with ${busiestWeekday?.matches || 0} recent matches.`,
+    },
+  ];
+
   return {
     cards,
     questions: buildWeirdQuestions({
@@ -1005,9 +1116,22 @@ const buildWeirdSignals = ({ recentMatches, topPlayers, rivalryIndex, upsetTrack
     oddsBins,
     rackBins,
     busiestWeekday,
+    rift: {
+      feverScore,
+      fields: riftFields,
+      glyphs: riftGlyphs,
+      questions: riftQuestions,
+      headline: feverScore >= 420
+        ? "The room has entered full neon drift."
+        : feverScore >= 180
+          ? "The table is loudly suspicious."
+          : "The weird signal is warming up.",
+    },
     totalMatches: matches.length || stats?.total_matches || 0,
   };
 };
+
+const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const scoreWeirdness = (score) => {
   const numbers = String(score || "")
@@ -1296,6 +1420,106 @@ const WeirdConstellation = ({ nodes }) => (
     </div>
   </div>
 );
+
+const WeirdRiftPanel = ({ rift, loading }) => {
+  const fields = rift?.fields || [];
+  const glyphs = rift?.glyphs || [];
+  const score = rift?.feverScore ?? 0;
+  const meterScore = clampNumber(score, 0, 100);
+
+  return (
+    <section
+      id="weird-rift-panel"
+      className="weird-rift-panel"
+      data-testid="weird-rift-panel"
+    >
+      <div className="weird-rift-header">
+        <div>
+          <div className="weird-rift-kicker">Extreme Weird Mode</div>
+          <h2>Static Cache Rift</h2>
+          <p>{loading ? "The rift is waiting on deferred analytics." : rift?.headline}</p>
+        </div>
+        <div className="weird-rift-badge">
+          <span>Rift</span>
+          <strong>{score}</strong>
+        </div>
+      </div>
+
+      <div className="weird-rift-grid">
+        <div className="weird-rift-meter" style={{ "--rift-score": `${meterScore}%` }}>
+          <div className="weird-eight-ball">
+            <span>8</span>
+          </div>
+          <div>
+            <div className="weird-rift-meter-label">Weirdness Pressure</div>
+            <div className="weird-rift-meter-value">{score}</div>
+          </div>
+        </div>
+
+        <div className="weird-rift-wheel" aria-label="Static cache rift glyphs">
+          <div className="weird-rift-core">
+            <span>FO</span>
+            <strong>cache</strong>
+          </div>
+          {glyphs.map((glyph, index) => {
+            const angle = index * 30 - 88;
+            const node = (
+              <>
+                <span>{glyph.value}</span>
+                <strong>{shortCompactLabel(glyph.label)}</strong>
+              </>
+            );
+            const className = `weird-rift-glyph weird-signal-${glyph.tone || "cyan"}`;
+            const style = {
+              "--rift-angle": `${angle}deg`,
+              "--rift-angle-inverse": `${-angle}deg`,
+              "--rift-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+              "--rift-power": `${clampNumber(glyph.score || 0, 8, 100)}%`,
+            };
+            return glyph.to ? (
+              <Link
+                key={`${glyph.label}-${index}`}
+                to={glyph.to}
+                className={className}
+                style={style}
+              >
+                {node}
+              </Link>
+            ) : (
+              <div key={`${glyph.label}-${index}`} className={className} style={style}>
+                {node}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="weird-rift-lanes">
+          {fields.map((field) => (
+            <Link key={field.label} to={field.to} className={`weird-rift-lane weird-signal-${field.tone || "cyan"}`}>
+              <div className="weird-rift-lane-top">
+                <span>{field.label}</span>
+                <strong>{field.value}</strong>
+              </div>
+              <div className="weird-rift-lane-bar">
+                <span style={{ width: `${clampNumber(field.score, 3, 100)}%` }} />
+              </div>
+              <p>{field.detail}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="weird-rift-questions">
+        {(rift?.questions || []).map((item) => (
+          <div key={item.label}>
+            <span>{item.label}</span>
+            <strong>{item.answer}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   const body = (
@@ -1593,6 +1817,12 @@ const shortName = (value = "") => {
   const parts = String(value).split(" ").filter(Boolean);
   if (parts.length < 2) return value;
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+};
+
+const shortCompactLabel = (value = "") => {
+  const words = String(value).split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return value;
+  return words.slice(0, 2).join(" ");
 };
 
 const AnalyticsList = ({ title, rows, empty, loading = false, renderRow }) => (

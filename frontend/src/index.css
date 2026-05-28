@@ -1304,6 +1304,421 @@ h1, h2, h3, h4, h5, h6 {
     color: #C9C1F4;
 }
 
+.weird-jump-chip {
+    align-items: center;
+    min-height: 2.5rem;
+    border: 1px solid rgba(255, 225, 86, 0.38);
+    border-radius: 0.55rem;
+    padding: 0 0.8rem;
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-decoration: none;
+    text-transform: uppercase;
+    background:
+        linear-gradient(135deg, rgba(255, 225, 86, 0.14), rgba(255, 79, 216, 0.14)),
+        rgba(7, 5, 15, 0.72);
+    box-shadow: 0 0 22px rgba(255, 225, 86, 0.14);
+}
+
+.weird-jump-chip:hover {
+    border-color: rgba(51, 244, 199, 0.7);
+    color: #33F4C7;
+}
+
+.weird-rift-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background:
+        radial-gradient(circle at 13% 15%, rgba(255, 225, 86, 0.22), transparent 18rem),
+        radial-gradient(circle at 72% 14%, rgba(51, 244, 199, 0.2), transparent 20rem),
+        radial-gradient(circle at 50% 95%, rgba(255, 79, 216, 0.25), transparent 24rem),
+        linear-gradient(135deg, rgba(9, 6, 24, 0.95), rgba(52, 12, 72, 0.83));
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.weird-rift-panel::before,
+.weird-rift-panel::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.weird-rift-panel::before {
+    inset: 0;
+    opacity: 0.52;
+    background:
+        linear-gradient(90deg, rgba(51, 244, 199, 0.11), transparent 20%, rgba(255, 225, 86, 0.12) 49%, transparent 68%, rgba(255, 79, 216, 0.12)),
+        repeating-linear-gradient(30deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 17px),
+        repeating-radial-gradient(circle at 50% 50%, transparent 0 2.7rem, rgba(255, 255, 255, 0.08) 2.7rem 2.75rem);
+    mix-blend-mode: screen;
+}
+
+.weird-rift-panel::after {
+    left: 1.25rem;
+    right: 1.25rem;
+    top: 0;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #33F4C7, #FFE156, #FF4FD8, #7C5CFF, #00E0FF, #9DFF57);
+    box-shadow: 0 0 30px rgba(255, 79, 216, 0.34);
+}
+
+.weird-rift-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.weird-rift-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.weird-rift-kicker {
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.weird-rift-header h2 {
+    margin-top: 0.45rem;
+    color: #F3F4F6;
+    font-family: "Outfit", sans-serif;
+    font-size: clamp(1.8rem, 4.4vw, 4.4rem);
+    font-weight: 800;
+    line-height: 0.9;
+}
+
+.weird-rift-header p {
+    max-width: 44rem;
+    margin-top: 0.75rem;
+    color: #D9D6FF;
+    font-size: 0.95rem;
+}
+
+.weird-rift-badge {
+    display: grid;
+    min-width: 7rem;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+    background:
+        conic-gradient(from 20deg, rgba(51, 244, 199, 0.24), rgba(255, 225, 86, 0.26), rgba(255, 79, 216, 0.24), rgba(51, 244, 199, 0.24)),
+        rgba(7, 5, 15, 0.72);
+}
+
+.weird-rift-badge span {
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.weird-rift-badge strong {
+    color: #F3F4F6;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.weird-rift-grid {
+    display: grid;
+    grid-template-columns: minmax(11rem, 0.58fr) minmax(20rem, 1.34fr) minmax(18rem, 0.86fr);
+    gap: 1rem;
+    margin-top: 1.25rem;
+    align-items: stretch;
+}
+
+.weird-rift-meter,
+.weird-rift-wheel,
+.weird-rift-lanes {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0.65rem;
+    background:
+        linear-gradient(145deg, rgba(7, 5, 15, 0.84), rgba(33, 13, 58, 0.72));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.weird-rift-meter {
+    display: grid;
+    min-height: 24rem;
+    align-content: center;
+    justify-items: center;
+    gap: 1.1rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.weird-eight-ball {
+    display: grid;
+    width: min(12rem, 70vw);
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 50%, #F3F4F6 0 18%, transparent 18.5%),
+        conic-gradient(from 0deg, #33F4C7 0 var(--rift-score), rgba(255, 255, 255, 0.08) var(--rift-score) 100%),
+        radial-gradient(circle at 42% 32%, rgba(255, 255, 255, 0.28), transparent 19%),
+        #05030A;
+    box-shadow: 0 0 42px rgba(51, 244, 199, 0.22), 0 0 0 10px rgba(255, 255, 255, 0.04);
+}
+
+.weird-eight-ball span {
+    display: grid;
+    width: 2.8rem;
+    height: 2.8rem;
+    place-items: center;
+    border-radius: 50%;
+    color: #05030A;
+    font-family: "Outfit", sans-serif;
+    font-size: 1.65rem;
+    font-weight: 800;
+    background: #F3F4F6;
+}
+
+.weird-rift-meter-label {
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.weird-rift-meter-value {
+    margin-top: 0.3rem;
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 0.95;
+}
+
+.weird-rift-wheel {
+    position: relative;
+    min-height: 24rem;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(255, 225, 86, 0.16), transparent 6rem),
+        repeating-radial-gradient(circle at 50% 50%, transparent 0 3.4rem, rgba(255, 255, 255, 0.11) 3.4rem 3.45rem),
+        linear-gradient(145deg, rgba(7, 5, 15, 0.88), rgba(35, 13, 59, 0.78));
+}
+
+.weird-rift-wheel::before,
+.weird-rift-wheel::after {
+    content: "";
+    position: absolute;
+    inset: 2.5rem 5.5rem;
+    border: 1px solid rgba(51, 244, 199, 0.18);
+    border-radius: 50%;
+    transform: rotate(16deg) scaleX(1.8);
+}
+
+.weird-rift-wheel::after {
+    border-color: rgba(255, 79, 216, 0.2);
+    transform: rotate(-38deg) scaleX(1.44);
+}
+
+.weird-rift-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    display: grid;
+    width: 6rem;
+    height: 6rem;
+    place-items: center;
+    border-radius: 50%;
+    color: #07050F;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(from 20deg, #33F4C7, #FFE156, #FF4FD8, #7C5CFF, #33F4C7);
+    box-shadow: 0 0 46px rgba(255, 225, 86, 0.24);
+}
+
+.weird-rift-core span {
+    align-self: end;
+    font-family: "Outfit", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.weird-rift-core strong {
+    align-self: start;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.weird-rift-glyph {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    display: grid;
+    width: 6.1rem;
+    min-height: 4.2rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--rift-color) 58%, rgba(255, 255, 255, 0.15));
+    border-radius: 0.6rem;
+    padding: 0.55rem;
+    color: #F3F4F6 !important;
+    text-align: center;
+    text-decoration: none;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--rift-color) 26%, transparent) var(--rift-power), transparent var(--rift-power)),
+        linear-gradient(145deg, rgba(7, 5, 15, 0.93), rgba(43, 13, 66, 0.82));
+    box-shadow: 0 0 24px color-mix(in srgb, var(--rift-color) 24%, transparent);
+    transform:
+        translate(-50%, -50%)
+        rotate(var(--rift-angle))
+        translateX(clamp(7rem, 14vw, 12rem))
+        rotate(var(--rift-angle-inverse));
+}
+
+.weird-rift-glyph:hover {
+    border-color: var(--rift-color);
+    transform:
+        translate(-50%, -50%)
+        rotate(var(--rift-angle))
+        translateX(clamp(7rem, 14vw, 12rem))
+        rotate(var(--rift-angle-inverse))
+        scale(1.06);
+}
+
+.weird-rift-glyph span {
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.weird-rift-glyph strong {
+    max-width: 100%;
+    overflow: hidden;
+    color: #F3F4F6;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.58rem;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.weird-rift-lanes {
+    display: grid;
+    gap: 0.7rem;
+    padding: 0.8rem;
+}
+
+.weird-rift-lane {
+    display: grid;
+    gap: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.55rem;
+    padding: 0.78rem;
+    color: #F3F4F6 !important;
+    text-decoration: none;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.08), transparent 6rem),
+        rgba(7, 5, 15, 0.54);
+}
+
+.weird-rift-lane:hover {
+    border-color: rgba(255, 225, 86, 0.5);
+    background:
+        radial-gradient(circle at 0% 0%, rgba(255, 225, 86, 0.12), transparent 6rem),
+        rgba(7, 5, 15, 0.74);
+}
+
+.weird-rift-lane-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.weird-rift-lane-top span {
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.weird-rift-lane-top strong {
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+}
+
+.weird-rift-lane-bar {
+    height: 0.45rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.weird-rift-lane-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #33F4C7, #FFE156, #FF4FD8);
+    box-shadow: 0 0 16px rgba(255, 79, 216, 0.3);
+}
+
+.weird-rift-lane p {
+    margin: 0;
+    color: #D9D6FF;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.weird-rift-questions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.weird-rift-questions div {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.55rem;
+    padding: 0.85rem;
+    background: rgba(7, 5, 15, 0.58);
+}
+
+.weird-rift-questions span {
+    display: block;
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.weird-rift-questions strong {
+    display: block;
+    margin-top: 0.45rem;
+    color: #F3F4F6;
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .weird-orbit-core {
         animation: weirdCorePulse 4.2s ease-in-out infinite;
@@ -1345,6 +1760,56 @@ h1, h2, h3, h4, h5, h6 {
         top: auto;
         width: 100%;
         min-height: 3.4rem;
+        transform: none;
+    }
+
+    .weird-rift-panel {
+        padding: 1rem;
+    }
+
+    .weird-rift-header {
+        display: grid;
+    }
+
+    .weird-rift-badge {
+        width: 100%;
+        grid-template-columns: 1fr auto;
+        justify-items: start;
+    }
+
+    .weird-rift-grid,
+    .weird-rift-questions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .weird-rift-meter {
+        min-height: auto;
+    }
+
+    .weird-rift-wheel {
+        display: grid;
+        min-height: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        padding: 1rem;
+    }
+
+    .weird-rift-wheel::before,
+    .weird-rift-wheel::after,
+    .weird-rift-core {
+        display: none;
+    }
+
+    .weird-rift-glyph {
+        position: relative;
+        left: auto;
+        top: auto;
+        width: auto;
+        min-height: 4rem;
+        transform: none;
+    }
+
+    .weird-rift-glyph:hover {
         transform: none;
     }
 }
