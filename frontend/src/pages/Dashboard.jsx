@@ -194,6 +194,13 @@ export default function Dashboard() {
         }
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
+        <SurrealMeltPanel
+          stats={stats}
+          rift={weirdSignals?.rift}
+          topPlayers={topPlayers}
+          dashboardTrends={dashboardTrends}
+        />
+
         <section
           className="weird-stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
           data-testid="stats-grid"
@@ -1218,6 +1225,105 @@ const matchDetailPath = (row) =>
     : row?.tournament_id
       ? `/tournaments/${row.tournament_id}`
       : "#";
+
+const SurrealMeltPanel = ({ stats, rift, topPlayers, dashboardTrends }) => {
+  const leadPlayer = topPlayers?.[0];
+  const hotPlayer = dashboardTrends?.hottest_player;
+  const fever = rift?.feverScore ?? 0;
+  const meltStats = [
+    {
+      label: "Tables",
+      value: stats?.total_tournaments ?? "-",
+      detail: "events bending",
+      to: "/tournaments",
+      tone: "cyan",
+    },
+    {
+      label: "Racks",
+      value: stats?.total_matches ?? "-",
+      detail: "matches dripping",
+      to: rankingPath("total_matches"),
+      tone: "gold",
+    },
+    {
+      label: "Faces",
+      value: stats?.total_players ?? "-",
+      detail: "players floating",
+      to: "/players",
+      tone: "pink",
+    },
+    {
+      label: "Fever",
+      value: fever,
+      detail: rift?.headline || "rift warming",
+      to: "#weird-rift-panel",
+      tone: "violet",
+    },
+  ];
+
+  return (
+    <section className="surreal-melt-panel" data-testid="surreal-melt-panel">
+      <div className="surreal-sky" aria-hidden="true">
+        <div className="surreal-sun">
+          <span>8</span>
+        </div>
+        <div className="surreal-cue surreal-cue-a" />
+        <div className="surreal-cue surreal-cue-b" />
+        <div className="surreal-liquid-table">
+          <span />
+        </div>
+        <div className="surreal-melt-ball surreal-ball-one">
+          <span>{stats?.total_tournaments ?? "-"}</span>
+        </div>
+        <div className="surreal-melt-ball surreal-ball-two">
+          <span>{stats?.total_players ?? "-"}</span>
+        </div>
+        <div className="surreal-melt-ball surreal-ball-three">
+          <span>{fever}</span>
+        </div>
+      </div>
+
+      <div className="surreal-melt-copy">
+        <div className="surreal-kicker">Surreal Rack State</div>
+        <h2>Stats are melting into the rails.</h2>
+        <p>
+          {leadPlayer
+            ? `${leadPlayer.name} floats at ${leadPlayer.wins}-${leadPlayer.losses}; the table refuses to stay flat.`
+            : "The cache is still warming the felt."}
+        </p>
+      </div>
+
+      <div className="surreal-clock-grid">
+        {meltStats.map((item, index) => (
+          <Link
+            key={item.label}
+            to={item.to}
+            className={`surreal-clock-card weird-signal-${item.tone}`}
+            style={{
+              "--clock-tilt": `${index % 2 === 0 ? -4 : 5}deg`,
+              "--clock-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+            }}
+          >
+            <div className="surreal-clock-face">
+              <span>{item.value}</span>
+            </div>
+            <div>
+              <strong>{item.label}</strong>
+              <small>{item.detail}</small>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="surreal-melt-footer">
+        <Link to={hotPlayer ? `/players/${encodeURIComponent(hotPlayer.player)}` : "/leaderboard"}>
+          {hotPlayer ? `${hotPlayer.player} is currently melting the form chart` : "Leaderboard liquefies here"}
+        </Link>
+        <Link to="/compare">Compare warped matchups</Link>
+      </div>
+    </section>
+  );
+};
 
 const RecentMatchName = ({ name, entryType, tone }) => {
   const isWinner = tone === "winner";
