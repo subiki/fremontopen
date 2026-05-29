@@ -2228,6 +2228,20 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 1;
 }
 
+.trip-color-fog {
+    position: absolute;
+    inset: -28%;
+    z-index: 0;
+    opacity: 0.72;
+    pointer-events: none;
+    background:
+        conic-gradient(from 12deg at 28% 52%, rgba(51, 244, 199, 0.28), rgba(255, 225, 86, 0.18), rgba(255, 79, 216, 0.26), rgba(124, 92, 255, 0.2), rgba(157, 255, 87, 0.2), rgba(51, 244, 199, 0.28)),
+        radial-gradient(circle at 74% 18%, rgba(255, 138, 76, 0.22), transparent 24rem),
+        radial-gradient(circle at 50% 96%, rgba(0, 224, 255, 0.2), transparent 26rem);
+    filter: blur(0.5px) saturate(1.35);
+    mix-blend-mode: screen;
+}
+
 .trip-vortex {
     position: relative;
     min-height: 19rem;
@@ -2244,14 +2258,40 @@ h1, h2, h3, h4, h5, h6 {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 2.1rem;
-    height: 78%;
+    width: 1.25rem;
+    height: 86%;
     border-radius: 999px;
     background:
-        linear-gradient(180deg, transparent, color-mix(in srgb, var(--trip-color) 72%, transparent), transparent);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--trip-color) 38%, transparent);
+        linear-gradient(180deg, transparent, color-mix(in srgb, var(--trip-color) 86%, transparent), transparent);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--trip-color) 46%, transparent);
     transform-origin: center;
     transform: translate(-50%, -50%) rotate(var(--trip-angle));
+    mix-blend-mode: screen;
+}
+
+.trip-swirl-orbits {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.trip-swirl-orbits i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(6.6rem + var(--swirl-index) * 3.4rem);
+    height: calc(4.2rem + var(--swirl-index) * 2.6rem);
+    border: 2px solid color-mix(in srgb, var(--swirl-color) 48%, transparent);
+    border-left-color: transparent;
+    border-bottom-color: color-mix(in srgb, var(--swirl-color) 72%, transparent);
+    border-radius: 50%;
+    box-shadow:
+        0 0 20px color-mix(in srgb, var(--swirl-color) 30%, transparent),
+        inset 0 0 18px color-mix(in srgb, var(--swirl-color) 16%, transparent);
+    transform:
+        translate(-50%, -50%)
+        rotate(calc(var(--swirl-index) * 23deg))
+        skewX(calc(var(--swirl-index) * -2deg));
     mix-blend-mode: screen;
 }
 
@@ -2319,6 +2359,27 @@ h1, h2, h3, h4, h5, h6 {
     margin-top: 0.9rem;
     color: #D9D6FF;
     line-height: 1.55;
+}
+
+.trip-spectrum-strip {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    gap: 0.35rem;
+    min-height: 1.25rem;
+    padding: 0.28rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(7, 5, 15, 0.54);
+    box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.06), 0 0 24px rgba(255, 79, 216, 0.14);
+}
+
+.trip-spectrum-strip span {
+    min-width: 0;
+    border-radius: 999px;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--spectrum-color) 30%, #FFFFFF), var(--spectrum-color));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--spectrum-color) 38%, transparent);
 }
 
 .trip-prism-stat-ring {
@@ -2412,6 +2473,19 @@ h1, h2, h3, h4, h5, h6 {
         animation: tripRayPulse 3.8s ease-in-out infinite alternate;
     }
 
+    .trip-color-fog {
+        animation: tripFogSpin 18s linear infinite;
+    }
+
+    .trip-swirl-orbits i {
+        animation: tripSwirlRoll 9s ease-in-out infinite alternate;
+    }
+
+    .trip-spectrum-strip span {
+        animation: tripSpectrumPulse 2.8s ease-in-out infinite alternate;
+        animation-delay: var(--spectrum-delay);
+    }
+
     .trip-prism-copy h2 {
         animation: weirdHue 5.8s ease-in-out infinite;
     }
@@ -2440,6 +2514,34 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes tripRayPulse {
     from { opacity: 0.52; transform: translate(-50%, -50%) rotate(var(--trip-angle)) scaleY(0.92); }
     to { opacity: 0.9; transform: translate(-50%, -50%) rotate(var(--trip-angle)) scaleY(1.12); }
+}
+
+@keyframes tripFogSpin {
+    from { transform: rotate(0deg) scale(1.05); }
+    to { transform: rotate(360deg) scale(1.05); }
+}
+
+@keyframes tripSwirlRoll {
+    from {
+        opacity: 0.52;
+        transform:
+            translate(-50%, -50%)
+            rotate(calc(var(--swirl-index) * 23deg))
+            skewX(calc(var(--swirl-index) * -2deg));
+    }
+    to {
+        opacity: 0.92;
+        transform:
+            translate(-50%, -50%)
+            rotate(calc(var(--swirl-index) * 23deg + 38deg))
+            skewX(calc(var(--swirl-index) * 2deg))
+            scale(1.04);
+    }
+}
+
+@keyframes tripSpectrumPulse {
+    from { filter: saturate(1) brightness(0.92); transform: scaleY(0.72); }
+    to { filter: saturate(1.45) brightness(1.2); transform: scaleY(1.12); }
 }
 
 @media (max-width: 640px) {
@@ -2563,6 +2665,11 @@ h1, h2, h3, h4, h5, h6 {
 
     .trip-vortex {
         min-height: 17rem;
+    }
+
+    .trip-spectrum-strip {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        border-radius: 0.65rem;
     }
 
     .trip-prism-stat-ring {

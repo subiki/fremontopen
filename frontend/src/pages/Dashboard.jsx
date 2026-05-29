@@ -1369,16 +1369,28 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
 
   return (
     <section className="trip-prism-panel" data-testid="trip-prism-panel">
+      <div className="trip-color-fog" aria-hidden="true" />
       <div className="trip-vortex" aria-hidden="true">
-        {Array.from({ length: 18 }).map((_, index) => (
+        {Array.from({ length: 30 }).map((_, index) => (
           <span
             key={`trip-ray-${index}`}
             style={{
-              "--trip-angle": `${index * 20}deg`,
+              "--trip-angle": `${index * 12}deg`,
               "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
             }}
           />
         ))}
+        <div className="trip-swirl-orbits">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <i
+              key={`trip-swirl-${index}`}
+              style={{
+                "--swirl-index": index + 1,
+                "--swirl-color": WEIRD_COLORS[(index * 3) % WEIRD_COLORS.length],
+              }}
+            />
+          ))}
+        </div>
         <div className="trip-vortex-core">
           <span>8</span>
         </div>
@@ -1390,6 +1402,18 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
         <p>
           Mirrored cache signals, bent through pool-ball color and leaderboard gravity.
         </p>
+      </div>
+
+      <div className="trip-spectrum-strip" aria-hidden="true">
+        {WEIRD_COLORS.map((color, index) => (
+          <span
+            key={`trip-spectrum-${color}`}
+            style={{
+              "--spectrum-color": color,
+              "--spectrum-delay": `${index * 0.08}s`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="trip-prism-stat-ring">
