@@ -2178,6 +2178,210 @@ h1, h2, h3, h4, h5, h6 {
     color: #33F4C7;
 }
 
+.trip-prism-panel {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.82fr) minmax(22rem, 1.18fr);
+    gap: 1rem;
+    min-height: 21rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background:
+        radial-gradient(circle at 12% 50%, rgba(51, 244, 199, 0.25), transparent 18rem),
+        radial-gradient(circle at 80% 20%, rgba(255, 225, 86, 0.22), transparent 15rem),
+        radial-gradient(circle at 70% 90%, rgba(255, 79, 216, 0.24), transparent 18rem),
+        linear-gradient(118deg, rgba(6, 4, 17, 0.96), rgba(67, 12, 84, 0.84), rgba(5, 46, 59, 0.9));
+    box-shadow: 0 28px 72px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.trip-prism-panel::before,
+.trip-prism-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.trip-prism-panel::before {
+    opacity: 0.58;
+    background:
+        repeating-conic-gradient(from 0deg at 28% 50%, rgba(255, 255, 255, 0.08) 0deg 8deg, transparent 8deg 16deg),
+        repeating-linear-gradient(122deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 19px);
+    mix-blend-mode: screen;
+}
+
+.trip-prism-panel::after {
+    left: -20%;
+    top: 12%;
+    width: 72%;
+    height: 92%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(255, 225, 86, 0.18) 21% 22%, transparent 23% 38%, rgba(255, 79, 216, 0.18) 39% 40%, transparent 41% 100%);
+    filter: blur(0.2px);
+}
+
+.trip-prism-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.trip-vortex {
+    position: relative;
+    min-height: 19rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0.65rem;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(255, 225, 86, 0.16), transparent 5rem),
+        conic-gradient(from 0deg, rgba(51, 244, 199, 0.18), rgba(255, 225, 86, 0.16), rgba(255, 79, 216, 0.18), rgba(124, 92, 255, 0.16), rgba(51, 244, 199, 0.18)),
+        rgba(7, 5, 15, 0.64);
+}
+
+.trip-vortex span:not(.trip-vortex-core span) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2.1rem;
+    height: 78%;
+    border-radius: 999px;
+    background:
+        linear-gradient(180deg, transparent, color-mix(in srgb, var(--trip-color) 72%, transparent), transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--trip-color) 38%, transparent);
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(var(--trip-angle));
+    mix-blend-mode: screen;
+}
+
+.trip-vortex-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    width: 6.2rem;
+    height: 6.2rem;
+    place-items: center;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 50%, #F3F4F6 0 20%, transparent 20.5%),
+        radial-gradient(circle at 40% 32%, rgba(255, 255, 255, 0.3), transparent 22%),
+        #05030A;
+    box-shadow: 0 0 48px rgba(255, 79, 216, 0.34), 0 0 0 12px rgba(255, 255, 255, 0.04);
+    transform: translate(-50%, -50%);
+}
+
+.trip-vortex-core span {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 50%;
+    color: #05030A;
+    font-family: "Outfit", sans-serif;
+    font-weight: 800;
+    background: #F3F4F6;
+}
+
+.trip-prism-copy {
+    align-self: end;
+    padding: 0.5rem;
+}
+
+.trip-prism-kicker {
+    color: #9DFF57;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.trip-prism-copy h2 {
+    max-width: 11ch;
+    margin-top: 0.55rem;
+    color: transparent;
+    font-family: "Outfit", sans-serif;
+    font-size: clamp(2.25rem, 5.4vw, 5.6rem);
+    font-weight: 800;
+    line-height: 0.86;
+    background:
+        linear-gradient(90deg, #9DFF57, #33F4C7, #FFE156, #FF4FD8, #7C5CFF);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 24px rgba(51, 244, 199, 0.22));
+}
+
+.trip-prism-copy p {
+    max-width: 34rem;
+    margin-top: 0.9rem;
+    color: #D9D6FF;
+    line-height: 1.55;
+}
+
+.trip-prism-stat-ring {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.65rem;
+    grid-column: 1 / -1;
+}
+
+.trip-prism-card {
+    display: grid;
+    min-height: 7rem;
+    align-content: center;
+    justify-items: center;
+    border: 1px solid color-mix(in srgb, var(--trip-card-color) 58%, rgba(255, 255, 255, 0.15));
+    border-radius: 0.6rem;
+    padding: 0.85rem;
+    color: #F3F4F6 !important;
+    text-align: center;
+    text-decoration: none;
+    background:
+        radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--trip-card-color) 24%, transparent), transparent 6rem),
+        linear-gradient(145deg, rgba(7, 5, 15, 0.82), rgba(41, 13, 64, 0.72));
+    box-shadow: 0 0 24px color-mix(in srgb, var(--trip-card-color) 20%, transparent);
+    transform: rotate(var(--trip-card-tilt));
+}
+
+.trip-prism-card:hover {
+    border-color: var(--trip-card-color);
+    transform: rotate(0deg) translateY(-2px) scale(1.02);
+}
+
+.trip-prism-card span,
+.trip-prism-card small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.trip-prism-card span {
+    color: #C9C1F4;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.trip-prism-card strong {
+    margin-top: 0.45rem;
+    color: #FFE156;
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(1.35rem, 2.4vw, 2.5rem);
+    line-height: 0.95;
+}
+
+.trip-prism-card small {
+    margin-top: 0.45rem;
+    color: #D9D6FF;
+    font-size: 0.72rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .weird-orbit-core {
         animation: weirdCorePulse 4.2s ease-in-out infinite;
@@ -2199,6 +2403,18 @@ h1, h2, h3, h4, h5, h6 {
     .surreal-ball-three {
         animation-delay: -4.1s;
     }
+
+    .trip-vortex {
+        animation: tripVortexHue 8s ease-in-out infinite alternate;
+    }
+
+    .trip-vortex span:not(.trip-vortex-core span) {
+        animation: tripRayPulse 3.8s ease-in-out infinite alternate;
+    }
+
+    .trip-prism-copy h2 {
+        animation: weirdHue 5.8s ease-in-out infinite;
+    }
 }
 
 @keyframes weirdCorePulse {
@@ -2214,6 +2430,16 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes surrealFloat {
     from { filter: hue-rotate(0deg) saturate(1.05); }
     to { filter: hue-rotate(24deg) saturate(1.28); }
+}
+
+@keyframes tripVortexHue {
+    from { filter: hue-rotate(0deg) saturate(1.08); }
+    to { filter: hue-rotate(42deg) saturate(1.35); }
+}
+
+@keyframes tripRayPulse {
+    from { opacity: 0.52; transform: translate(-50%, -50%) rotate(var(--trip-angle)) scaleY(0.92); }
+    to { opacity: 0.9; transform: translate(-50%, -50%) rotate(var(--trip-angle)) scaleY(1.12); }
 }
 
 @media (max-width: 640px) {
@@ -2328,6 +2554,24 @@ h1, h2, h3, h4, h5, h6 {
 
     .surreal-melt-footer {
         justify-content: flex-start;
+    }
+
+    .trip-prism-panel {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0.9rem;
+    }
+
+    .trip-vortex {
+        min-height: 17rem;
+    }
+
+    .trip-prism-stat-ring {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .trip-prism-card {
+        min-height: 5.25rem;
+        transform: none;
     }
 }
 

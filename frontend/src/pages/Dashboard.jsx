@@ -200,6 +200,12 @@ export default function Dashboard() {
           topPlayers={topPlayers}
           dashboardTrends={dashboardTrends}
         />
+        <TripPrismPanel
+          stats={stats}
+          rift={weirdSignals?.rift}
+          topPlayers={topPlayers}
+          rivalryIndex={rivalryIndex}
+        />
 
         <section
           className="weird-stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
@@ -1320,6 +1326,88 @@ const SurrealMeltPanel = ({ stats, rift, topPlayers, dashboardTrends }) => {
           {hotPlayer ? `${hotPlayer.player} is currently melting the form chart` : "Leaderboard liquefies here"}
         </Link>
         <Link to="/compare">Compare warped matchups</Link>
+      </div>
+    </section>
+  );
+};
+
+const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
+  const leadPlayer = topPlayers?.[0];
+  const rivalry = rivalryIndex?.[0];
+  const prismStats = [
+    {
+      label: "Felt Echo",
+      value: stats?.total_matches ?? "-",
+      detail: "match trails",
+      to: rankingPath("total_matches"),
+    },
+    {
+      label: "Prism Field",
+      value: stats?.average_tournament_players ?? "-",
+      detail: "avg bodies",
+      to: "/tournaments",
+    },
+    {
+      label: "Rift Heat",
+      value: rift?.feverScore ?? 0,
+      detail: "weird pressure",
+      to: "#weird-rift-panel",
+    },
+    {
+      label: "Orbit King",
+      value: leadPlayer ? `${leadPlayer.wins}W` : "-",
+      detail: leadPlayer?.name || "leaderboard",
+      to: leadPlayer ? `/players/${encodeURIComponent(leadPlayer.name)}` : "/leaderboard",
+    },
+    {
+      label: "Twin Flame",
+      value: rivalry?.matches || "-",
+      detail: rivalry?.label || "compare path",
+      to: rivalry ? `/compare/${encodeURIComponent(rivalry.player_a)}/${encodeURIComponent(rivalry.player_b)}` : "/compare",
+    },
+  ];
+
+  return (
+    <section className="trip-prism-panel" data-testid="trip-prism-panel">
+      <div className="trip-vortex" aria-hidden="true">
+        {Array.from({ length: 18 }).map((_, index) => (
+          <span
+            key={`trip-ray-${index}`}
+            style={{
+              "--trip-angle": `${index * 20}deg`,
+              "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+            }}
+          />
+        ))}
+        <div className="trip-vortex-core">
+          <span>8</span>
+        </div>
+      </div>
+
+      <div className="trip-prism-copy">
+        <div className="trip-prism-kicker">Kaleidoscope Break</div>
+        <h2>The bracket is seeing trails.</h2>
+        <p>
+          Mirrored cache signals, bent through pool-ball color and leaderboard gravity.
+        </p>
+      </div>
+
+      <div className="trip-prism-stat-ring">
+        {prismStats.map((item, index) => (
+          <Link
+            key={item.label}
+            to={item.to}
+            className="trip-prism-card"
+            style={{
+              "--trip-card-color": WEIRD_COLORS[(index * 2) % WEIRD_COLORS.length],
+              "--trip-card-tilt": `${index % 2 === 0 ? -3 : 3}deg`,
+            }}
+          >
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+            <small>{item.detail}</small>
+          </Link>
+        ))}
       </div>
     </section>
   );
