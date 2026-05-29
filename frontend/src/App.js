@@ -20,6 +20,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   const [theme, setTheme] = useState(getTheme());
+  const toasterTheme = theme === "light" || theme === "classic" ? "light" : "dark";
 
   useEffect(() => {
     setTheme(initTheme());
@@ -49,7 +50,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster
-        theme={theme}
+        theme={toasterTheme}
         position="top-right"
         toastOptions={{
           style: {

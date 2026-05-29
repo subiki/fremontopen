@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, MagnifyingGlass, Moon, Sun, WarningCircle, X } from "@phosphor-icons/react";
+import { CheckCircle, DesktopTower, MagnifyingGlass, Moon, Sparkle, Sun, WarningCircle, X } from "@phosphor-icons/react";
 import { fetchSyncStatus } from "../lib/api";
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { SearchBar } from "./SearchBar";
-import { getTheme, onThemeChange, toggleTheme } from "../lib/theme";
+import { getNextTheme, getTheme, onThemeChange, THEME_LABELS, toggleTheme } from "../lib/theme";
+
+const themeIcons = {
+  dark: Moon,
+  light: Sun,
+  weird: Sparkle,
+  classic: DesktopTower,
+};
 
 export const Topbar = ({ title, subtitle, actions }) => {
   const [status, setStatus] = useState(null);
@@ -38,6 +45,8 @@ export const Topbar = ({ title, subtitle, actions }) => {
     last_synced_at: status?.last_synced_at,
     sync_status: status?.status,
   });
+  const nextTheme = getNextTheme(theme);
+  const ThemeIcon = themeIcons[theme] || Moon;
 
   return (
     <header
@@ -77,12 +86,13 @@ export const Topbar = ({ title, subtitle, actions }) => {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="weird-icon-button"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="weird-icon-button weird-theme-toggle"
+            aria-label={`Switch to ${THEME_LABELS[nextTheme]} mode`}
+            title={`Switch to ${THEME_LABELS[nextTheme]} mode`}
             data-testid="theme-toggle"
           >
-            {theme === "dark" ? <Sun size={18} weight="duotone" /> : <Moon size={18} weight="duotone" />}
+            <ThemeIcon size={18} weight="duotone" />
+            <span>{THEME_LABELS[theme]}</span>
           </button>
           <div
             className="weird-pill weird-sync-chip hidden sm:flex"

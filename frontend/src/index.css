@@ -32,6 +32,34 @@
     --loss: #B91C1C;
 }
 
+[data-theme="weird"] {
+    --bg: #07050F;
+    --surface: #17112A;
+    --surface-2: #24183F;
+    --border: #6247AA;
+    --primary: #33F4C7;
+    --primary-hover: #FF4FD8;
+    --secondary: #FFE156;
+    --text-primary: #F3F4F6;
+    --text-secondary: #D9D6FF;
+    --text-muted: #B8B1D9;
+    --loss: #FF5B8A;
+}
+
+[data-theme="classic"] {
+    --bg: #008080;
+    --surface: #C0C0C0;
+    --surface-2: #E0E0E0;
+    --border: #000000;
+    --primary: #0000EE;
+    --primary-hover: #551A8B;
+    --secondary: #FF0;
+    --text-primary: #000000;
+    --text-secondary: #000080;
+    --text-muted: #333333;
+    --loss: #B00000;
+}
+
 html, body, #root {
     background-color: var(--bg);
     color: var(--text-primary);
@@ -98,6 +126,50 @@ h1, h2, h3, h4, h5, h6 {
         --border: 214 24% 88%;
         --input: 214 24% 88%;
         --ring: 158 64% 30%;
+    }
+
+    [data-theme="weird"] {
+        --background: 257 48% 4%;
+        --foreground: 220 14% 96%;
+        --card: 267 42% 12%;
+        --card-foreground: 220 14% 96%;
+        --popover: 267 42% 12%;
+        --popover-foreground: 220 14% 96%;
+        --primary: 168 90% 58%;
+        --primary-foreground: 222 25% 6%;
+        --secondary: 305 75% 34%;
+        --secondary-foreground: 220 14% 96%;
+        --muted: 263 35% 15%;
+        --muted-foreground: 252 24% 76%;
+        --accent: 47 100% 67%;
+        --accent-foreground: 220 14% 96%;
+        --destructive: 342 100% 68%;
+        --destructive-foreground: 220 14% 96%;
+        --border: 258 42% 47%;
+        --input: 258 42% 47%;
+        --ring: 306 100% 65%;
+    }
+
+    [data-theme="classic"] {
+        --background: 180 100% 25%;
+        --foreground: 0 0% 0%;
+        --card: 0 0% 75%;
+        --card-foreground: 0 0% 0%;
+        --popover: 0 0% 75%;
+        --popover-foreground: 0 0% 0%;
+        --primary: 240 100% 47%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 60 100% 50%;
+        --secondary-foreground: 0 0% 0%;
+        --muted: 0 0% 88%;
+        --muted-foreground: 0 0% 20%;
+        --accent: 60 100% 50%;
+        --accent-foreground: 0 0% 0%;
+        --destructive: 0 100% 34%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 0 0% 0%;
+        --input: 0 0% 100%;
+        --ring: 240 100% 47%;
     }
 }
 
@@ -636,6 +708,22 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-1px);
 }
 
+.weird-theme-toggle {
+    grid-auto-flow: column;
+    width: auto;
+    min-width: 5.35rem;
+    gap: 0.35rem;
+    padding: 0 0.65rem;
+}
+
+.weird-theme-toggle span {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.63rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .weird-sync-chip {
     align-items: center;
     gap: 0.45rem;
@@ -779,6 +867,15 @@ h1, h2, h3, h4, h5, h6 {
 
     .weird-sync-chip {
         display: none !important;
+    }
+
+    .weird-theme-toggle {
+        min-width: 2.5rem;
+        padding: 0;
+    }
+
+    .weird-theme-toggle span {
+        display: none;
     }
 
     .weird-route-loader {
@@ -3067,6 +3164,254 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes weirdHue {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
+}
+
+[data-theme="dark"] .trip-shape-field,
+[data-theme="dark"] .trip-fractal-field,
+[data-theme="dark"] .trip-sparkle-field {
+    opacity: 0.48;
+}
+
+[data-theme="dark"] .trip-prism-panel,
+[data-theme="dark"] .surreal-melt-panel {
+    background:
+        radial-gradient(circle at 12% 50%, rgba(16, 185, 129, 0.14), transparent 18rem),
+        linear-gradient(135deg, rgba(7, 11, 19, 0.96), rgba(17, 24, 39, 0.9)) !important;
+}
+
+[data-theme="dark"] .weird-title {
+    background: linear-gradient(90deg, #F3F4F6, #C9C1F4, #33F4C7);
+    background-size: 180% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: 0 0 18px rgba(51, 244, 199, 0.18);
+}
+
+[data-theme="weird"] .trip-prism-panel {
+    filter: saturate(1.12);
+}
+
+[data-theme="weird"] .trip-shape-field,
+[data-theme="weird"] .trip-fractal-field,
+[data-theme="weird"] .trip-sparkle-field {
+    opacity: 1;
+}
+
+[data-theme="classic"],
+[data-theme="classic"] body {
+    background-color: #008080 !important;
+    color: #000 !important;
+}
+
+[data-theme="classic"] body,
+[data-theme="classic"] h1,
+[data-theme="classic"] h2,
+[data-theme="classic"] h3,
+[data-theme="classic"] h4,
+[data-theme="classic"] h5,
+[data-theme="classic"] h6 {
+    font-family: "Times New Roman", Times, serif !important;
+}
+
+[data-theme="classic"] .font-mono,
+[data-theme="classic"] code,
+[data-theme="classic"] pre,
+[data-theme="classic"] .weird-brand-subtitle,
+[data-theme="classic"] .weird-portal-kicker,
+[data-theme="classic"] .weird-theme-toggle span,
+[data-theme="classic"] .weird-mobile-node span {
+    font-family: "Courier New", Courier, monospace !important;
+}
+
+[data-theme="classic"] .felt-grain {
+    background-color: #008080 !important;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 10px),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 18px) !important;
+}
+
+[data-theme="classic"] .weird-mode::before {
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 16px),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 16px) !important;
+    opacity: 0.58 !important;
+    filter: none !important;
+}
+
+[data-theme="classic"] .weird-mode::after,
+[data-theme="classic"] .trip-color-fog,
+[data-theme="classic"] .trip-sparkle-field,
+[data-theme="classic"] .trip-fractal-field,
+[data-theme="classic"] .trip-shape-field,
+[data-theme="classic"] .surreal-drip,
+[data-theme="classic"] .surreal-sun {
+    display: none !important;
+}
+
+[data-theme="classic"] .weird-portal-header {
+    background: #008080 !important;
+    backdrop-filter: none !important;
+}
+
+[data-theme="classic"] .weird-portal-shell,
+[data-theme="classic"] .weird-command-deck,
+[data-theme="classic"] .weird-mobile-signal-remote,
+[data-theme="classic"] .weird-mobile-drawer,
+[data-theme="classic"] .weird-route-loader,
+[data-theme="classic"] .surreal-melt-panel,
+[data-theme="classic"] .trip-prism-panel,
+[data-theme="classic"] section.bg-\[\#141923\],
+[data-theme="classic"] div.bg-\[\#141923\].rounded-lg,
+[data-theme="classic"] .weird-stat-card {
+    border: 3px ridge #FFFFFF !important;
+    border-radius: 0 !important;
+    background:
+        linear-gradient(180deg, #E8E8E8, #BDBDBD) !important;
+    color: #000 !important;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: none !important;
+}
+
+[data-theme="classic"] .weird-command-deck::before,
+[data-theme="classic"] .weird-command-deck::after,
+[data-theme="classic"] .weird-card::before,
+[data-theme="classic"] .weird-mode section.bg-\[\#141923\]::before,
+[data-theme="classic"] .weird-mode div.bg-\[\#141923\].rounded-lg::before,
+[data-theme="classic"] .weird-stat-card::after,
+[data-theme="classic"] .trip-prism-panel::before,
+[data-theme="classic"] .trip-prism-panel::after {
+    display: none !important;
+}
+
+[data-theme="classic"] .weird-title,
+[data-theme="classic"] .weird-portal-title,
+[data-theme="classic"] .trip-prism-copy h2,
+[data-theme="classic"] .surreal-melt-copy h2 {
+    color: #000080 !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    text-shadow: 2px 2px #FFFF00 !important;
+}
+
+[data-theme="classic"] a {
+    color: #0000EE !important;
+    text-decoration: underline !important;
+}
+
+[data-theme="classic"] a:visited {
+    color: #551A8B !important;
+}
+
+[data-theme="classic"] .weird-logo,
+[data-theme="classic"] .weird-card-icon,
+[data-theme="classic"] .weird-icon-button,
+[data-theme="classic"] .weird-pill,
+[data-theme="classic"] .weird-sync-chip,
+[data-theme="classic"] button,
+[data-theme="classic"] select,
+[data-theme="classic"] input {
+    border: 2px outset #FFFFFF !important;
+    border-radius: 0 !important;
+    background: #C0C0C0 !important;
+    color: #000 !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] button:active,
+[data-theme="classic"] .weird-icon-button:active {
+    border-style: inset !important;
+}
+
+[data-theme="classic"] .weird-route-sigil,
+[data-theme="classic"] .weird-orbit-center,
+[data-theme="classic"] .trip-vortex-core {
+    border: 3px ridge #FFFFFF !important;
+    border-radius: 0 !important;
+    background: #FFFF00 !important;
+    color: #000 !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .weird-orbit-nav,
+[data-theme="classic"] .trip-vortex,
+[data-theme="classic"] .surreal-sky {
+    border: 3px inset #FFFFFF !important;
+    border-radius: 0 !important;
+    background:
+        repeating-linear-gradient(0deg, #000080 0 8px, #0000A8 8px 16px) !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .weird-orbit-nav::before,
+[data-theme="classic"] .weird-orbit-nav::after {
+    border-color: #FFFF00 !important;
+}
+
+[data-theme="classic"] .weird-orbit-nav-node,
+[data-theme="classic"] .weird-drawer-tile,
+[data-theme="classic"] .weird-mobile-node,
+[data-theme="classic"] .trip-prism-card,
+[data-theme="classic"] .surreal-clock-card,
+[data-theme="classic"] li.bg-\[\#0B0E14\],
+[data-theme="classic"] .bg-\[\#0B0E14\],
+[data-theme="classic"] .bg-\[\#10151F\],
+[data-theme="classic"] .bg-\[\#141923\] {
+    border: 2px outset #FFFFFF !important;
+    border-radius: 0 !important;
+    background: #D4D0C8 !important;
+    color: #000 !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .trip-prism-card:hover,
+[data-theme="classic"] .weird-orbit-nav-node:hover,
+[data-theme="classic"] .weird-orbit-nav-node.is-active,
+[data-theme="classic"] .weird-mobile-node.is-active {
+    border-style: inset !important;
+    color: #000 !important;
+    background: #FFFF99 !important;
+}
+
+[data-theme="classic"] .trip-vortex span:not(.trip-vortex-core span) {
+    background: linear-gradient(180deg, transparent, #FFFF00, transparent) !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .trip-spectrum-strip {
+    border: 2px inset #FFFFFF !important;
+    border-radius: 0 !important;
+    background: #000080 !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .trip-spectrum-strip span {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+[data-theme="classic"] .text-\[\#F3F4F6\],
+[data-theme="classic"] .hover\:text-\[\#F3F4F6\]:hover,
+[data-theme="classic"] .text-\[\#CBD5E1\],
+[data-theme="classic"] .text-\[\#9CA3AF\],
+[data-theme="classic"] .hover\:text-\[\#9CA3AF\]:hover,
+[data-theme="classic"] .text-\[\#6B7280\],
+[data-theme="classic"] .placeholder-\[\#6B7280\]::placeholder {
+    color: #000 !important;
+}
+
+[data-theme="classic"] .text-\[\#10B981\],
+[data-theme="classic"] .hover\:text-\[\#10B981\]:hover,
+[data-theme="classic"] .text-\[\#F59E0B\],
+[data-theme="classic"] .text-\[\#EF4444\] {
+    color: #000080 !important;
+}
+
+[data-theme="classic"] .border-\[\#273041\],
+[data-theme="classic"] .border-\[\#273041\]\/60,
+[data-theme="classic"] .border-\[\#273041\]\/70,
+[data-theme="classic"] .divide-\[\#273041\]\/60 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #000 !important;
 }
 
 @media print {

@@ -1,17 +1,33 @@
 const KEY = "cuestats_theme";
-const THEMES = new Set(["dark", "light"]);
+export const THEME_ORDER = ["dark", "light", "weird", "classic"];
+export const THEME_LABELS = {
+  dark: "Dark",
+  light: "Light",
+  weird: "Weird",
+  classic: "1993",
+};
+
+const THEMES = new Set(THEME_ORDER);
+
+export const normalizeTheme = (theme) => (THEMES.has(theme) ? theme : "dark");
 
 export const getTheme = () => {
   if (typeof window === "undefined") return "dark";
   const saved = window.localStorage.getItem(KEY);
-  return THEMES.has(saved) ? saved : "dark";
+  return normalizeTheme(saved);
+};
+
+export const getNextTheme = (theme = getTheme()) => {
+  const current = normalizeTheme(theme);
+  const index = THEME_ORDER.indexOf(current);
+  return THEME_ORDER[(index + 1) % THEME_ORDER.length];
 };
 
 export const applyTheme = (theme) => {
   if (typeof document === "undefined") return theme;
-  const next = THEMES.has(theme) ? theme : "dark";
+  const next = normalizeTheme(theme);
   document.documentElement.dataset.theme = next;
-  document.documentElement.style.colorScheme = next;
+  document.documentElement.style.colorScheme = next === "light" || next === "classic" ? "light" : "dark";
   return next;
 };
 
@@ -24,7 +40,7 @@ export const setTheme = (theme) => {
   return next;
 };
 
-export const toggleTheme = () => setTheme(getTheme() === "dark" ? "light" : "dark");
+export const toggleTheme = () => setTheme(getNextTheme());
 
 export const initTheme = () => applyTheme(getTheme());
 
