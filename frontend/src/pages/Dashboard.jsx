@@ -20,6 +20,21 @@ import { rankingPath } from "./StatRankings";
 const EMPTY_SEASON_STANDINGS = [];
 const EMPTY_DASHBOARD_ARRAY = [];
 
+const deferDashboardTask = (callback, timeout = 800) => {
+  if (typeof window === "undefined") {
+    const handle = setTimeout(callback, 0);
+    return () => clearTimeout(handle);
+  }
+
+  if (typeof window.requestIdleCallback === "function") {
+    const handle = window.requestIdleCallback(callback, { timeout });
+    return () => window.cancelIdleCallback?.(handle);
+  }
+
+  const handle = window.setTimeout(callback, 0);
+  return () => window.clearTimeout(handle);
+};
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [topPlayers, setTopPlayers] = useState([]);
@@ -29,6 +44,7 @@ export default function Dashboard() {
   const [durationGroups, setDurationGroups] = useState([]);
   const [singleTournamentOverperformers, setSingleTournamentOverperformers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -37,12 +53,8 @@ export default function Dashboard() {
   const loadCore = async () => {
     setLoading(true);
     try {
-      const [statsData, topPlayersData] = await Promise.all([
-        fetchStats(),
-        fetchLeaderboard(1000),
-      ]);
+      const statsData = await fetchStats();
       setStats(statsData);
-      setTopPlayers(topPlayersData);
     } finally {
       setLoading(false);
     }
@@ -51,6 +63,37 @@ export default function Dashboard() {
   useEffect(() => {
     loadCore();
   }, []);
+
+  useEffect(() => {
+    if (!stats) return undefined;
+
+    let cancelled = false;
+    setLeaderboardLoading(true);
+
+    const loadLeaderboard = async () => {
+      try {
+        const topPlayersData = await fetchLeaderboard(1000);
+        if (cancelled) return;
+        startTransition(() => {
+          setTopPlayers(topPlayersData || []);
+          setLeaderboardLoading(false);
+        });
+      } catch {
+        if (!cancelled) {
+          startTransition(() => setLeaderboardLoading(false));
+        }
+      }
+    };
+
+    const cancelDeferred = deferDashboardTask(() => {
+      void loadLeaderboard();
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      cancelDeferred();
+    };
+  }, [stats]);
 
   useEffect(() => {
     if (!stats) return undefined;
@@ -89,23 +132,13 @@ export default function Dashboard() {
       }
     };
 
-    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
-      const handle = window.requestIdleCallback(() => {
-        void loadDeferred();
-      }, { timeout: 1200 });
-      return () => {
-        cancelled = true;
-        window.cancelIdleCallback?.(handle);
-      };
-    }
-
-    const timeout = window.setTimeout(() => {
+    const cancelDeferred = deferDashboardTask(() => {
       void loadDeferred();
-    }, 0);
+    }, 1200);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timeout);
+      cancelDeferred();
     };
   }, [stats]);
 
@@ -136,7 +169,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [following, stats]);
+  }, [following]);
 
   const topTournamentWinners = stats?.top_tournament_winners || EMPTY_DASHBOARD_ARRAY;
   const upsetTracker = stats?.upset_tracker || EMPTY_DASHBOARD_ARRAY;
@@ -710,7 +743,7 @@ export default function Dashboard() {
                 Full leaderboard ->
               </Link>
             </div>
-            {loading && !topPlayers.length ? (
+            {(loading || leaderboardLoading) && !topPlayers.length ? (
               <div className="text-[#6B7280] text-sm">Loading...</div>
             ) : topPlayers.length === 0 ? (
               <div className="text-[#6B7280] text-sm">
