@@ -1,5 +1,21 @@
 # Agent Session Notes
 
+## 2026-05-27 - Expanded dashboard deep links and tournament archive entry points
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live dashboard/archive code because the request was to improve navigation without inventing new backend scope.
+- Updated `frontend/src/pages/Dashboard.jsx` so previously plain-text dashboard surfaces now deep-link to relevant existing pages: info/cache cards, event-series cards, timing group cards, analytics badges, top-player stat lines, and recent-match score/game blocks.
+- Added lightweight query-param support in `frontend/src/pages/Tournaments.jsx` for `series`, `game`, `winner`, `sort`, `view`, `q`, and date filters so dashboard deep links can open the tournament archive in a pre-filtered state instead of dropping users on the generic archive.
+- Updated `BACKLOG.md` so the source-of-truth done list reflects the shipped dashboard navigation pass.
+- Verified with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
+## 2026-05-27 - Fixed static leaderboard ordering for profile rank context
+
+- Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live checkout before choosing work because the static-demo backlog was otherwise complete and this needed to come from an actual current app regression.
+- Fixed `frontend/src/lib/api.js` so the static `/leaderboard` fallback now sorts players by the same default wins-first leaderboard metric the UI expects instead of returning raw player-index order.
+- Updated `frontend/src/pages/PlayerDetail.jsx` so the subtitle rank and `Rank Context` card resolve against the canonical player name after redirects, which keeps case-insensitive profile URLs from missing the corrected static leaderboard position.
+- Updated `BACKLOG.md` so the source-of-truth done list records the shipped static leaderboard ordering fix.
+- Verified with `C:\Users\karmi\OneDrive\Documents\fremontopen\.tools\node-v24.15.0-win-x64\npm.cmd run build --prefix frontend`.
+
 ## 2026-05-26 - Branch merge and prune troubleshooting
 
 - Started from clean `main` at `32c05f06` after the Dependabot merge and verified the DreamHost deploy had already succeeded for that head.

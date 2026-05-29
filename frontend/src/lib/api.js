@@ -1,4 +1,5 @@
 import axios from "axios";
+import { compareLeaderboardPlayers, getLeaderboardMetric } from "./leaderboardMetrics";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const STATIC_DATA = process.env.REACT_APP_STATIC_DATA === "true";
@@ -426,7 +427,10 @@ const staticGet = async (path, config = {}) => {
     return { data: bundle?.detail || notFound("Player not found") };
   }
   if (path === "/leaderboard") {
-    return { data: (await loadPlayersIndex(cache)).players.slice(0, params.limit || 25) };
+    const metric = getLeaderboardMetric("wins");
+    const sortedPlayers = [...(await loadPlayersIndex(cache)).players]
+      .sort((left, right) => compareLeaderboardPlayers(metric, left, right));
+    return { data: sortedPlayers.slice(0, params.limit || 25) };
   }
   if (path === "/search") {
     const [playerLookup, tournamentSearch] = await Promise.all([

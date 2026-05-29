@@ -131,15 +131,14 @@ export default function PlayerDetail() {
     })();
   }, []);
 
-  const position = useMemo(() => {
-    if (!leaderboard.length) return null;
-    const idx = leaderboard.findIndex((player) => player.name === decoded);
-    if (idx === -1) return null;
-    return { idx: idx + 1, total: leaderboard.length };
-  }, [leaderboard, decoded]);
-
   const p = data?.player;
   const canonicalName = p?.name || decoded;
+  const position = useMemo(() => {
+    if (!leaderboard.length) return null;
+    const idx = leaderboard.findIndex((player) => player.name === canonicalName);
+    if (idx === -1) return null;
+    return { idx: idx + 1, total: leaderboard.length };
+  }, [canonicalName, leaderboard]);
   const h2h = useMemo(() => data?.head_to_head || [], [data?.head_to_head]);
   const placements = extras?.placements;
   const topFinishes = placements?.top_finishes || {};

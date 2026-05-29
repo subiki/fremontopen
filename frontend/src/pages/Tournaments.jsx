@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Topbar } from "../components/Topbar";
 import { fetchTournaments } from "../lib/api";
 import { Trophy, ArrowSquareOut, CalendarDots, Medal } from "@phosphor-icons/react";
@@ -32,15 +32,16 @@ const formatDifficultySummary = (difficulty) => {
 };
 
 export default function Tournaments() {
+  const [searchParams] = useSearchParams();
   const [list, setList] = useState([]);
-  const [sort, setSort] = useState("date");
-  const [game, setGame] = useState("all");
-  const [series, setSeries] = useState("all");
-  const [winner, setWinner] = useState("all");
-  const [query, setQuery] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [view, setView] = useState("cards");
+  const [sort, setSort] = useState(() => readTournamentSort(searchParams));
+  const [game, setGame] = useState(() => searchParams.get("game") || "all");
+  const [series, setSeries] = useState(() => searchParams.get("series") || "all");
+  const [winner, setWinner] = useState(() => searchParams.get("winner") || "all");
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+  const [dateFrom, setDateFrom] = useState(() => searchParams.get("dateFrom") || "");
+  const [dateTo, setDateTo] = useState(() => searchParams.get("dateTo") || "");
+  const [view, setView] = useState(() => readTournamentView(searchParams));
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -54,6 +55,17 @@ export default function Tournaments() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    setSort(readTournamentSort(searchParams));
+    setGame(searchParams.get("game") || "all");
+    setSeries(searchParams.get("series") || "all");
+    setWinner(searchParams.get("winner") || "all");
+    setQuery(searchParams.get("q") || "");
+    setDateFrom(searchParams.get("dateFrom") || "");
+    setDateTo(searchParams.get("dateTo") || "");
+    setView(readTournamentView(searchParams));
+  }, [searchParams]);
 
   const gameOptions = useMemo(() => {
     const counts = new Map();
@@ -345,3 +357,12 @@ export default function Tournaments() {
     </>
   );
 }
+
+const readTournamentSort = (searchParams) => {
+  const value = searchParams.get("sort");
+  return ["date", "players", "duration", "name"].includes(value) ? value : "date";
+};
+
+const readTournamentView = (searchParams) => {
+  return searchParams.get("view") === "timeline" ? "timeline" : "cards";
+};

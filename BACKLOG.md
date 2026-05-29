@@ -104,6 +104,8 @@ Legend: `JFL` always first, `P0` ship next, `P1` near-term, `P2` nice-to-have, `
 - [x] Player directory filters for tournaments, racks, and richer stat sorting
 - [x] Biggest single tournament pot won per player
 - [x] Clarify leaderboard current and best columns
+- [x] Static leaderboard fallback sorts by wins for dashboard and player rank context
+- [x] Dashboard stat and summary cards deep-link to relevant archive, ranking, player, tournament, and info pages
 - [x] Single-tournament performance above ELO view
 - [x] Player photo/card art from local static assets
 - [x] Multi-event support for other tournaments beyond Fremont Open
