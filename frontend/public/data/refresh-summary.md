@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-05-27T05:19:45.681313+00:00`
+- Generated: `2026-05-29T22:15:06.845690+00:00`
 - Total JSON files: `2381`
-- Total JSON bytes: `34329460`
+- Total JSON bytes: `34329463`
 - cache.json bytes: `17212`
 
 ## Heaviest Stats Sections
@@ -42,21 +42,19 @@
 - `data/tournament-duration-groups.json`: `3679` bytes
 - `data/single-tournament-overperformers.json`: `3289` bytes
 - `data/data-size-report.json`: `2384` bytes
-- `data/refresh-change-report.json`: `499` bytes
+- `data/refresh-change-report.json`: `502` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-05-27T04:38:20.881489+00:00`
+- Previous generated: `2026-05-27T05:19:45.681313+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `+1518656`
+- Total JSON bytes delta: `+3`
 - cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/players-index.json`: `+72408` bytes (`584563` -> `656971`)
-- `data/players-search-index.json`: `-256` bytes (`38921` -> `38665`)
-- `data/refresh-change-report.json`: `+82` bytes (`417` -> `499`)
+- `data/refresh-change-report.json`: `+3` bytes (`499` -> `502`)
 
 ### Stats Section Deltas
 
