@@ -50,32 +50,28 @@ export const Topbar = ({ title, subtitle, actions }) => {
 
   return (
     <header
-      className="weird-portal-header sticky top-0 z-40"
+      className="sticky top-0 z-40 backdrop-blur-xl bg-[#0B0E14]/80 border-b border-[#273041]"
       data-testid="app-topbar"
     >
-      <div className="weird-portal-shell">
-        <div className="weird-route-sigil" aria-hidden="true">
-          <span />
-          <strong>{String(title || "FO").slice(0, 2).toUpperCase()}</strong>
-        </div>
-
-        <div className="weird-portal-copy min-w-0">
-          <div className="weird-portal-kicker">Fremont Open static signal</div>
-          <h1 className="weird-title weird-portal-title">
+      <div className="px-6 sm:px-8 py-5 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-[Outfit] text-2xl sm:text-3xl font-semibold tracking-tight text-[#F3F4F6] truncate">
             {title}
           </h1>
-          {subtitle ? <p className="weird-portal-subtitle">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="text-sm text-[#9CA3AF] mt-1 truncate">{subtitle}</p>
+          ) : null}
         </div>
 
-        <div className="weird-portal-actions">
-          <div className="weird-portal-search hidden lg:block">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden lg:block">
             <SearchBar />
           </div>
           {actions}
           <button
             type="button"
             onClick={() => setMobileSearchOpen((value) => !value)}
-            className="weird-icon-button lg:hidden"
+            className="lg:hidden w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
             aria-label={mobileSearchOpen ? "Close search" : "Open search"}
             aria-expanded={mobileSearchOpen}
             aria-controls="mobile-search-panel"
@@ -86,7 +82,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="weird-icon-button weird-theme-toggle"
+            className="weird-theme-toggle rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center gap-2 hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
             aria-label={`Switch to ${THEME_LABELS[nextTheme]} mode`}
             title={`Switch to ${THEME_LABELS[nextTheme]} mode`}
             data-testid="theme-toggle"
@@ -95,7 +91,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
             <span>{THEME_LABELS[theme]}</span>
           </button>
           <div
-            className="weird-pill weird-sync-chip hidden sm:flex"
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-md bg-[#141923] border border-[#273041] text-xs"
             data-testid="sync-status"
             title="The dataset is refreshed by a scheduled background job"
           >
@@ -134,7 +130,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
       {mobileSearchOpen ? (
         <div
           id="mobile-search-panel"
-          className="weird-mobile-search lg:hidden"
+          className="lg:hidden border-t border-[#273041] px-6 sm:px-8 pb-4"
           data-testid="mobile-search-panel"
         >
           <SearchBar />

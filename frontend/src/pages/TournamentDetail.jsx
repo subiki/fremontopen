@@ -710,7 +710,7 @@ const BracketMatch = ({ match }) => {
   const winner = match.winner_name || "TBD";
   const loser = match.loser_name || "TBD";
   return (
-    <div className="weird-bracket-match rounded-md border border-[#273041] bg-[#0B0E14] overflow-hidden" data-testid="bracket-match">
+    <div className="rounded-md border border-[#273041] bg-[#0B0E14] overflow-hidden" data-testid="bracket-match">
       <BracketPlayer name={winner} entryType={match.winner_entry_type} tone="winner" />
       <BracketPlayer name={loser} entryType={match.loser_entry_type} tone="loser" />
       <div className="flex items-center justify-between gap-3 border-t border-[#273041]/60 px-3 py-2 text-xs font-mono text-[#6B7280]">

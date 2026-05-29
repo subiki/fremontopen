@@ -1,4 +1,4 @@
-import { memo, startTransition, useEffect, useMemo, useState } from "react";
+import { lazy, startTransition, Suspense, useEffect, useMemo, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
@@ -15,27 +15,30 @@ import {
 import { assessCacheFreshness, formatRelativeTime } from "../lib/cacheFreshness";
 import { Link } from "react-router-dom";
 import { getFollowing, onFollowingChange } from "../lib/follow";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { rankingPath } from "./StatRankings";
+import { getTheme, onThemeChange } from "../lib/theme";
 
 const EMPTY_SEASON_STANDINGS = [];
-const EMPTY_DASHBOARD_ARRAY = [];
-
-const deferDashboardTask = (callback, timeout = 800) => {
-  if (typeof window === "undefined") {
-    const handle = setTimeout(callback, 0);
-    return () => clearTimeout(handle);
-  }
-
-  if (typeof window.requestIdleCallback === "function") {
-    const handle = window.requestIdleCallback(callback, { timeout });
-    return () => window.cancelIdleCallback?.(handle);
-  }
-
-  const handle = window.setTimeout(callback, 0);
-  return () => window.clearTimeout(handle);
-};
+const WeirdDashboard = lazy(() => import("./DashboardWeird"));
 
 export default function Dashboard() {
+  const [theme, setTheme] = useState(getTheme());
+
+  useEffect(() => onThemeChange(setTheme), []);
+
+  if (theme === "weird") {
+    return (
+      <Suspense fallback={<DashboardLoadingShell />}>
+        <WeirdDashboard />
+      </Suspense>
+    );
+  }
+
+  return <DashboardOriginal />;
+}
+
+const DashboardOriginal = () => {
   const [stats, setStats] = useState(null);
   const [topPlayers, setTopPlayers] = useState([]);
   const [h2hHeatmap, setH2HHeatmap] = useState({ players: [], matrix: [], top_pairs: [] });
@@ -44,7 +47,6 @@ export default function Dashboard() {
   const [durationGroups, setDurationGroups] = useState([]);
   const [singleTournamentOverperformers, setSingleTournamentOverperformers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [following, setFollowing] = useState(getFollowing());
   const [followedPlayers, setFollowedPlayers] = useState([]);
@@ -53,8 +55,12 @@ export default function Dashboard() {
   const loadCore = async () => {
     setLoading(true);
     try {
-      const statsData = await fetchStats();
+      const [statsData, topPlayersData] = await Promise.all([
+        fetchStats(),
+        fetchLeaderboard(1000),
+      ]);
       setStats(statsData);
+      setTopPlayers(topPlayersData);
     } finally {
       setLoading(false);
     }
@@ -63,37 +69,6 @@ export default function Dashboard() {
   useEffect(() => {
     loadCore();
   }, []);
-
-  useEffect(() => {
-    if (!stats) return undefined;
-
-    let cancelled = false;
-    setLeaderboardLoading(true);
-
-    const loadLeaderboard = async () => {
-      try {
-        const topPlayersData = await fetchLeaderboard(1000);
-        if (cancelled) return;
-        startTransition(() => {
-          setTopPlayers(topPlayersData || []);
-          setLeaderboardLoading(false);
-        });
-      } catch {
-        if (!cancelled) {
-          startTransition(() => setLeaderboardLoading(false));
-        }
-      }
-    };
-
-    const cancelDeferred = deferDashboardTask(() => {
-      void loadLeaderboard();
-    }, 500);
-
-    return () => {
-      cancelled = true;
-      cancelDeferred();
-    };
-  }, [stats]);
 
   useEffect(() => {
     if (!stats) return undefined;
@@ -132,13 +107,23 @@ export default function Dashboard() {
       }
     };
 
-    const cancelDeferred = deferDashboardTask(() => {
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      const handle = window.requestIdleCallback(() => {
+        void loadDeferred();
+      }, { timeout: 1200 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(handle);
+      };
+    }
+
+    const timeout = window.setTimeout(() => {
       void loadDeferred();
-    }, 1200);
+    }, 0);
 
     return () => {
       cancelled = true;
-      cancelDeferred();
+      window.clearTimeout(timeout);
     };
   }, [stats]);
 
@@ -169,10 +154,10 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [following]);
+  }, [following, stats]);
 
-  const topTournamentWinners = stats?.top_tournament_winners || EMPTY_DASHBOARD_ARRAY;
-  const upsetTracker = stats?.upset_tracker || EMPTY_DASHBOARD_ARRAY;
+  const topTournamentWinners = stats?.top_tournament_winners || [];
+  const upsetTracker = stats?.upset_tracker || [];
   const anniversary = stats?.anniversary_matches || {};
   const fieldDurationTrend = stats?.tournament_field_duration_trend || [];
   const durationExtremes = stats?.tournament_duration_extremes;
@@ -184,7 +169,7 @@ export default function Dashboard() {
     if (!seasonStandings.length) return null;
     return seasonStandings.find((season) => season.season_key === selectedSeasonKey) || latestSeason;
   }, [latestSeason, seasonStandings, selectedSeasonKey]);
-  const eventSeriesSummary = stats?.event_series_summary || EMPTY_DASHBOARD_ARRAY;
+  const eventSeriesSummary = stats?.event_series_summary || [];
   const freshness = assessCacheFreshness(cacheMetadata);
   const currentAttendanceLeader = useMemo(
     () => leaderByMetric(topPlayers, "attendance_streak"),
@@ -193,16 +178,6 @@ export default function Dashboard() {
   const bestAttendanceLeader = useMemo(
     () => leaderByMetric(topPlayers, "best_attendance_streak"),
     [topPlayers],
-  );
-  const weirdSignals = useMemo(
-    () => buildWeirdSignals({
-      recentMatches,
-      topPlayers,
-      rivalryIndex,
-      upsetTracker,
-      stats,
-    }),
-    [recentMatches, rivalryIndex, stats, topPlayers, upsetTracker],
   );
 
   useEffect(() => {
@@ -220,28 +195,10 @@ export default function Dashboard() {
       <Topbar
         title="Dashboard"
         subtitle="Cached billiards intelligence - Fremont Open"
-        actions={
-          <a href="#weird-rift-panel" className="weird-jump-chip hidden md:inline-flex">
-            Rift {weirdSignals?.rift?.feverScore ?? 0}
-          </a>
-        }
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
-        <SurrealMeltPanel
-          stats={stats}
-          rift={weirdSignals?.rift}
-          topPlayers={topPlayers}
-          dashboardTrends={dashboardTrends}
-        />
-        <TripPrismPanel
-          stats={stats}
-          rift={weirdSignals?.rift}
-          topPlayers={topPlayers}
-          rivalryIndex={rivalryIndex}
-        />
-
         <section
-          className="weird-stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-up"
           data-testid="stats-grid"
         >
           <StatCard
@@ -337,14 +294,12 @@ export default function Dashboard() {
             value={formatDateTime(dashboardTrends.latest_sync)}
             detail={`${stats?.total_tournaments ?? "-"} tournaments cached`}
             icon={Clock}
-            to="/info"
           />
           <TrendCard
             label="Active Players"
             value={dashboardTrends.active_players ?? "-"}
             detail={`${dashboardTrends.activity_match_count ?? 0} recent matches`}
             icon={Users}
-            to="/players"
           />
           <TrendCard
             label="Hottest Player"
@@ -374,9 +329,6 @@ export default function Dashboard() {
           />
         </section>
 
-        <WeirdSignalsPanel signals={weirdSignals} loading={analyticsLoading && recentMatches.length === 0} />
-        <WeirdRiftPanel rift={weirdSignals?.rift} loading={analyticsLoading && recentMatches.length === 0} />
-
         <section
           className="bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
           data-testid="tournament-timing-panel"
@@ -394,11 +346,7 @@ export default function Dashboard() {
               <TimingExtremeCard label="Fastest Overall" row={durationExtremes?.shortest} />
               <TimingExtremeCard label="Slowest Overall" row={durationExtremes?.longest} />
               {durationGroups.slice(0, 2).map((group) => (
-                <TimingGroupCard
-                  key={`${group.game}-${group.player_count}`}
-                  group={group}
-                  to={tournamentArchivePath({ game: group.game, sort: "duration" })}
-                />
+                <TimingGroupCard key={`${group.game}-${group.player_count}`} group={group} />
               ))}
               {analyticsLoading && durationGroups.length === 0 ? (
                 <>
@@ -471,10 +419,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:min-w-[680px]">
-                <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} to="/info" />
-                <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} to="/info" />
-                <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} to="/tournaments" />
-                <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} to="/players" />
+                <MetadataStat label="Generated" value={formatDateTime(cacheMetadata.generated_at)} />
+                <MetadataStat label="Last Sync" value={formatDateTime(cacheMetadata.last_synced_at)} />
+                <MetadataStat label="Tournaments" value={cacheMetadata.tournament_count ?? stats?.total_tournaments ?? "-"} />
+                <MetadataStat label="Players" value={cacheMetadata.player_count ?? stats?.total_players ?? "-"} />
               </dl>
             </div>
           </div>
@@ -496,10 +444,9 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:min-w-[620px]">
                 {eventSeriesSummary.map((row) => (
-                  <Link
+                  <div
                     key={row.series}
-                    to={tournamentArchivePath({ series: row.series })}
-                    className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 hover:border-[#10B981]/40 transition-colors"
+                    className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3"
                   >
                     <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
                       {row.series}
@@ -508,7 +455,7 @@ export default function Dashboard() {
                       {row.count}
                     </div>
                     <div className="mt-1 text-xs text-[#6B7280]">tournaments</div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
@@ -577,9 +524,7 @@ export default function Dashboard() {
                     {row.player}
                   </Link>
                 </div>
-                <Link to={rankingPath("top_1_finishes")} className="font-mono text-sm text-[#F59E0B] hover:text-[#FBBF24]">
-                  {row.wins} titles
-                </Link>
+                <span className="font-mono text-sm text-[#F59E0B]">{row.wins} titles</span>
               </>
             )}
           />
@@ -596,12 +541,9 @@ export default function Dashboard() {
                 >
                   {row.label}
                 </Link>
-                <Link
-                  to={`/compare/${encodeURIComponent(row.player_a)}/${encodeURIComponent(row.player_b)}`}
-                  className="font-mono text-xs text-[#9CA3AF] shrink-0 hover:text-[#F3F4F6]"
-                >
+                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                   {row.matches} / {row.a_wins}-{row.b_wins}
-                </Link>
+                </span>
               </>
             )}
           />
@@ -628,12 +570,9 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </div>
-                <Link
-                  to={`/tournaments/${row.tournament_id}`}
-                  className="font-mono text-xs text-[#10B981] shrink-0 hover:text-[#34D399]"
-                >
+                <span className="font-mono text-xs text-[#10B981] shrink-0">
                   {row.above_expectation >= 0 ? "+" : ""}{Number(row.above_expectation || 0).toFixed(2)}
-                </Link>
+                </span>
               </>
             )}
           />
@@ -654,12 +593,9 @@ export default function Dashboard() {
                     def. {row.loser}
                   </div>
                 </div>
-                <Link
-                  to={matchDetailPath(row)}
-                  className="font-mono text-xs text-[#F59E0B] shrink-0 hover:text-[#FBBF24]"
-                >
+                <span className="font-mono text-xs text-[#F59E0B] shrink-0">
                   {row.winner_probability}% odds
-                </Link>
+                </span>
               </>
             )}
           />
@@ -690,12 +626,9 @@ export default function Dashboard() {
                     </div>
                   ) : null}
                 </div>
-                <Link
-                  to={matchDetailPath(row)}
-                  className="font-mono text-xs text-[#9CA3AF] shrink-0 hover:text-[#F3F4F6]"
-                >
+                <span className="font-mono text-xs text-[#9CA3AF] shrink-0">
                   {formatDateTimeWithYear(row.date)}
-                </Link>
+                </span>
               </>
             )}
           />
@@ -716,12 +649,9 @@ export default function Dashboard() {
                     {row.game || "Unknown"} . {row.players ?? "-"} players . {row.duration_label || "-"}
                   </div>
                 </div>
-                <Link
-                  to={`/tournaments/${row.tournament_id}`}
-                  className={`font-mono text-xs shrink-0 hover:underline ${durationPaceTone(row.duration_vs_average?.status)}`}
-                >
+                <span className={`font-mono text-xs shrink-0 ${durationPaceTone(row.duration_vs_average?.status)}`}>
                   {row.duration_vs_average?.label || "No avg"}
-                </Link>
+                </span>
               </>
             )}
           />
@@ -743,7 +673,7 @@ export default function Dashboard() {
                 Full leaderboard ->
               </Link>
             </div>
-            {(loading || leaderboardLoading) && !topPlayers.length ? (
+            {loading && !topPlayers.length ? (
               <div className="text-[#6B7280] text-sm">Loading...</div>
             ) : topPlayers.length === 0 ? (
               <div className="text-[#6B7280] text-sm">
@@ -769,21 +699,21 @@ export default function Dashboard() {
                       </Link>
                     </div>
                     <div className="text-right">
-                      <Link to={rankingPath("wins")} className="block font-mono text-sm hover:text-[#F3F4F6]">
+                      <div className="font-mono text-sm">
                         <span className="text-[#10B981]">{p.races_won ?? p.wins}W</span>
                         <span className="text-[#6B7280] mx-1">.</span>
                         <span className="text-[#EF4444]">{p.races_lost ?? p.losses}L</span>
                         <span className="text-[#6B7280] ml-2">races</span>
-                      </Link>
-                      <Link to={rankingPath("racks_won")} className="mt-1 block font-mono text-xs text-[#9CA3AF] hover:text-[#F3F4F6]">
+                      </div>
+                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
                         <span className="text-[#10B981]">{p.racks_won ?? "-"}</span>
                         <span className="text-[#6B7280] mx-1">.</span>
                         <span className="text-[#EF4444]">{p.racks_lost ?? "-"}</span>
                         <span className="text-[#6B7280] ml-2">racks</span>
-                      </Link>
-                      <Link to={rankingPath("average_placement")} className="mt-1 block font-mono text-xs text-[#9CA3AF] hover:text-[#F3F4F6]">
+                      </div>
+                      <div className="mt-1 font-mono text-xs text-[#9CA3AF]">
                         Avg place {p.average_placement ?? "-"}
-                      </Link>
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -820,12 +750,12 @@ export default function Dashboard() {
                         {formatDateTimeWithYear(m.completed_at)} . {formatWinnerOdds(m)} odds
                       </div>
                     </div>
-                    <Link to={matchDetailPath(m)} className="font-mono text-xs text-[#9CA3AF] shrink-0 text-right hover:text-[#F3F4F6]">
+                    <div className="font-mono text-xs text-[#9CA3AF] shrink-0 text-right">
                       <div className="text-[#6B7280]">
                         {m.tournament_game || "Game TBD"}
                       </div>
                       <div className="mt-1">{m.scores || "-"}</div>
-                    </Link>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -835,7 +765,21 @@ export default function Dashboard() {
       </main>
     </>
   );
-}
+};
+
+const DashboardLoadingShell = () => (
+  <>
+    <Topbar
+      title="Dashboard"
+      subtitle="Cached billiards intelligence - Fremont Open"
+    />
+    <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="dashboard-page">
+      <section className="bg-[#141923] border border-[#273041] rounded-lg p-6">
+        <div className="text-[#6B7280] text-sm">Loading weird dashboard...</div>
+      </section>
+    </main>
+  </>
+);
 
 const ordinal = (rank) => {
   if (rank === 1) return "1st";
@@ -878,469 +822,6 @@ const formatMoney = (value) =>
     ? value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     : "-";
 
-const WEIRD_COLORS = [
-  "#33F4C7",
-  "#FFE156",
-  "#FF4FD8",
-  "#7C5CFF",
-  "#00E0FF",
-  "#FF8A4C",
-  "#9DFF57",
-  "#FF3D71",
-  "#4D7CFF",
-  "#F7B2FF",
-  "#7DFFCB",
-  "#FFB000",
-  "#FF2DF7",
-  "#27FF00",
-  "#FF1744",
-  "#38BDF8",
-  "#F97316",
-  "#D946EF",
-];
-
-const TRIP_RAYS = Array.from({ length: 36 }).map((_, index) => ({
-  key: `trip-ray-${index}`,
-  style: {
-    "--trip-angle": `${index * 10}deg`,
-    "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-  },
-}));
-
-const TRIP_SWIRLS = Array.from({ length: 5 }).map((_, index) => ({
-  key: `trip-swirl-${index}`,
-  style: {
-    "--swirl-index": index + 1,
-    "--swirl-color": WEIRD_COLORS[(index * 3) % WEIRD_COLORS.length],
-  },
-}));
-
-const TRIP_SPARKLES = Array.from({ length: 36 }).map((_, index) => ({
-  key: `trip-sparkle-${index}`,
-  style: {
-    "--spark-x": `${(index * 37 + 11) % 100}%`,
-    "--spark-y": `${(index * 61 + 7) % 96}%`,
-    "--spark-size": `${4 + (index % 4) * 2}px`,
-    "--spark-color": WEIRD_COLORS[(index * 5) % WEIRD_COLORS.length],
-    "--spark-delay": `${(index % 12) * -0.18}s`,
-    "--spark-drift-x": `${(index % 7) * 3 - 9}px`,
-    "--spark-drift-y": `${(index % 5) * -4 + 8}px`,
-    "--spark-speed": `${2.2 + (index % 6) * 0.22}s`,
-  },
-}));
-
-const TRIP_SHAPES = Array.from({ length: 18 }).map((_, index) => {
-  const shapeClips = [
-    "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-    "polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%)",
-    "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
-    "polygon(12% 18%, 88% 4%, 72% 48%, 96% 86%, 48% 72%, 8% 94%, 26% 50%)",
-  ];
-  return {
-    key: `trip-chaos-shape-${index}`,
-    style: {
-      "--shape-x": `${(index * 23 + 4) % 98}%`,
-      "--shape-y": `${(index * 47 + 9) % 94}%`,
-      "--shape-size": `${2.1 + (index % 5) * 0.72}rem`,
-      "--shape-mobile-size": `${1.45 + (index % 5) * 0.44}rem`,
-      "--shape-rotate": `${index * 31 - 45}deg`,
-      "--shape-spin": `${index % 2 === 0 ? 42 : -48}deg`,
-      "--shape-color": WEIRD_COLORS[(index * 7) % WEIRD_COLORS.length],
-      "--shape-color-alt": WEIRD_COLORS[(index * 7 + 5) % WEIRD_COLORS.length],
-      "--shape-delay": `${index * -0.19}s`,
-      "--shape-clip": shapeClips[index % shapeClips.length],
-    },
-  };
-});
-
-const TRIP_FRACTALS = Array.from({ length: 10 }).map((_, clusterIndex) => {
-  const size = 5.8 + (clusterIndex % 3) * 1.35;
-  return {
-    key: `trip-fractal-${clusterIndex}`,
-    style: {
-      "--fractal-x": `${(clusterIndex * 19 + 8) % 96}%`,
-      "--fractal-y": `${(clusterIndex * 31 + 12) % 88}%`,
-      "--fractal-size": `${size}rem`,
-      "--fractal-mobile-size": `${size * 0.72}rem`,
-      "--fractal-rotate": `${clusterIndex * 29 - 34}deg`,
-      "--fractal-color": WEIRD_COLORS[(clusterIndex * 4) % WEIRD_COLORS.length],
-      "--fractal-delay": `${clusterIndex * -0.42}s`,
-    },
-    branches: Array.from({ length: 11 }).map((__, branchIndex) => ({
-      key: `trip-fractal-${clusterIndex}-${branchIndex}`,
-      style: {
-        "--branch-index": branchIndex + 1,
-        "--branch-angle": `${branchIndex * 32.727 + clusterIndex * 6}deg`,
-        "--branch-delay": `${(branchIndex + 1) * -0.09}s`,
-        "--branch-width": `${1.25 + (branchIndex + 1) * 0.16}rem`,
-      },
-    })),
-  };
-});
-
-const buildWeirdSignals = ({ recentMatches, topPlayers, rivalryIndex, upsetTracker, stats }) => {
-  const matches = recentMatches || [];
-  const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const weekdayCounts = weekdayNames.map((name) => ({ name, matches: 0 }));
-  const oddsBins = [
-    { name: "0-35", matches: 0 },
-    { name: "36-45", matches: 0 },
-    { name: "46-55", matches: 0 },
-    { name: "56-70", matches: 0 },
-    { name: "71+", matches: 0 },
-  ];
-  const rackBins = [
-    { name: "tiny", matches: 0 },
-    { name: "normal", matches: 0 },
-    { name: "long", matches: 0 },
-    { name: "marathon", matches: 0 },
-  ];
-  const pairCounts = new Map();
-
-  let afterDark = 0;
-  let coinFlip = 0;
-  let lowOddsWins = 0;
-  let longestNameMatch = null;
-  let weirdestScore = null;
-
-  matches.forEach((match) => {
-    const date = new Date(match.completed_at);
-    if (!Number.isNaN(date.getTime())) {
-      weekdayCounts[date.getDay()].matches += 1;
-      if (date.getHours() >= 21 || date.getHours() < 4) afterDark += 1;
-    }
-
-    const odds = Number(match?.elo_odds?.winner_probability);
-    if (Number.isFinite(odds)) {
-      if (odds <= 35) {
-        oddsBins[0].matches += 1;
-        lowOddsWins += 1;
-      } else if (odds <= 45) {
-        oddsBins[1].matches += 1;
-      } else if (odds <= 55) {
-        oddsBins[2].matches += 1;
-        coinFlip += 1;
-      } else if (odds <= 70) {
-        oddsBins[3].matches += 1;
-      } else {
-        oddsBins[4].matches += 1;
-      }
-    }
-
-    const scoreShape = scoreWeirdness(match.scores);
-    if (scoreShape.racks > 0) {
-      if (scoreShape.racks <= 4) rackBins[0].matches += 1;
-      else if (scoreShape.racks <= 8) rackBins[1].matches += 1;
-      else if (scoreShape.racks <= 12) rackBins[2].matches += 1;
-      else rackBins[3].matches += 1;
-      if (!weirdestScore || scoreShape.weirdness > weirdestScore.weirdness) {
-        weirdestScore = { ...scoreShape, match };
-      }
-    }
-
-    const names = [match.winner_name, match.loser_name].filter(Boolean);
-    if (names.length === 2) {
-      const key = names.map((name) => name.toLowerCase()).sort().join("::");
-      pairCounts.set(key, {
-        count: (pairCounts.get(key)?.count || 0) + 1,
-        players: names,
-      });
-      const letters = names.join("").replace(/[^a-z]/gi, "").length;
-      if (!longestNameMatch || letters > longestNameMatch.letters) {
-        longestNameMatch = { letters, match, players: names };
-      }
-    }
-  });
-
-  const busiestWeekday = [...weekdayCounts].sort((a, b) => b.matches - a.matches)[0];
-  const repeatPair = [...pairCounts.values()].sort((a, b) => b.count - a.count)[0];
-  const bestStreak = [...topPlayers]
-    .filter((player) => Number(player.attendance_streak || 0) > 0)
-    .sort((a, b) => Number(b.attendance_streak || 0) - Number(a.attendance_streak || 0))[0];
-  const topUpset = upsetTracker?.[0];
-  const topRivalry = rivalryIndex?.[0];
-
-  const cards = [
-    {
-      label: "Coin-Flip Victories",
-      value: coinFlip || "-",
-      detail: "Winner odds landed between 46% and 55%.",
-      tone: "cyan",
-      to: "/compare",
-    },
-    {
-      label: "Low-Odds Escapes",
-      value: lowOddsWins || "-",
-      detail: topUpset ? `${topUpset.winner || topUpset.player || "Someone"} broke the model hardest.` : "Upset tracker is quiet.",
-      tone: "pink",
-      to: "/leaderboard",
-    },
-    {
-      label: "After-Dark Matches",
-      value: afterDark || "-",
-      detail: "Completed after 9 PM or before 4 AM.",
-      tone: "gold",
-      to: "/tournaments",
-    },
-    {
-      label: "Repeat Gravity",
-      value: repeatPair?.count || "-",
-      detail: repeatPair ? `${repeatPair.players[0]} vs ${repeatPair.players[1]}` : "No repeated pair in the recent slice.",
-      tone: "violet",
-      to: repeatPair ? `/compare/${encodeURIComponent(repeatPair.players[0])}/${encodeURIComponent(repeatPair.players[1])}` : "/compare",
-    },
-    {
-      label: "Name-Length Collision",
-      value: longestNameMatch?.letters || "-",
-      detail: longestNameMatch ? `${longestNameMatch.players[0]} vs ${longestNameMatch.players[1]}` : "No name collision found.",
-      tone: "blue",
-      to: longestNameMatch ? matchDetailPath(longestNameMatch.match) : "/players",
-    },
-    {
-      label: "Attendance Ritual",
-      value: bestStreak?.attendance_streak || "-",
-      detail: bestStreak ? `${bestStreak.name} keeps showing up.` : "No streak leader found.",
-      tone: "green",
-      to: bestStreak ? `/players/${encodeURIComponent(bestStreak.name)}` : "/players",
-    },
-    {
-      label: "Score Distortion",
-      value: weirdestScore?.scores || "-",
-      detail: weirdestScore ? `${weirdestScore.racks} racks, spread ${weirdestScore.spread}` : "Scores are too normal right now.",
-      tone: "pink",
-      to: weirdestScore ? matchDetailPath(weirdestScore.match) : "/tournaments",
-    },
-    {
-      label: "Rivalry Static",
-      value: topRivalry?.matches || "-",
-      detail: topRivalry?.label || "No rivalry frequency spike.",
-      tone: "cyan",
-      to: topRivalry ? `/compare/${encodeURIComponent(topRivalry.player_a)}/${encodeURIComponent(topRivalry.player_b)}` : "/compare",
-    },
-  ];
-
-  const feverScore = clampNumber(
-    Math.round(
-      (coinFlip * 2.7)
-        + (lowOddsWins * 4.5)
-        + (afterDark * 1.9)
-        + ((repeatPair?.count || 0) * 9)
-        + ((topRivalry?.matches || 0) * 0.85)
-        + ((weirdestScore?.weirdness || 0) * 1.15)
-        + ((bestStreak?.attendance_streak || 0) * 2.2),
-    ),
-    0,
-    999,
-  );
-  const maxRivalryMatches = Math.max(1, ...rivalryIndex.map((row) => Number(row.matches || 0)));
-  const maxPlayerWins = Math.max(1, ...topPlayers.slice(0, 16).map((player) => Number(player.wins || 0)));
-  const riftFields = [
-    {
-      label: "Chalk Entropy",
-      value: `${clampNumber(Math.round((coinFlip / Math.max(1, matches.length)) * 300), 0, 100)}%`,
-      score: clampNumber(Math.round((coinFlip / Math.max(1, matches.length)) * 300), 0, 100),
-      detail: `${coinFlip || 0} recent matches lived near coin-flip odds.`,
-      tone: "cyan",
-      to: "/compare",
-    },
-    {
-      label: "Table Gravity",
-      value: repeatPair?.count ? `${repeatPair.count}x` : "-",
-      score: clampNumber((repeatPair?.count || 0) * 18, 0, 100),
-      detail: repeatPair ? `${repeatPair.players[0]} and ${repeatPair.players[1]} keep bending back together.` : "No pair is stuck in orbit.",
-      tone: "violet",
-      to: repeatPair ? `/compare/${encodeURIComponent(repeatPair.players[0])}/${encodeURIComponent(repeatPair.players[1])}` : "/compare",
-    },
-    {
-      label: "Ghost Rack Index",
-      value: weirdestScore?.racks || "-",
-      score: clampNumber((weirdestScore?.weirdness || 0) * 4, 0, 100),
-      detail: weirdestScore ? `${weirdestScore.scores} is the current score distortion.` : "Scores are not haunted enough yet.",
-      tone: "pink",
-      to: weirdestScore ? matchDetailPath(weirdestScore.match) : "/tournaments",
-    },
-    {
-      label: "Bracket Fever",
-      value: topUpset?.winner_probability ? `${topUpset.winner_probability}%` : `${lowOddsWins || 0}`,
-      score: clampNumber(lowOddsWins * 14 + (topUpset ? 18 : 0), 0, 100),
-      detail: topUpset ? `${topUpset.winner || "An underdog"} punctured the expected line.` : "The upset field is quiet.",
-      tone: "gold",
-      to: topUpset ? matchDetailPath(topUpset) : "/leaderboard",
-    },
-    {
-      label: "Calendar Static",
-      value: afterDark || "-",
-      score: clampNumber(Math.round((afterDark / Math.max(1, matches.length)) * 420), 0, 100),
-      detail: `${afterDark || 0} matches crossed the late-night rail.`,
-      tone: "blue",
-      to: "/tournaments",
-    },
-    {
-      label: "Ritual Attendance",
-      value: bestStreak?.attendance_streak || "-",
-      score: clampNumber((bestStreak?.attendance_streak || 0) * 9, 0, 100),
-      detail: bestStreak ? `${bestStreak.name} is the current return-to-table signal.` : "No active ritual has enough signal.",
-      tone: "green",
-      to: bestStreak ? `/players/${encodeURIComponent(bestStreak.name)}` : "/players",
-    },
-  ];
-  const riftGlyphs = [
-    ...riftFields.map((field) => ({
-      label: field.label,
-      value: field.value,
-      score: field.score,
-      tone: field.tone,
-      to: field.to,
-    })),
-    ...topPlayers.slice(0, 4).map((player, index) => ({
-      label: player.name,
-      value: `${player.wins || 0}W`,
-      score: clampNumber(Math.round((Number(player.wins || 0) / maxPlayerWins) * 100), 0, 100),
-      tone: ["cyan", "pink", "gold", "violet"][index % 4],
-      to: `/players/${encodeURIComponent(player.name)}`,
-    })),
-    ...rivalryIndex.slice(0, 2).map((row, index) => ({
-      label: row.label,
-      value: `${row.matches || 0}`,
-      score: clampNumber(Math.round((Number(row.matches || 0) / maxRivalryMatches) * 100), 0, 100),
-      tone: ["blue", "green"][index % 2],
-      to: `/compare/${encodeURIComponent(row.player_a)}/${encodeURIComponent(row.player_b)}`,
-    })),
-  ].slice(0, 12);
-  const riftQuestions = [
-    {
-      label: "What would a table whisper first?",
-      answer: [...riftFields].sort((a, b) => b.score - a.score)[0]?.detail || "The cache has not formed a sentence yet.",
-    },
-    {
-      label: "Where is the bracket least normal?",
-      answer: topUpset
-        ? `${topUpset.winner || "The winner"} beat the odds at ${topUpset.winner_probability ?? "-"}%.`
-        : `${lowOddsWins || 0} recent winners came from the low-odds side.`,
-    },
-    {
-      label: "Which stat is pretending to be weather?",
-      answer: `${busiestWeekday?.name || "No day"} has the strongest weekday pressure with ${busiestWeekday?.matches || 0} recent matches.`,
-    },
-  ];
-
-  return {
-    cards,
-    questions: buildWeirdQuestions({
-      afterDark,
-      bestStreak,
-      busiestWeekday,
-      coinFlip,
-      lowOddsWins,
-      repeatPair,
-      topRivalry,
-      weirdestScore,
-    }),
-    constellation: cards.slice(0, 6).map((card, index) => ({
-      label: card.label,
-      value: card.value,
-      tone: card.tone,
-      orbit: index + 1,
-    })),
-    weekdayCounts,
-    oddsBins,
-    rackBins,
-    busiestWeekday,
-    rift: {
-      feverScore,
-      fields: riftFields,
-      glyphs: riftGlyphs,
-      questions: riftQuestions,
-      headline: feverScore >= 420
-        ? "The room has entered full neon drift."
-        : feverScore >= 180
-          ? "The table is loudly suspicious."
-          : "The weird signal is warming up.",
-    },
-    totalMatches: matches.length || stats?.total_matches || 0,
-  };
-};
-
-const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
-
-const scoreWeirdness = (score) => {
-  const numbers = String(score || "")
-    .match(/\d+/g)
-    ?.map((value) => Number(value))
-    .filter((value) => Number.isFinite(value)) || [];
-  if (numbers.length === 0) {
-    return { scores: score || "-", racks: 0, spread: 0, weirdness: 0 };
-  }
-  const racks = numbers.reduce((sum, value) => sum + value, 0);
-  const spread = Math.max(...numbers) - Math.min(...numbers);
-  const repeated = new Set(numbers).size < numbers.length ? 4 : 0;
-  const close = spread <= 1 ? 5 : 0;
-  const weirdness = racks + repeated + close;
-  return { scores: score || "-", racks, spread, weirdness };
-};
-
-const buildWeirdQuestions = ({
-  afterDark,
-  bestStreak,
-  busiestWeekday,
-  coinFlip,
-  lowOddsWins,
-  repeatPair,
-  topRivalry,
-  weirdestScore,
-}) => [
-  {
-    question: "Which matches felt like the table decided?",
-    answer: `${coinFlip || 0} recent wins lived in the 46-55% odds fog.`,
-  },
-  {
-    question: "Who keeps bending the calendar?",
-    answer: bestStreak
-      ? `${bestStreak.name} has the active attendance ritual at ${bestStreak.attendance_streak}.`
-      : "No active ritual has enough signal yet.",
-  },
-  {
-    question: "When does the room get strange?",
-    answer: `${busiestWeekday?.name || "No day"} is the current weekday vortex, with ${busiestWeekday?.matches || 0} recent matches.`,
-  },
-  {
-    question: "Which rivalry refuses to cool down?",
-    answer: topRivalry?.label
-      ? `${topRivalry.label} has ${topRivalry.matches} logged collisions.`
-      : "No rivalry is making enough noise yet.",
-  },
-  {
-    question: "How many outcomes ignored the script?",
-    answer: `${lowOddsWins || 0} winners came from 35% odds or lower.`,
-  },
-  {
-    question: "Which score looks least normal?",
-    answer: weirdestScore
-      ? `${weirdestScore.scores} carried ${weirdestScore.racks} racks and a ${weirdestScore.spread}-rack spread.`
-      : "No score has distorted enough to earn a label.",
-  },
-  {
-    question: "Who got pulled back into the same orbit?",
-    answer: repeatPair
-      ? `${repeatPair.players[0]} and ${repeatPair.players[1]} repeated ${repeatPair.count} times recently.`
-      : "No pair is caught in repeat gravity.",
-  },
-  {
-    question: "Did the late-night table speak?",
-    answer: `${afterDark || 0} recent matches finished after 9 PM or before 4 AM.`,
-  },
-];
-
-const tournamentArchivePath = (params = {}) => {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (!value || value === "all") return;
-    query.set(key, String(value));
-  });
-  const suffix = query.toString();
-  return suffix ? `/tournaments?${suffix}` : "/tournaments";
-};
-
 const matchAnchorId = (matchId) => `match-${encodeURIComponent(String(matchId || ""))}`;
 
 const matchDetailPath = (row) =>
@@ -1349,231 +830,6 @@ const matchDetailPath = (row) =>
     : row?.tournament_id
       ? `/tournaments/${row.tournament_id}`
       : "#";
-
-const SurrealMeltPanel = ({ stats, rift, topPlayers, dashboardTrends }) => {
-  const leadPlayer = topPlayers?.[0];
-  const hotPlayer = dashboardTrends?.hottest_player;
-  const fever = rift?.feverScore ?? 0;
-  const meltStats = [
-    {
-      label: "Tables",
-      value: stats?.total_tournaments ?? "-",
-      detail: "events bending",
-      to: "/tournaments",
-      tone: "cyan",
-    },
-    {
-      label: "Racks",
-      value: stats?.total_matches ?? "-",
-      detail: "matches dripping",
-      to: rankingPath("total_matches"),
-      tone: "gold",
-    },
-    {
-      label: "Faces",
-      value: stats?.total_players ?? "-",
-      detail: "players floating",
-      to: "/players",
-      tone: "pink",
-    },
-    {
-      label: "Fever",
-      value: fever,
-      detail: rift?.headline || "rift warming",
-      to: "#weird-rift-panel",
-      tone: "violet",
-    },
-  ];
-
-  return (
-    <section className="surreal-melt-panel" data-testid="surreal-melt-panel">
-      <div className="surreal-sky" aria-hidden="true">
-        <div className="surreal-sun">
-          <span>8</span>
-        </div>
-        <div className="surreal-cue surreal-cue-a" />
-        <div className="surreal-cue surreal-cue-b" />
-        <div className="surreal-liquid-table">
-          <span />
-        </div>
-        <div className="surreal-melt-ball surreal-ball-one">
-          <span>{stats?.total_tournaments ?? "-"}</span>
-        </div>
-        <div className="surreal-melt-ball surreal-ball-two">
-          <span>{stats?.total_players ?? "-"}</span>
-        </div>
-        <div className="surreal-melt-ball surreal-ball-three">
-          <span>{fever}</span>
-        </div>
-      </div>
-
-      <div className="surreal-melt-copy">
-        <div className="surreal-kicker">Surreal Rack State</div>
-        <h2>Stats are melting into the rails.</h2>
-        <p>
-          {leadPlayer
-            ? `${leadPlayer.name} floats at ${leadPlayer.wins}-${leadPlayer.losses}; the table refuses to stay flat.`
-            : "The cache is still warming the felt."}
-        </p>
-      </div>
-
-      <div className="surreal-clock-grid">
-        {meltStats.map((item, index) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            className={`surreal-clock-card weird-signal-${item.tone}`}
-            style={{
-              "--clock-tilt": `${index % 2 === 0 ? -4 : 5}deg`,
-              "--clock-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-            }}
-          >
-            <div className="surreal-clock-face">
-              <span>{item.value}</span>
-            </div>
-            <div>
-              <strong>{item.label}</strong>
-              <small>{item.detail}</small>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      <div className="surreal-melt-footer">
-        <Link to={hotPlayer ? `/players/${encodeURIComponent(hotPlayer.player)}` : "/leaderboard"}>
-          {hotPlayer ? `${hotPlayer.player} is currently melting the form chart` : "Leaderboard liquefies here"}
-        </Link>
-        <Link to="/compare">Compare warped matchups</Link>
-      </div>
-    </section>
-  );
-};
-
-const TripAtmosphere = memo(function TripAtmosphere() {
-  return (
-    <>
-      <div className="trip-color-fog" aria-hidden="true" />
-      <div className="trip-sparkle-field" aria-hidden="true">
-        {TRIP_SPARKLES.map((sparkle) => (
-          <i key={sparkle.key} style={sparkle.style} />
-        ))}
-      </div>
-      <div className="trip-shape-field" aria-hidden="true">
-        {TRIP_SHAPES.map((shape) => (
-          <i key={shape.key} style={shape.style} />
-        ))}
-      </div>
-      <div className="trip-fractal-field" aria-hidden="true">
-        {TRIP_FRACTALS.map((fractal) => (
-          <div
-            key={fractal.key}
-            className="trip-fractal-seed"
-            style={fractal.style}
-          >
-            {fractal.branches.map((branch) => (
-              <span key={branch.key} style={branch.style} />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="trip-vortex" aria-hidden="true">
-        {TRIP_RAYS.map((ray) => (
-          <span key={ray.key} style={ray.style} />
-        ))}
-        <div className="trip-swirl-orbits">
-          {TRIP_SWIRLS.map((swirl) => (
-            <i key={swirl.key} style={swirl.style} />
-          ))}
-        </div>
-        <div className="trip-vortex-core">
-          <span>8</span>
-        </div>
-      </div>
-    </>
-  );
-});
-
-const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
-  const leadPlayer = topPlayers?.[0];
-  const rivalry = rivalryIndex?.[0];
-  const prismStats = [
-    {
-      label: "Felt Echo",
-      value: stats?.total_matches ?? "-",
-      detail: "match trails",
-      to: rankingPath("total_matches"),
-    },
-    {
-      label: "Prism Field",
-      value: stats?.average_tournament_players ?? "-",
-      detail: "avg bodies",
-      to: "/tournaments",
-    },
-    {
-      label: "Rift Heat",
-      value: rift?.feverScore ?? 0,
-      detail: "weird pressure",
-      to: "#weird-rift-panel",
-    },
-    {
-      label: "Orbit King",
-      value: leadPlayer ? `${leadPlayer.wins}W` : "-",
-      detail: leadPlayer?.name || "leaderboard",
-      to: leadPlayer ? `/players/${encodeURIComponent(leadPlayer.name)}` : "/leaderboard",
-    },
-    {
-      label: "Twin Flame",
-      value: rivalry?.matches || "-",
-      detail: rivalry?.label || "compare path",
-      to: rivalry ? `/compare/${encodeURIComponent(rivalry.player_a)}/${encodeURIComponent(rivalry.player_b)}` : "/compare",
-    },
-  ];
-
-  return (
-    <section className="trip-prism-panel" data-testid="trip-prism-panel">
-      <TripAtmosphere />
-
-      <div className="trip-prism-copy">
-        <div className="trip-prism-kicker">Kaleidoscope Break</div>
-        <h2>The bracket is seeing trails.</h2>
-        <p>
-          Mirrored cache signals, bent through pool-ball color and leaderboard gravity.
-        </p>
-      </div>
-
-      <div className="trip-spectrum-strip" aria-hidden="true">
-        {WEIRD_COLORS.map((color, index) => (
-          <span
-            key={`trip-spectrum-${color}`}
-            style={{
-              "--spectrum-color": color,
-              "--spectrum-delay": `${index * 0.08}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="trip-prism-stat-ring">
-        {prismStats.map((item, index) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            className="trip-prism-card"
-            style={{
-              "--trip-card-color": WEIRD_COLORS[(index * 2) % WEIRD_COLORS.length],
-              "--trip-card-tilt": `${index % 2 === 0 ? -3 : 3}deg`,
-              "--trip-card-index": index,
-            }}
-          >
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-            <small>{item.detail}</small>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-};
 
 const RecentMatchName = ({ name, entryType, tone }) => {
   const isWinner = tone === "winner";
@@ -1590,291 +846,9 @@ const RecentMatchName = ({ name, entryType, tone }) => {
   );
 };
 
-const WeirdSignalsPanel = ({ signals, loading }) => {
-  const cards = signals?.cards || [];
-  return (
-    <section
-      className="weird-oracle bg-[#141923] border border-[#273041] rounded-lg p-5 sm:p-6"
-      data-testid="weird-signals-panel"
-    >
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#F59E0B]">
-              Weird Signal Lab
-            </div>
-            <h2 className="mt-2 font-[Outfit] text-2xl sm:text-3xl font-semibold text-[#F3F4F6]">
-              Questions Nobody Asked, Until Now
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#C9C1F4]">
-              Derived from cached matches: odds weather, score distortion, name collisions, late-night completions, and other useful nonsense.
-            </p>
-          </div>
-          <div className="rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-3 font-mono text-xs text-[#9CA3AF]">
-            {loading ? "warming up" : `${signals?.totalMatches || 0} matches in the signal pool`}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          {cards.map((card) => (
-            <WeirdSignalCard key={card.label} card={card} />
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <WeirdMiniChart
-            title="Weekday Vortex"
-            subtitle={`Busiest recent day: ${signals?.busiestWeekday?.name || "-"}`}
-            data={signals?.weekdayCounts || []}
-            dataKey="matches"
-          />
-          <WeirdMiniChart
-            title="Odds Weather"
-            subtitle="How often the model was barely sure"
-            data={signals?.oddsBins || []}
-            dataKey="matches"
-          />
-          <WeirdMiniChart
-            title="Score Distortion"
-            subtitle="Tiny, normal, long, and marathon rack shapes"
-            data={signals?.rackBins || []}
-            dataKey="matches"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-4">
-          <WeirdQuestionDeck questions={signals?.questions || []} />
-          <WeirdConstellation nodes={signals?.constellation || []} />
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const WeirdSignalCard = ({ card }) => {
-  const body = (
-    <div className={`weird-signal-card weird-signal-${card.tone || "cyan"} h-full rounded-md border border-[#273041] bg-[#0B0E14] px-4 py-4`}>
-      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#C9C1F4]">
-        {card.label}
-      </div>
-      <div className="mt-3 font-mono text-2xl font-semibold text-[#F3F4F6]">
-        {card.value}
-      </div>
-      <div className="mt-2 text-xs leading-5 text-[#C9C1F4]">
-        {card.detail}
-      </div>
-    </div>
-  );
-  return card.to ? <Link to={card.to} className="block h-full">{body}</Link> : body;
-};
-
-const WeirdMiniChart = ({ title, subtitle, data, dataKey }) => {
-  const maxValue = Math.max(1, ...data.map((entry) => Number(entry[dataKey] || 0)));
-  return (
-    <div className="weird-mini-chart rounded-md border border-[#273041] bg-[#0B0E14] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">{title}</h3>
-          <p className="mt-1 text-xs text-[#C9C1F4]">{subtitle}</p>
-        </div>
-      </div>
-      <div className="weird-color-ribbon mt-4">
-        {data.map((entry, index) => {
-          const value = Number(entry[dataKey] || 0);
-          return (
-            <div key={`ribbon-${entry.name}`} className="weird-ribbon-item">
-              <div
-                className="weird-ribbon-fill"
-                style={{
-                  "--ribbon-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-                  "--ribbon-power": `${Math.max(10, Math.round((value / maxValue) * 100))}%`,
-                }}
-              />
-              <span>{entry.name}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="weird-native-bars mt-4" role="img" aria-label={`${title} bar chart`}>
-        {data.map((entry, index) => {
-          const value = Number(entry[dataKey] || 0);
-          return (
-            <div key={`native-bar-${entry.name}`} className="weird-native-bar-row">
-              <span>{entry.name}</span>
-              <div className="weird-native-bar-track">
-                <i
-                  style={{
-                    "--bar-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-                    width: `${Math.max(3, Math.round((value / maxValue) * 100))}%`,
-                  }}
-                />
-              </div>
-              <strong>{value}</strong>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const WeirdQuestionDeck = ({ questions }) => (
-  <div className="weird-question-deck rounded-md border border-[#273041] bg-[#0B0E14] p-4">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Question Engine</h3>
-        <p className="mt-1 text-xs text-[#C9C1F4]">The cache asks itself suspiciously specific things.</p>
-      </div>
-      <div className="weird-oracle-eye" aria-hidden="true" />
-    </div>
-    <div className="mt-4 grid grid-cols-1 gap-3">
-      {questions.slice(0, 5).map((item) => (
-        <div key={item.question} className="weird-question-row rounded-md border border-[#273041] bg-[#141923] px-4 py-3">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FFE156]">
-            {item.question}
-          </div>
-          <div className="mt-2 text-sm leading-6 text-[#F3F4F6]">
-            {item.answer}
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const WeirdConstellation = ({ nodes }) => (
-  <div className="weird-constellation rounded-md border border-[#273041] bg-[#0B0E14] p-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h3 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Signal Constellation</h3>
-        <p className="mt-1 text-xs text-[#C9C1F4]">Not scientific. Still strangely useful.</p>
-      </div>
-      <div className="font-mono text-xs text-[#9CA3AF]">{nodes.length} nodes</div>
-    </div>
-    <div className="weird-orbit-map mt-4" aria-label="Weird signal constellation">
-      <div className="weird-orbit-core">
-        <span>FO</span>
-      </div>
-      {nodes.map((node, index) => (
-        <div
-          key={node.label}
-          className={`weird-orbit-node weird-signal-${node.tone || "cyan"}`}
-          style={{
-            "--orbit-angle": `${index * 58 + 12}deg`,
-            "--orbit-radius": `${7.5 + (index % 3) * 2.9}rem`,
-          }}
-        >
-          <span className="font-mono text-sm">{node.value}</span>
-          <span>{node.label.replace(/-/g, " ")}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const WeirdRiftPanel = ({ rift, loading }) => {
-  const fields = rift?.fields || [];
-  const glyphs = rift?.glyphs || [];
-  const score = rift?.feverScore ?? 0;
-  const meterScore = clampNumber(score, 0, 100);
-
-  return (
-    <section
-      id="weird-rift-panel"
-      className="weird-rift-panel"
-      data-testid="weird-rift-panel"
-    >
-      <div className="weird-rift-header">
-        <div>
-          <div className="weird-rift-kicker">Extreme Weird Mode</div>
-          <h2>Static Cache Rift</h2>
-          <p>{loading ? "The rift is waiting on deferred analytics." : rift?.headline}</p>
-        </div>
-        <div className="weird-rift-badge">
-          <span>Rift</span>
-          <strong>{score}</strong>
-        </div>
-      </div>
-
-      <div className="weird-rift-grid">
-        <div className="weird-rift-meter" style={{ "--rift-score": `${meterScore}%` }}>
-          <div className="weird-eight-ball">
-            <span>8</span>
-          </div>
-          <div>
-            <div className="weird-rift-meter-label">Weirdness Pressure</div>
-            <div className="weird-rift-meter-value">{score}</div>
-          </div>
-        </div>
-
-        <div className="weird-rift-wheel" aria-label="Static cache rift glyphs">
-          <div className="weird-rift-core">
-            <span>FO</span>
-            <strong>cache</strong>
-          </div>
-          {glyphs.map((glyph, index) => {
-            const angle = index * 30 - 88;
-            const node = (
-              <>
-                <span>{glyph.value}</span>
-                <strong>{shortCompactLabel(glyph.label)}</strong>
-              </>
-            );
-            const className = `weird-rift-glyph weird-signal-${glyph.tone || "cyan"}`;
-            const style = {
-              "--rift-angle": `${angle}deg`,
-              "--rift-angle-inverse": `${-angle}deg`,
-              "--rift-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-              "--rift-power": `${clampNumber(glyph.score || 0, 8, 100)}%`,
-            };
-            return glyph.to ? (
-              <Link
-                key={`${glyph.label}-${index}`}
-                to={glyph.to}
-                className={className}
-                style={style}
-              >
-                {node}
-              </Link>
-            ) : (
-              <div key={`${glyph.label}-${index}`} className={className} style={style}>
-                {node}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="weird-rift-lanes">
-          {fields.map((field) => (
-            <Link key={field.label} to={field.to} className={`weird-rift-lane weird-signal-${field.tone || "cyan"}`}>
-              <div className="weird-rift-lane-top">
-                <span>{field.label}</span>
-                <strong>{field.value}</strong>
-              </div>
-              <div className="weird-rift-lane-bar">
-                <span style={{ width: `${clampNumber(field.score, 3, 100)}%` }} />
-              </div>
-              <p>{field.detail}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="weird-rift-questions">
-        {(rift?.questions || []).map((item) => (
-          <div key={item.label}>
-            <span>{item.label}</span>
-            <strong>{item.answer}</strong>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-};
-
 const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
   const body = (
-    <div className="weird-card weird-trend-card bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/40 transition-colors h-full">
+    <div className="bg-[#141923] border border-[#273041] rounded-lg p-5 hover:border-[#10B981]/40 transition-colors h-full">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -1894,7 +868,7 @@ const TrendCard = ({ label, value, detail, icon: Icon, to }) => {
     </div>
   );
 
-  return to ? <Link to={to} className="block h-full">{body}</Link> : body;
+  return to ? <Link to={to}>{body}</Link> : body;
 };
 
 const durationPaceTone = (status) => {
@@ -1903,25 +877,16 @@ const durationPaceTone = (status) => {
   return "text-[#9CA3AF]";
 };
 
-const MetadataStat = ({ label, value, to }) => {
-  const content = (
-    <>
-      <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
-        {label}
-      </dt>
-      <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
-        {value}
-      </dd>
-    </>
-  );
-  return to ? (
-    <Link to={to} className="block rounded-md px-2 py-1 -mx-2 -my-1 hover:bg-[#0B0E14] transition-colors">
-      {content}
-    </Link>
-  ) : (
-    <div>{content}</div>
-  );
-};
+const MetadataStat = ({ label, value }) => (
+  <div>
+    <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+      {label}
+    </dt>
+    <dd className="mt-1 font-mono text-sm text-[#F3F4F6]">
+      {value}
+    </dd>
+  </div>
+);
 
 const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
   const toneClasses = {
@@ -1952,11 +917,10 @@ const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-3 text-sm lg:min-w-[280px]">
-          <MetadataChip label="Sync status" value={statusLabel} to="/info" />
+          <MetadataChip label="Sync status" value={statusLabel} />
           <MetadataChip
             label="Export lag"
             value={formatExportLag(cacheMetadata.generated_at, cacheMetadata.last_synced_at)}
-            to="/info"
           />
         </dl>
       </div>
@@ -1964,22 +928,12 @@ const CacheFreshnessBanner = ({ freshness, cacheMetadata }) => {
   );
 };
 
-const MetadataChip = ({ label, value, to }) => {
-  const className = "rounded-md border border-current/20 bg-black/10 px-3 py-2";
-  const content = (
-    <>
-      <dt className="text-[11px] uppercase tracking-[0.14em] opacity-70">{label}</dt>
-      <dd className="mt-1 font-mono text-sm">{value}</dd>
-    </>
-  );
-  return to ? (
-    <Link to={to} className={`${className} block hover:bg-black/20 transition-colors`}>
-      {content}
-    </Link>
-  ) : (
-    <div className={className}>{content}</div>
-  );
-};
+const MetadataChip = ({ label, value }) => (
+  <div className="rounded-md border border-current/20 bg-black/10 px-3 py-2">
+    <dt className="text-[11px] uppercase tracking-[0.14em] opacity-70">{label}</dt>
+    <dd className="mt-1 font-mono text-sm">{value}</dd>
+  </div>
+);
 
 const TimingExtremeCard = ({ label, row }) => {
   const body = (
@@ -1997,55 +951,58 @@ const TimingExtremeCard = ({ label, row }) => {
   return row?.tournament_id ? <Link to={`/tournaments/${row.tournament_id}`}>{body}</Link> : body;
 };
 
-const TimingGroupCard = ({ group, loading = false, to }) => {
-  const body = (
-    <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
-      <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
-        {loading ? "Loading..." : `${group.game} / ${group.player_count} players`}
-      </div>
-      <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
-        {loading ? "Deferred panel" : `${group.shortest?.duration_label || "-"} - ${group.longest?.duration_label || "-"}`}
-      </div>
-      <div className="mt-1 text-xs text-[#9CA3AF]">
-        {loading
-          ? "Loads after the dashboard core cards."
-          : `Avg ${group.average_label || "-"} across ${group.sample_count} event${group.sample_count === 1 ? "" : "s"}`}
-      </div>
+const TimingGroupCard = ({ group, loading = false }) => (
+  <div className="bg-[#0B0E14] border border-[#273041] rounded-md px-4 py-3 h-full">
+    <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280]">
+      {loading ? "Loading..." : `${group.game} / ${group.player_count} players`}
     </div>
-  );
-  return to && !loading ? <Link to={to} className="block h-full">{body}</Link> : body;
-};
+    <div className="mt-2 font-mono text-sm text-[#F3F4F6]">
+      {loading ? "Deferred panel" : `${group.shortest?.duration_label || "-"} - ${group.longest?.duration_label || "-"}`}
+    </div>
+    <div className="mt-1 text-xs text-[#9CA3AF]">
+      {loading
+        ? "Loads after the dashboard core cards."
+        : `Avg ${group.average_label || "-"} across ${group.sample_count} event${group.sample_count === 1 ? "" : "s"}`}
+    </div>
+  </div>
+);
 
 const SeasonStandingsChart = ({ season }) => {
   const data = (season?.players || []).slice(0, 6);
   if (data.length === 0) {
     return <div className="text-[#6B7280] text-sm">No season standings available.</div>;
   }
-  const maxPoints = Math.max(1, ...data.map((player) => Number(player.points || 0)));
 
   return (
-    <div className="weird-season-bars" data-testid="season-standings-chart" role="img" aria-label="Season standings bar chart">
-      {data.map((player, index) => (
-        <Link
-          key={player.player}
-          to={`/players/${encodeURIComponent(player.player)}`}
-          className="weird-season-bar-row"
-          style={{
-            "--season-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-            "--season-power": `${Math.max(4, Math.round((Number(player.points || 0) / maxPoints) * 100))}%`,
-          }}
-          title={`${player.player}: ${player.points} points, ${player.wins}-${player.losses}`}
-        >
-          <div className="weird-season-player">
-            <span>{player.player}</span>
-            <small>{player.wins}-{player.losses} races</small>
-          </div>
-          <div className="weird-season-track">
-            <span />
-          </div>
-          <strong>{player.points}</strong>
-        </Link>
-      ))}
+    <div className="h-72 w-full" data-testid="season-standings-chart">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <CartesianGrid stroke="#273041" strokeDasharray="3 3" />
+          <XAxis
+            dataKey="player"
+            stroke="#6B7280"
+            tick={{ fontSize: 11 }}
+            interval={0}
+            tickFormatter={(value) => shortName(value)}
+          />
+          <YAxis stroke="#6B7280" tick={{ fontSize: 11 }} />
+          <Tooltip
+            contentStyle={{
+              background: "#141923",
+              border: "1px solid #273041",
+              borderRadius: 6,
+              fontSize: 12,
+              color: "#F3F4F6",
+            }}
+            formatter={(value, name, row) => {
+              if (name === "points") return [`${value} points`, row.payload.player];
+              if (name === "wins") return [`${value} wins`, row.payload.player];
+              return [`${value} losses`, row.payload.player];
+            }}
+          />
+          <Bar dataKey="points" fill="#10B981" radius={[4, 4, 0, 0]} name="points" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -2162,12 +1119,6 @@ const shortName = (value = "") => {
   const parts = String(value).split(" ").filter(Boolean);
   if (parts.length < 2) return value;
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-};
-
-const shortCompactLabel = (value = "") => {
-  const words = String(value).split(/\s+/).filter(Boolean);
-  if (words.length <= 2) return value;
-  return words.slice(0, 2).join(" ");
 };
 
 const AnalyticsList = ({ title, rows, empty, loading = false, renderRow }) => (

@@ -5,17 +5,17 @@
 @tailwind utilities;
 
 :root {
-    --bg: #07050F;
-    --surface: #17112A;
-    --surface-2: #24183F;
-    --border: #6247AA;
-    --primary: #33F4C7;
-    --primary-hover: #FF4FD8;
-    --secondary: #FFE156;
+    --bg: #0B0E14;
+    --surface: #141923;
+    --surface-2: #1E2532;
+    --border: #273041;
+    --primary: #10B981;
+    --primary-hover: #059669;
+    --secondary: #F59E0B;
     --text-primary: #F3F4F6;
-    --text-secondary: #D9D6FF;
-    --text-muted: #B8B1D9;
-    --loss: #FF5B8A;
+    --text-secondary: #CBD5E1;
+    --text-muted: #A3ADBE;
+    --loss: #EF4444;
 }
 
 [data-theme="light"] {
@@ -84,25 +84,25 @@ h1, h2, h3, h4, h5, h6 {
 /* Theme css vars (dark) */
 @layer base {
     :root {
-        --background: 257 48% 4%;
+        --background: 222 25% 6%;
         --foreground: 220 14% 96%;
-        --card: 267 42% 12%;
+        --card: 222 22% 11%;
         --card-foreground: 220 14% 96%;
-        --popover: 267 42% 12%;
+        --popover: 222 22% 11%;
         --popover-foreground: 220 14% 96%;
-        --primary: 168 90% 58%;
+        --primary: 160 84% 39%;
         --primary-foreground: 222 25% 6%;
-        --secondary: 305 75% 34%;
+        --secondary: 222 22% 14%;
         --secondary-foreground: 220 14% 96%;
-        --muted: 263 35% 15%;
-        --muted-foreground: 252 24% 76%;
-        --accent: 47 100% 67%;
+        --muted: 222 22% 14%;
+        --muted-foreground: 220 9% 64%;
+        --accent: 222 22% 14%;
         --accent-foreground: 220 14% 96%;
-        --destructive: 342 100% 68%;
+        --destructive: 0 75% 55%;
         --destructive-foreground: 220 14% 96%;
-        --border: 258 42% 47%;
-        --input: 258 42% 47%;
-        --ring: 306 100% 65%;
+        --border: 222 22% 20%;
+        --input: 222 22% 20%;
+        --ring: 160 84% 39%;
         --radius: 0.5rem;
     }
 
@@ -185,11 +185,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #33F4C7, #FF4FD8, #FFE156);
-    border-radius: 6px;
-}
-::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #FFE156, #33F4C7, #FF4FD8); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-2); }
 
 /* Animations */
 @keyframes fadeUp {
@@ -218,10 +215,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Felt grain texture overlay */
 .felt-grain {
     background-image:
-        radial-gradient(circle at 12% 18%, rgba(255, 79, 216, 0.22), transparent 32%),
-        radial-gradient(circle at 78% 12%, rgba(51, 244, 199, 0.18), transparent 28%),
-        radial-gradient(circle at 68% 78%, rgba(255, 225, 86, 0.14), transparent 30%),
-        conic-gradient(from 180deg at 50% 50%, rgba(78, 47, 210, 0.18), rgba(0, 224, 255, 0.14), rgba(255, 79, 216, 0.14), rgba(78, 47, 210, 0.18));
+        radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.04), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.03), transparent 40%);
 }
 
 [data-theme="light"] .felt-grain {

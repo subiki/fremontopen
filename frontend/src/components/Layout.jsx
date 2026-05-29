@@ -1,20 +1,18 @@
-import { Suspense } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-
-const RouteLoading = () => (
-  <div className="weird-route-loader" role="status" aria-live="polite">
-    <div className="weird-route-loader-core">8</div>
-    <div>
-      <div className="weird-route-loader-title">Racking static signal</div>
-      <div className="weird-route-loader-copy">Loading the next cache-fed view</div>
-    </div>
-  </div>
-);
+import { getTheme, onThemeChange } from "../lib/theme";
 
 export const Layout = () => {
+  const [theme, setTheme] = useState(getTheme());
+
+  useEffect(() => onThemeChange(setTheme), []);
+
   return (
-    <div className="weird-mode min-h-screen bg-[#0B0E14] felt-grain" data-testid="app-layout">
+    <div
+      className={`min-h-screen bg-[#0B0E14] flex felt-grain${theme === "weird" ? " weird-mode" : ""}`}
+      data-testid="app-layout"
+    >
       <a
         href="#main-content"
         className="skip-link"
@@ -26,11 +24,9 @@ export const Layout = () => {
       <div
         id="main-content"
         tabIndex={-1}
-        className="weird-main min-w-0 flex flex-col pb-24 md:pb-10 focus:outline-none"
+        className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0 focus:outline-none"
       >
-        <Suspense fallback={<RouteLoading />}>
-          <Outlet />
-        </Suspense>
+        <Outlet />
       </div>
     </div>
   );
