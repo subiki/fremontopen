@@ -1370,6 +1370,23 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
   return (
     <section className="trip-prism-panel" data-testid="trip-prism-panel">
       <div className="trip-color-fog" aria-hidden="true" />
+      <div className="trip-sparkle-field" aria-hidden="true">
+        {Array.from({ length: 36 }).map((_, index) => (
+          <i
+            key={`trip-sparkle-${index}`}
+            style={{
+              "--spark-x": `${(index * 37 + 11) % 100}%`,
+              "--spark-y": `${(index * 61 + 7) % 96}%`,
+              "--spark-size": `${4 + (index % 4) * 2}px`,
+              "--spark-color": WEIRD_COLORS[(index * 5) % WEIRD_COLORS.length],
+              "--spark-delay": `${(index % 12) * -0.18}s`,
+              "--spark-drift-x": `${(index % 7) * 3 - 9}px`,
+              "--spark-drift-y": `${(index % 5) * -4 + 8}px`,
+              "--spark-speed": `${2.2 + (index % 6) * 0.22}s`,
+            }}
+          />
+        ))}
+      </div>
       <div className="trip-vortex" aria-hidden="true">
         {Array.from({ length: 30 }).map((_, index) => (
           <span
@@ -1425,6 +1442,7 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
             style={{
               "--trip-card-color": WEIRD_COLORS[(index * 2) % WEIRD_COLORS.length],
               "--trip-card-tilt": `${index % 2 === 0 ? -3 : 3}deg`,
+              "--trip-card-index": index,
             }}
           >
             <span>{item.label}</span>

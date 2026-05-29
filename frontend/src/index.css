@@ -2242,6 +2242,50 @@ h1, h2, h3, h4, h5, h6 {
     mix-blend-mode: screen;
 }
 
+.trip-sparkle-field {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.trip-sparkle-field i {
+    position: absolute;
+    left: var(--spark-x);
+    top: var(--spark-y);
+    display: block;
+    width: var(--spark-size);
+    height: var(--spark-size);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--spark-color) 82%, #FFFFFF);
+    box-shadow:
+        0 0 8px color-mix(in srgb, var(--spark-color) 88%, transparent),
+        0 0 22px color-mix(in srgb, var(--spark-color) 60%, transparent),
+        0 0 44px rgba(255, 255, 255, 0.22);
+    opacity: 0.74;
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.62);
+}
+
+.trip-sparkle-field i::before,
+.trip-sparkle-field i::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1px;
+    height: calc(var(--spark-size) * 4.2);
+    border-radius: 999px;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.88), transparent);
+    transform: translate(-50%, -50%);
+}
+
+.trip-sparkle-field i::after {
+    width: calc(var(--spark-size) * 4.2);
+    height: 1px;
+}
+
 .trip-vortex {
     position: relative;
     min-height: 19rem;
@@ -2390,10 +2434,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .trip-prism-card {
+    position: relative;
     display: grid;
     min-height: 7rem;
     align-content: center;
     justify-items: center;
+    overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--trip-card-color) 58%, rgba(255, 255, 255, 0.15));
     border-radius: 0.6rem;
     padding: 0.85rem;
@@ -2407,9 +2453,25 @@ h1, h2, h3, h4, h5, h6 {
     transform: rotate(var(--trip-card-tilt));
 }
 
+.trip-prism-card::before {
+    content: "";
+    position: absolute;
+    inset: -70% -36%;
+    pointer-events: none;
+    background:
+        linear-gradient(115deg, transparent 34%, rgba(255, 255, 255, 0.02) 42%, rgba(255, 255, 255, 0.58) 50%, rgba(255, 255, 255, 0.03) 58%, transparent 66%);
+    opacity: 0;
+    transform: translateX(-78%) rotate(12deg);
+}
+
 .trip-prism-card:hover {
     border-color: var(--trip-card-color);
     transform: rotate(0deg) translateY(-2px) scale(1.02);
+}
+
+.trip-prism-card > * {
+    position: relative;
+    z-index: 1;
 }
 
 .trip-prism-card span,
@@ -2486,6 +2548,16 @@ h1, h2, h3, h4, h5, h6 {
         animation-delay: var(--spectrum-delay);
     }
 
+    .trip-sparkle-field i {
+        animation: tripSparklePop var(--spark-speed) ease-in-out infinite;
+        animation-delay: var(--spark-delay);
+    }
+
+    .trip-prism-card::before {
+        animation: tripCardGlint 5.8s ease-in-out infinite;
+        animation-delay: calc(var(--trip-card-index) * -0.62s);
+    }
+
     .trip-prism-copy h2 {
         animation: weirdHue 5.8s ease-in-out infinite;
     }
@@ -2542,6 +2614,36 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes tripSpectrumPulse {
     from { filter: saturate(1) brightness(0.92); transform: scaleY(0.72); }
     to { filter: saturate(1.45) brightness(1.2); transform: scaleY(1.12); }
+}
+
+@keyframes tripSparklePop {
+    0%, 100% {
+        opacity: 0.16;
+        transform:
+            translate(-50%, -50%)
+            rotate(45deg)
+            scale(0.35);
+    }
+    42% {
+        opacity: 0.95;
+        transform:
+            translate(calc(-50% + var(--spark-drift-x)), calc(-50% + var(--spark-drift-y)))
+            rotate(225deg)
+            scale(1.22);
+    }
+    68% {
+        opacity: 0.38;
+        transform:
+            translate(calc(-50% - var(--spark-drift-x)), calc(-50% - var(--spark-drift-y)))
+            rotate(315deg)
+            scale(0.72);
+    }
+}
+
+@keyframes tripCardGlint {
+    0%, 46%, 100% { opacity: 0; transform: translateX(-78%) rotate(12deg); }
+    56% { opacity: 0.75; }
+    68% { opacity: 0; transform: translateX(78%) rotate(12deg); }
 }
 
 @media (max-width: 640px) {
@@ -2670,6 +2772,10 @@ h1, h2, h3, h4, h5, h6 {
     .trip-spectrum-strip {
         grid-template-columns: repeat(6, minmax(0, 1fr));
         border-radius: 0.65rem;
+    }
+
+    .trip-sparkle-field i:nth-child(n+25) {
+        display: none;
     }
 
     .trip-prism-stat-ring {
