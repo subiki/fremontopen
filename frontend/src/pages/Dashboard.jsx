@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { memo, startTransition, useEffect, useMemo, useState } from "react";
 import { Topbar } from "../components/Topbar";
 import { StatCard } from "../components/StatCard";
 import { Trophy, Users, Target, ChartLineUp, Star, Clock, Medal, Fire, Scales, CurrencyDollar } from "@phosphor-icons/react";
@@ -860,6 +860,61 @@ const WEIRD_COLORS = [
   "#FFB000",
 ];
 
+const TRIP_RAYS = Array.from({ length: 30 }).map((_, index) => ({
+  key: `trip-ray-${index}`,
+  style: {
+    "--trip-angle": `${index * 12}deg`,
+    "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
+  },
+}));
+
+const TRIP_SWIRLS = Array.from({ length: 5 }).map((_, index) => ({
+  key: `trip-swirl-${index}`,
+  style: {
+    "--swirl-index": index + 1,
+    "--swirl-color": WEIRD_COLORS[(index * 3) % WEIRD_COLORS.length],
+  },
+}));
+
+const TRIP_SPARKLES = Array.from({ length: 36 }).map((_, index) => ({
+  key: `trip-sparkle-${index}`,
+  style: {
+    "--spark-x": `${(index * 37 + 11) % 100}%`,
+    "--spark-y": `${(index * 61 + 7) % 96}%`,
+    "--spark-size": `${4 + (index % 4) * 2}px`,
+    "--spark-color": WEIRD_COLORS[(index * 5) % WEIRD_COLORS.length],
+    "--spark-delay": `${(index % 12) * -0.18}s`,
+    "--spark-drift-x": `${(index % 7) * 3 - 9}px`,
+    "--spark-drift-y": `${(index % 5) * -4 + 8}px`,
+    "--spark-speed": `${2.2 + (index % 6) * 0.22}s`,
+  },
+}));
+
+const TRIP_FRACTALS = Array.from({ length: 7 }).map((_, clusterIndex) => {
+  const size = 5.8 + (clusterIndex % 3) * 1.35;
+  return {
+    key: `trip-fractal-${clusterIndex}`,
+    style: {
+      "--fractal-x": `${(clusterIndex * 19 + 8) % 96}%`,
+      "--fractal-y": `${(clusterIndex * 31 + 12) % 88}%`,
+      "--fractal-size": `${size}rem`,
+      "--fractal-mobile-size": `${size * 0.72}rem`,
+      "--fractal-rotate": `${clusterIndex * 29 - 34}deg`,
+      "--fractal-color": WEIRD_COLORS[(clusterIndex * 4) % WEIRD_COLORS.length],
+      "--fractal-delay": `${clusterIndex * -0.42}s`,
+    },
+    branches: Array.from({ length: 9 }).map((__, branchIndex) => ({
+      key: `trip-fractal-${clusterIndex}-${branchIndex}`,
+      style: {
+        "--branch-index": branchIndex + 1,
+        "--branch-angle": `${branchIndex * 40 + clusterIndex * 6}deg`,
+        "--branch-delay": `${(branchIndex + 1) * -0.09}s`,
+        "--branch-width": `${1.25 + (branchIndex + 1) * 0.16}rem`,
+      },
+    })),
+  };
+});
+
 const buildWeirdSignals = ({ recentMatches, topPlayers, rivalryIndex, upsetTracker, stats }) => {
   const matches = recentMatches || [];
   const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -1331,6 +1386,45 @@ const SurrealMeltPanel = ({ stats, rift, topPlayers, dashboardTrends }) => {
   );
 };
 
+const TripAtmosphere = memo(function TripAtmosphere() {
+  return (
+    <>
+      <div className="trip-color-fog" aria-hidden="true" />
+      <div className="trip-sparkle-field" aria-hidden="true">
+        {TRIP_SPARKLES.map((sparkle) => (
+          <i key={sparkle.key} style={sparkle.style} />
+        ))}
+      </div>
+      <div className="trip-fractal-field" aria-hidden="true">
+        {TRIP_FRACTALS.map((fractal) => (
+          <div
+            key={fractal.key}
+            className="trip-fractal-seed"
+            style={fractal.style}
+          >
+            {fractal.branches.map((branch) => (
+              <span key={branch.key} style={branch.style} />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="trip-vortex" aria-hidden="true">
+        {TRIP_RAYS.map((ray) => (
+          <span key={ray.key} style={ray.style} />
+        ))}
+        <div className="trip-swirl-orbits">
+          {TRIP_SWIRLS.map((swirl) => (
+            <i key={swirl.key} style={swirl.style} />
+          ))}
+        </div>
+        <div className="trip-vortex-core">
+          <span>8</span>
+        </div>
+      </div>
+    </>
+  );
+});
+
 const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
   const leadPlayer = topPlayers?.[0];
   const rivalry = rivalryIndex?.[0];
@@ -1369,78 +1463,7 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
 
   return (
     <section className="trip-prism-panel" data-testid="trip-prism-panel">
-      <div className="trip-color-fog" aria-hidden="true" />
-      <div className="trip-sparkle-field" aria-hidden="true">
-        {Array.from({ length: 36 }).map((_, index) => (
-          <i
-            key={`trip-sparkle-${index}`}
-            style={{
-              "--spark-x": `${(index * 37 + 11) % 100}%`,
-              "--spark-y": `${(index * 61 + 7) % 96}%`,
-              "--spark-size": `${4 + (index % 4) * 2}px`,
-              "--spark-color": WEIRD_COLORS[(index * 5) % WEIRD_COLORS.length],
-              "--spark-delay": `${(index % 12) * -0.18}s`,
-              "--spark-drift-x": `${(index % 7) * 3 - 9}px`,
-              "--spark-drift-y": `${(index % 5) * -4 + 8}px`,
-              "--spark-speed": `${2.2 + (index % 6) * 0.22}s`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="trip-fractal-field" aria-hidden="true">
-        {Array.from({ length: 7 }).map((_, clusterIndex) => (
-          <div
-            key={`trip-fractal-${clusterIndex}`}
-            className="trip-fractal-seed"
-            style={{
-              "--fractal-x": `${(clusterIndex * 19 + 8) % 96}%`,
-              "--fractal-y": `${(clusterIndex * 31 + 12) % 88}%`,
-              "--fractal-size": `${5.8 + (clusterIndex % 3) * 1.35}rem`,
-              "--fractal-mobile-size": `${(5.8 + (clusterIndex % 3) * 1.35) * 0.72}rem`,
-              "--fractal-rotate": `${clusterIndex * 29 - 34}deg`,
-              "--fractal-color": WEIRD_COLORS[(clusterIndex * 4) % WEIRD_COLORS.length],
-              "--fractal-delay": `${clusterIndex * -0.42}s`,
-            }}
-          >
-            {Array.from({ length: 9 }).map((_, branchIndex) => (
-              <span
-                key={`trip-fractal-${clusterIndex}-${branchIndex}`}
-                style={{
-                  "--branch-index": branchIndex + 1,
-                  "--branch-angle": `${branchIndex * 40 + clusterIndex * 6}deg`,
-                  "--branch-delay": `${(branchIndex + 1) * -0.09}s`,
-                  "--branch-width": `${1.25 + (branchIndex + 1) * 0.16}rem`,
-                }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="trip-vortex" aria-hidden="true">
-        {Array.from({ length: 30 }).map((_, index) => (
-          <span
-            key={`trip-ray-${index}`}
-            style={{
-              "--trip-angle": `${index * 12}deg`,
-              "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
-            }}
-          />
-        ))}
-        <div className="trip-swirl-orbits">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <i
-              key={`trip-swirl-${index}`}
-              style={{
-                "--swirl-index": index + 1,
-                "--swirl-color": WEIRD_COLORS[(index * 3) % WEIRD_COLORS.length],
-              }}
-            />
-          ))}
-        </div>
-        <div className="trip-vortex-core">
-          <span>8</span>
-        </div>
-      </div>
+      <TripAtmosphere />
 
       <div className="trip-prism-copy">
         <div className="trip-prism-kicker">Kaleidoscope Break</div>
