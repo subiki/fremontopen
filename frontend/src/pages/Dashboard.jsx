@@ -891,12 +891,18 @@ const WEIRD_COLORS = [
   "#F7B2FF",
   "#7DFFCB",
   "#FFB000",
+  "#FF2DF7",
+  "#27FF00",
+  "#FF1744",
+  "#38BDF8",
+  "#F97316",
+  "#D946EF",
 ];
 
-const TRIP_RAYS = Array.from({ length: 30 }).map((_, index) => ({
+const TRIP_RAYS = Array.from({ length: 36 }).map((_, index) => ({
   key: `trip-ray-${index}`,
   style: {
-    "--trip-angle": `${index * 12}deg`,
+    "--trip-angle": `${index * 10}deg`,
     "--trip-color": WEIRD_COLORS[index % WEIRD_COLORS.length],
   },
 }));
@@ -923,7 +929,31 @@ const TRIP_SPARKLES = Array.from({ length: 36 }).map((_, index) => ({
   },
 }));
 
-const TRIP_FRACTALS = Array.from({ length: 7 }).map((_, clusterIndex) => {
+const TRIP_SHAPES = Array.from({ length: 18 }).map((_, index) => {
+  const shapeClips = [
+    "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+    "polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%)",
+    "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+    "polygon(12% 18%, 88% 4%, 72% 48%, 96% 86%, 48% 72%, 8% 94%, 26% 50%)",
+  ];
+  return {
+    key: `trip-chaos-shape-${index}`,
+    style: {
+      "--shape-x": `${(index * 23 + 4) % 98}%`,
+      "--shape-y": `${(index * 47 + 9) % 94}%`,
+      "--shape-size": `${2.1 + (index % 5) * 0.72}rem`,
+      "--shape-mobile-size": `${1.45 + (index % 5) * 0.44}rem`,
+      "--shape-rotate": `${index * 31 - 45}deg`,
+      "--shape-spin": `${index % 2 === 0 ? 42 : -48}deg`,
+      "--shape-color": WEIRD_COLORS[(index * 7) % WEIRD_COLORS.length],
+      "--shape-color-alt": WEIRD_COLORS[(index * 7 + 5) % WEIRD_COLORS.length],
+      "--shape-delay": `${index * -0.19}s`,
+      "--shape-clip": shapeClips[index % shapeClips.length],
+    },
+  };
+});
+
+const TRIP_FRACTALS = Array.from({ length: 10 }).map((_, clusterIndex) => {
   const size = 5.8 + (clusterIndex % 3) * 1.35;
   return {
     key: `trip-fractal-${clusterIndex}`,
@@ -936,11 +966,11 @@ const TRIP_FRACTALS = Array.from({ length: 7 }).map((_, clusterIndex) => {
       "--fractal-color": WEIRD_COLORS[(clusterIndex * 4) % WEIRD_COLORS.length],
       "--fractal-delay": `${clusterIndex * -0.42}s`,
     },
-    branches: Array.from({ length: 9 }).map((__, branchIndex) => ({
+    branches: Array.from({ length: 11 }).map((__, branchIndex) => ({
       key: `trip-fractal-${clusterIndex}-${branchIndex}`,
       style: {
         "--branch-index": branchIndex + 1,
-        "--branch-angle": `${branchIndex * 40 + clusterIndex * 6}deg`,
+        "--branch-angle": `${branchIndex * 32.727 + clusterIndex * 6}deg`,
         "--branch-delay": `${(branchIndex + 1) * -0.09}s`,
         "--branch-width": `${1.25 + (branchIndex + 1) * 0.16}rem`,
       },
@@ -1426,6 +1456,11 @@ const TripAtmosphere = memo(function TripAtmosphere() {
       <div className="trip-sparkle-field" aria-hidden="true">
         {TRIP_SPARKLES.map((sparkle) => (
           <i key={sparkle.key} style={sparkle.style} />
+        ))}
+      </div>
+      <div className="trip-shape-field" aria-hidden="true">
+        {TRIP_SHAPES.map((shape) => (
+          <i key={shape.key} style={shape.style} />
         ))}
       </div>
       <div className="trip-fractal-field" aria-hidden="true">

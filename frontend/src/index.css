@@ -2286,6 +2286,44 @@ h1, h2, h3, h4, h5, h6 {
     height: 1px;
 }
 
+.trip-shape-field {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.trip-shape-field i {
+    position: absolute;
+    left: var(--shape-x);
+    top: var(--shape-y);
+    display: block;
+    width: var(--shape-size);
+    height: var(--shape-size);
+    border: 1px solid color-mix(in srgb, var(--shape-color) 66%, rgba(255, 255, 255, 0.2));
+    background:
+        radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.62), transparent 0.34rem),
+        conic-gradient(from 18deg, var(--shape-color), var(--shape-color-alt), #FFFFFF, var(--shape-color));
+    box-shadow:
+        0 0 18px color-mix(in srgb, var(--shape-color) 40%, transparent),
+        0 0 34px color-mix(in srgb, var(--shape-color-alt) 28%, transparent),
+        inset 0 0 16px rgba(255, 255, 255, 0.18);
+    clip-path: var(--shape-clip);
+    opacity: 0.72;
+    transform: translate(-50%, -50%) rotate(var(--shape-rotate)) scale(0.86);
+}
+
+.trip-shape-field i::before {
+    content: "";
+    position: absolute;
+    inset: 22%;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    clip-path: var(--shape-clip);
+    opacity: 0.64;
+}
+
 .trip-fractal-field {
     position: absolute;
     inset: 0;
@@ -2631,6 +2669,11 @@ h1, h2, h3, h4, h5, h6 {
         animation-delay: var(--spark-delay);
     }
 
+    .trip-shape-field i {
+        animation: tripShapeWarp 6.4s ease-in-out infinite alternate;
+        animation-delay: var(--shape-delay);
+    }
+
     .trip-prism-card::before {
         animation: tripCardGlint 5.8s ease-in-out infinite;
         animation-delay: calc(var(--trip-card-index) * -0.62s);
@@ -2725,6 +2768,19 @@ h1, h2, h3, h4, h5, h6 {
             translate(calc(-50% - var(--spark-drift-x)), calc(-50% - var(--spark-drift-y)))
             rotate(315deg)
             scale(0.72);
+    }
+}
+
+@keyframes tripShapeWarp {
+    from {
+        opacity: 0.44;
+        filter: hue-rotate(0deg) saturate(1.1);
+        transform: translate(-50%, -50%) rotate(var(--shape-rotate)) scale(0.72);
+    }
+    to {
+        opacity: 0.9;
+        filter: hue-rotate(76deg) saturate(1.6);
+        transform: translate(-50%, -50%) rotate(calc(var(--shape-rotate) + var(--shape-spin))) scale(1.12);
     }
 }
 
@@ -2890,12 +2946,21 @@ h1, h2, h3, h4, h5, h6 {
         display: none;
     }
 
+    .trip-shape-field i {
+        width: var(--shape-mobile-size);
+        height: var(--shape-mobile-size);
+    }
+
+    .trip-shape-field i:nth-child(n+11) {
+        display: none;
+    }
+
     .trip-fractal-seed {
         width: var(--fractal-mobile-size);
         height: var(--fractal-mobile-size);
     }
 
-    .trip-fractal-seed:nth-child(n+5) {
+    .trip-fractal-seed:nth-child(n+6) {
         display: none;
     }
 
