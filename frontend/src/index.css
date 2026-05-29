@@ -2286,6 +2286,84 @@ h1, h2, h3, h4, h5, h6 {
     height: 1px;
 }
 
+.trip-fractal-field {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.trip-fractal-seed {
+    position: absolute;
+    left: var(--fractal-x);
+    top: var(--fractal-y);
+    width: var(--fractal-size);
+    height: var(--fractal-size);
+    border: 1px solid color-mix(in srgb, var(--fractal-color) 54%, transparent);
+    border-radius: 50%;
+    opacity: 0.74;
+    background:
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--fractal-color) 20%, transparent), transparent 31%),
+        repeating-conic-gradient(from 30deg, color-mix(in srgb, var(--fractal-color) 18%, transparent) 0deg 10deg, transparent 10deg 20deg);
+    box-shadow:
+        0 0 22px color-mix(in srgb, var(--fractal-color) 28%, transparent),
+        inset 0 0 18px color-mix(in srgb, var(--fractal-color) 18%, transparent);
+    transform: translate(-50%, -50%) rotate(var(--fractal-rotate));
+}
+
+.trip-fractal-seed::before,
+.trip-fractal-seed::after {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    border: 1px solid color-mix(in srgb, var(--fractal-color) 64%, transparent);
+    clip-path: polygon(50% 2%, 96% 86%, 4% 86%);
+    opacity: 0.7;
+    transform: rotate(30deg);
+}
+
+.trip-fractal-seed::after {
+    inset: 34%;
+    opacity: 0.92;
+    transform: rotate(90deg);
+}
+
+.trip-fractal-seed span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--branch-width);
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.86), color-mix(in srgb, var(--fractal-color) 76%, transparent), transparent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--fractal-color) 42%, transparent);
+    transform-origin: left center;
+    transform: rotate(var(--branch-angle)) translateX(0.4rem);
+}
+
+.trip-fractal-seed span::before,
+.trip-fractal-seed span::after {
+    content: "";
+    position: absolute;
+    right: -0.08rem;
+    top: 50%;
+    width: 52%;
+    height: 1px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--fractal-color) 86%, transparent), transparent);
+    transform-origin: left center;
+}
+
+.trip-fractal-seed span::before {
+    transform: rotate(36deg);
+}
+
+.trip-fractal-seed span::after {
+    transform: rotate(-36deg);
+}
+
 .trip-vortex {
     position: relative;
     min-height: 19rem;
@@ -2558,6 +2636,16 @@ h1, h2, h3, h4, h5, h6 {
         animation-delay: calc(var(--trip-card-index) * -0.62s);
     }
 
+    .trip-fractal-seed {
+        animation: tripFractalBreathe 7s ease-in-out infinite alternate;
+        animation-delay: var(--fractal-delay);
+    }
+
+    .trip-fractal-seed span {
+        animation: tripFractalBranch 3.9s ease-in-out infinite alternate;
+        animation-delay: var(--branch-delay);
+    }
+
     .trip-prism-copy h2 {
         animation: weirdHue 5.8s ease-in-out infinite;
     }
@@ -2644,6 +2732,30 @@ h1, h2, h3, h4, h5, h6 {
     0%, 46%, 100% { opacity: 0; transform: translateX(-78%) rotate(12deg); }
     56% { opacity: 0.75; }
     68% { opacity: 0; transform: translateX(78%) rotate(12deg); }
+}
+
+@keyframes tripFractalBreathe {
+    from {
+        opacity: 0.5;
+        filter: hue-rotate(0deg) saturate(1.05);
+        transform: translate(-50%, -50%) rotate(var(--fractal-rotate)) scale(0.88);
+    }
+    to {
+        opacity: 0.9;
+        filter: hue-rotate(55deg) saturate(1.42);
+        transform: translate(-50%, -50%) rotate(calc(var(--fractal-rotate) + 28deg)) scale(1.08);
+    }
+}
+
+@keyframes tripFractalBranch {
+    from {
+        opacity: 0.48;
+        transform: rotate(var(--branch-angle)) translateX(0.25rem) scaleX(0.74);
+    }
+    to {
+        opacity: 0.95;
+        transform: rotate(calc(var(--branch-angle) + 8deg)) translateX(0.65rem) scaleX(1.12);
+    }
 }
 
 @media (max-width: 640px) {
@@ -2775,6 +2887,15 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     .trip-sparkle-field i:nth-child(n+25) {
+        display: none;
+    }
+
+    .trip-fractal-seed {
+        width: var(--fractal-mobile-size);
+        height: var(--fractal-mobile-size);
+    }
+
+    .trip-fractal-seed:nth-child(n+5) {
         display: none;
     }
 

@@ -1387,6 +1387,35 @@ const TripPrismPanel = ({ stats, rift, topPlayers, rivalryIndex }) => {
           />
         ))}
       </div>
+      <div className="trip-fractal-field" aria-hidden="true">
+        {Array.from({ length: 7 }).map((_, clusterIndex) => (
+          <div
+            key={`trip-fractal-${clusterIndex}`}
+            className="trip-fractal-seed"
+            style={{
+              "--fractal-x": `${(clusterIndex * 19 + 8) % 96}%`,
+              "--fractal-y": `${(clusterIndex * 31 + 12) % 88}%`,
+              "--fractal-size": `${5.8 + (clusterIndex % 3) * 1.35}rem`,
+              "--fractal-mobile-size": `${(5.8 + (clusterIndex % 3) * 1.35) * 0.72}rem`,
+              "--fractal-rotate": `${clusterIndex * 29 - 34}deg`,
+              "--fractal-color": WEIRD_COLORS[(clusterIndex * 4) % WEIRD_COLORS.length],
+              "--fractal-delay": `${clusterIndex * -0.42}s`,
+            }}
+          >
+            {Array.from({ length: 9 }).map((_, branchIndex) => (
+              <span
+                key={`trip-fractal-${clusterIndex}-${branchIndex}`}
+                style={{
+                  "--branch-index": branchIndex + 1,
+                  "--branch-angle": `${branchIndex * 40 + clusterIndex * 6}deg`,
+                  "--branch-delay": `${(branchIndex + 1) * -0.09}s`,
+                  "--branch-width": `${1.25 + (branchIndex + 1) * 0.16}rem`,
+                }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
       <div className="trip-vortex" aria-hidden="true">
         {Array.from({ length: 30 }).map((_, index) => (
           <span
