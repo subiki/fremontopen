@@ -80,8 +80,9 @@ export default function StatRankings() {
             <select
               value={minMatches}
               onChange={(event) => setMinMatches(Number(event.target.value))}
+              aria-label="Minimum matches"
               data-testid="stat-rankings-min-matches-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value={0}>All match totals</option>
               <option value={5}>Min 5 matches</option>
@@ -91,8 +92,9 @@ export default function StatRankings() {
             <select
               value={minTournaments}
               onChange={(event) => setMinTournaments(Number(event.target.value))}
+              aria-label="Minimum tournaments"
               data-testid="stat-rankings-min-tournaments-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value={0}>All tournament totals</option>
               <option value={3}>Min 3 tournaments</option>
@@ -103,8 +105,9 @@ export default function StatRankings() {
               <select
                 value={minPlacements}
                 onChange={(event) => setMinPlacements(Number(event.target.value))}
+                aria-label="Minimum placement samples"
                 data-testid="stat-rankings-min-placements-select"
-                className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+                className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
               >
                 <option value={0}>All placement samples</option>
                 <option value={1}>Min 1 placement</option>

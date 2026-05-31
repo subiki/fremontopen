@@ -92,8 +92,9 @@ export default function Players() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search players... (try 'Jimmy')"
+              aria-label="Search players"
               data-testid="player-search-input"
-              className="w-full bg-[#0B0E14] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-4 py-2.5 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
+              className="w-full min-h-11 bg-[#0B0E14] border border-[#273041] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none rounded-md pl-9 pr-4 py-2.5 text-sm text-[#F3F4F6] placeholder-[#6B7280]"
             />
           </div>
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
@@ -113,8 +114,9 @@ export default function Players() {
               <select
                 value={minMatches}
                 onChange={(e) => setMinMatches(Number(e.target.value))}
+                aria-label="Minimum matches"
                 data-testid="player-min-matches-select"
-                className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+                className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
               >
                 <option value={0}>All match totals</option>
                 <option value={5}>Min 5 matches</option>
@@ -124,8 +126,9 @@ export default function Players() {
               <select
                 value={minTournaments}
                 onChange={(e) => setMinTournaments(Number(e.target.value))}
+                aria-label="Minimum tournaments"
                 data-testid="player-min-tournaments-select"
-                className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+                className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
               >
                 <option value={0}>All tournament totals</option>
                 <option value={3}>Min 3 tournaments</option>
@@ -135,8 +138,9 @@ export default function Players() {
               <select
                 value={minRacks}
                 onChange={(e) => setMinRacks(Number(e.target.value))}
+                aria-label="Minimum racks"
                 data-testid="player-min-racks-select"
-                className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+                className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
               >
                 <option value={0}>All rack totals</option>
                 <option value={25}>Min 25 racks</option>
@@ -146,8 +150,9 @@ export default function Players() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
+                aria-label="Sort players"
                 data-testid="player-sort-select"
-                className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] min-w-[240px]"
+                className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] min-w-[240px]"
               >
                 <option value="name">Sort by name</option>
                 {leaderboardMetricGroups.map((group) => (
@@ -167,8 +172,9 @@ export default function Players() {
                 <select
                   value={minPlacements}
                   onChange={(e) => setMinPlacements(Number(e.target.value))}
+                  aria-label="Minimum placement samples"
                   data-testid="player-min-placements-select"
-                  className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+                  className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
                 >
                   <option value={0}>All placement samples</option>
                   <option value={1}>Min 1 placement</option>
@@ -181,7 +187,7 @@ export default function Players() {
                 type="button"
                 onClick={resetFilters}
                 disabled={!hasActiveFilters}
-                className="px-3 py-2.5 rounded-md border border-[#273041] text-sm text-[#F3F4F6] bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#111827]"
+                className="min-h-11 px-3 py-2.5 rounded-md border border-[#273041] text-sm text-[#F3F4F6] bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#111827]"
               >
                 Clear filters
               </button>

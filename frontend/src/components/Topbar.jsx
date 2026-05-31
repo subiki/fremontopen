@@ -53,7 +53,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
       className="sticky top-0 z-40 backdrop-blur-xl bg-[#0B0E14]/80 border-b border-[#273041]"
       data-testid="app-topbar"
     >
-      <div className="px-6 sm:px-8 py-5 flex items-center justify-between gap-4">
+      <div className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <h1 className="font-[Outfit] text-2xl sm:text-3xl font-semibold tracking-tight text-[#F3F4F6] truncate">
             {title}
@@ -71,7 +71,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
           <button
             type="button"
             onClick={() => setMobileSearchOpen((value) => !value)}
-            className="lg:hidden w-10 h-10 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
+            className="lg:hidden min-h-11 min-w-11 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#10B981]"
             aria-label={mobileSearchOpen ? "Close search" : "Open search"}
             aria-expanded={mobileSearchOpen}
             aria-controls="mobile-search-panel"
@@ -82,7 +82,7 @@ export const Topbar = ({ title, subtitle, actions }) => {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="weird-theme-toggle rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center gap-2 hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors"
+            className="weird-theme-toggle min-h-11 min-w-11 rounded-md border border-[#273041] bg-[#141923] text-[#9CA3AF] flex items-center justify-center gap-2 hover:text-[#F3F4F6] hover:border-[#10B981]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#10B981]"
             aria-label={`Switch to ${THEME_LABELS[nextTheme]} mode`}
             title={`Switch to ${THEME_LABELS[nextTheme]} mode`}
             data-testid="theme-toggle"
@@ -130,10 +130,10 @@ export const Topbar = ({ title, subtitle, actions }) => {
       {mobileSearchOpen ? (
         <div
           id="mobile-search-panel"
-          className="lg:hidden border-t border-[#273041] px-6 sm:px-8 pb-4"
+          className="lg:hidden border-t border-[#273041] px-4 sm:px-8 pb-4"
           data-testid="mobile-search-panel"
         >
-          <SearchBar />
+          <SearchBar autoFocus />
         </div>
       ) : null}
     </header>

@@ -53,8 +53,9 @@ export default function Leaderboard() {
             <select
               value={minMatches}
               onChange={(event) => setMinMatches(Number(event.target.value))}
+              aria-label="Minimum matches"
               data-testid="leaderboard-min-matches-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value={0}>All players</option>
               <option value={5}>Min 5 matches</option>
@@ -64,8 +65,9 @@ export default function Leaderboard() {
             <select
               value={minTournaments}
               onChange={(event) => setMinTournaments(Number(event.target.value))}
+              aria-label="Minimum tournaments"
               data-testid="leaderboard-min-tournaments-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value={0}>All tournament counts</option>
               <option value={3}>Min 3 tournaments</option>
@@ -75,8 +77,9 @@ export default function Leaderboard() {
             <select
               value={minRacks}
               onChange={(event) => setMinRacks(Number(event.target.value))}
+              aria-label="Minimum racks"
               data-testid="leaderboard-min-racks-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value={0}>All rack totals</option>
               <option value={25}>Min 25 racks</option>
@@ -86,8 +89,9 @@ export default function Leaderboard() {
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value)}
+              aria-label="Sort leaderboard"
               data-testid="leaderboard-sort-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] min-w-[240px]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] min-w-[240px]"
             >
               {leaderboardMetricGroups.map((group) => (
                 <optgroup key={group.label} label={group.label}>

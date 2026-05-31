@@ -147,7 +147,8 @@ export default function Tournaments() {
             <button
               type="button"
               onClick={() => setView("cards")}
-              className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
+              aria-pressed={view === "cards"}
+              className={`inline-flex min-h-11 items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
                 view === "cards" ? "bg-[#10B981]/10 text-[#10B981]" : "text-[#9CA3AF] hover:text-[#F3F4F6]"
               }`}
               data-testid="tournament-cards-view"
@@ -157,7 +158,8 @@ export default function Tournaments() {
             <button
               type="button"
               onClick={() => setView("timeline")}
-              className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
+              aria-pressed={view === "timeline"}
+              className={`inline-flex min-h-11 items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
                 view === "timeline" ? "bg-[#10B981]/10 text-[#10B981]" : "text-[#9CA3AF] hover:text-[#F3F4F6]"
               }`}
               data-testid="tournament-timeline-view"
@@ -171,14 +173,16 @@ export default function Tournaments() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name or winner"
+              aria-label="Search tournaments by name or winner"
               data-testid="tournament-search-input"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] xl:col-span-2"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981] xl:col-span-2"
             />
             <select
               value={game}
               onChange={(e) => setGame(e.target.value)}
+              aria-label="Filter tournaments by game"
               data-testid="tournament-game-filter-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value="all">All games</option>
               {gameOptions.map((option) => (
@@ -190,8 +194,9 @@ export default function Tournaments() {
             <select
               value={series}
               onChange={(e) => setSeries(e.target.value)}
+              aria-label="Filter tournaments by series"
               data-testid="tournament-series-filter-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value="all">All series</option>
               {seriesOptions.map((option) => (
@@ -203,8 +208,9 @@ export default function Tournaments() {
             <select
               value={winner}
               onChange={(e) => setWinner(e.target.value)}
+              aria-label="Filter tournaments by winner"
               data-testid="tournament-winner-filter-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value="all">All winners</option>
               {winnerOptions.map((option) => (
@@ -219,7 +225,7 @@ export default function Tournaments() {
               onChange={(e) => setDateFrom(e.target.value)}
               aria-label="Tournament date from"
               data-testid="tournament-date-from-input"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             />
             <input
               type="date"
@@ -227,13 +233,14 @@ export default function Tournaments() {
               onChange={(e) => setDateTo(e.target.value)}
               aria-label="Tournament date to"
               data-testid="tournament-date-to-input"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
+              aria-label="Sort tournaments"
               data-testid="tournament-sort-select"
-              className="bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
+              className="min-h-11 bg-[#0B0E14] border border-[#273041] rounded-md px-3 py-2.5 text-sm text-[#F3F4F6] outline-none focus:border-[#10B981]"
             >
               <option value="date">Sort by date</option>
               <option value="players">Sort by players</option>

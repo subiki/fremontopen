@@ -194,7 +194,8 @@ export default function PlayerDetail() {
         onClick={handleShare}
         data-testid="share-button"
         title="Copy share link"
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-[#141923] border border-[#273041] text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#10B981]/40 transition-colors"
+        aria-label="Copy share link"
+        className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-[#141923] border border-[#273041] text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#10B981]/40 transition-colors"
       >
         <ShareNetwork size={14} />
         <span className="hidden sm:inline">Share</span>
@@ -203,7 +204,7 @@ export default function PlayerDetail() {
         type="button"
         onClick={handleFollow}
         data-testid="follow-button"
-        className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
+        className={`inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
           following
             ? "bg-[#F59E0B]/10 border-[#F59E0B]/30 text-[#F59E0B] hover:bg-[#F59E0B]/20"
             : "bg-[#141923] border-[#273041] text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#F59E0B]/40"

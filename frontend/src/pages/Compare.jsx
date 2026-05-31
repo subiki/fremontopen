@@ -251,6 +251,7 @@ const ComparePicker = ({
         disabled={!left && !right}
         className="h-11 w-11 justify-self-center rounded-md border border-[#273041] bg-[#0B0E14] text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#10B981]/40 disabled:opacity-40 disabled:cursor-not-allowed"
         title="Swap players"
+        aria-label="Swap players"
         data-testid="compare-swap"
       >
         <ArrowsLeftRight size={18} className="mx-auto" />
@@ -281,7 +282,7 @@ const PlayerInput = ({ label, value, onChange, loading, testid }) => (
         onChange={(e) => onChange(e.target.value)}
         list="compare-player-options"
         placeholder={loading ? "Loading players..." : "Search player"}
-        className="w-full rounded-md border border-[#273041] bg-[#0B0E14] py-2.5 pl-9 pr-3 text-sm text-[#F3F4F6] outline-none placeholder-[#6B7280] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]"
+        className="w-full min-h-11 rounded-md border border-[#273041] bg-[#0B0E14] py-2.5 pl-9 pr-3 text-sm text-[#F3F4F6] outline-none placeholder-[#6B7280] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]"
         data-testid={testid}
       />
     </span>

@@ -432,7 +432,7 @@ export default function Dashboard() {
                       type="button"
                       key={season.season_key}
                       onClick={() => setSelectedSeasonKey(season.season_key)}
-                      className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                      className={`flex min-h-11 w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                         active
                           ? "border-[#10B981]/70 bg-[#063B32] text-[#F3F4F6]"
                           : "border-[#273041] bg-[#0B0E14] hover:border-[#10B981]/50"

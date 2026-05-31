@@ -65,7 +65,7 @@ export const Sidebar = () => {
   return (
     <>
       <aside
-        className="w-64 shrink-0 border-r border-[#273041] bg-[#0B0E14] hidden md:flex md:flex-col"
+        className="w-64 shrink-0 border-r border-[#273041] bg-[#0B0E14] hidden md:sticky md:top-0 md:flex md:h-screen md:flex-col md:self-start"
         data-testid="app-sidebar"
       >
         <div className="px-6 py-7 border-b border-[#273041] flex items-center gap-3">

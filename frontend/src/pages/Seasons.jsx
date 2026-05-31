@@ -52,11 +52,12 @@ export default function Seasons() {
                     key={season.season_key}
                     type="button"
                     onClick={() => setSelectedKey(season.season_key)}
-                    className={`w-full rounded-md border px-3 py-3 text-left transition-colors ${
+                    className={`w-full min-h-11 rounded-md border px-3 py-3 text-left transition-colors ${
                       selected?.season_key === season.season_key
                         ? "border-[#10B981]/40 bg-[#10B981]/10"
                         : "border-[#273041] bg-[#0B0E14] hover:border-[#10B981]/30"
                     }`}
+                    aria-pressed={selected?.season_key === season.season_key}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium text-[#F3F4F6]">{season.season}</span>
