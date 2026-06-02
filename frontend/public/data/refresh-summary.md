@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-06-01T22:21:52.218273+00:00`
+- Generated: `2026-06-02T21:34:20.924981+00:00`
 - Total JSON files: `2398`
-- Total JSON bytes: `34495796`
+- Total JSON bytes: `34496918`
 - cache.json bytes: `17220`
 
 ## Heaviest Stats Sections
@@ -42,33 +42,20 @@
 - `data/tournament-duration-groups.json`: `3678` bytes
 - `data/single-tournament-overperformers.json`: `3276` bytes
 - `data/data-size-report.json`: `2384` bytes
-- `data/refresh-change-report.json`: `331` bytes
+- `data/refresh-change-report.json`: `1453` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-05-30T10:15:08.802987+00:00`
-- JSON file delta: `+17`
-- Total JSON bytes delta: `+166510`
-- cache.json bytes delta: `+8`
+- Previous generated: `2026-06-01T22:21:52.218273+00:00`
+- JSON file delta: `+0`
+- Total JSON bytes delta: `+1122`
+- cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/players-index.json`: `+4126` bytes (`656971` -> `661097`)
-- `data/tournaments-index.json`: `+1134` bytes (`268108` -> `269242`)
-- `data/season-standings.json`: `+814` bytes (`176977` -> `177791`)
-- `data/players-search-index.json`: `+295` bytes (`38665` -> `38960`)
-- `data/tournaments-search-index.json`: `+102` bytes (`25996` -> `26098`)
-- `data/single-tournament-overperformers.json`: `-13` bytes (`3289` -> `3276`)
-- `data/refresh-change-report.json`: `+6` bytes (`325` -> `331`)
-- `data/tournament-duration-groups.json`: `-1` bytes (`3679` -> `3678`)
+- `data/refresh-change-report.json`: `+1122` bytes (`331` -> `1453`)
 
 ### Stats Section Deltas
 
-- `anniversary_matches`: `+9` bytes (`1931` -> `1940`)
-- `top_elo_players`: `-6` bytes (`659` -> `653`)
-- `season_standings`: `+3` bytes (`3613` -> `3616`)
-- `tournament_duration_trend`: `+1` bytes (`1223` -> `1224`)
-- `tournament_field_duration_trend`: `+1` bytes (`2822` -> `2823`)
-- `tournament_player_count_trend`: `+1` bytes (`935` -> `936`)
-- `upset_tracker`: `-1` bytes (`2734` -> `2733`)
+- No stats section size changes
