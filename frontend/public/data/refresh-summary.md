@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-06-09T22:17:42.316376+00:00`
+- Generated: `2026-06-14T22:17:33.970636+00:00`
 - Total JSON files: `2403`
-- Total JSON bytes: `34601376`
+- Total JSON bytes: `34636343`
 - cache.json bytes: `17185`
 
 ## Heaviest Stats Sections
@@ -18,7 +18,7 @@
 
 ## Largest Files
 
-- `data/players-index.json`: `662677` bytes
+- `data/players-index.json`: `664609` bytes
 - `data/players/a5ac7684edbf/matches.json`: `651954` bytes
 - `data/players/1a328327820c/matches.json`: `600172` bytes
 - `data/players/40a69d58d4f1/matches.json`: `475040` bytes
@@ -31,30 +31,33 @@
 
 ## Generated Analytics Files
 
-- `data/players-index.json`: `662677` bytes
+- `data/players-index.json`: `664609` bytes
 - `data/tournaments-index.json`: `270367` bytes
 - `data/season-standings.json`: `180500` bytes
-- `data/players-search-index.json`: `39028` bytes
+- `data/players-search-index.json`: `39021` bytes
 - `data/tournaments-search-index.json`: `26197` bytes
 - `data/h2h-heatmap.json`: `13850` bytes
 - `data/recent-matches.json`: `6918` bytes
 - `data/rivalry-index.json`: `4384` bytes
 - `data/tournament-duration-groups.json`: `3678` bytes
 - `data/single-tournament-overperformers.json`: `3272` bytes
-- `data/data-size-report.json`: `2384` bytes
-- `data/refresh-change-report.json`: `1367` bytes
+- `data/data-size-report.json`: `2385` bytes
+- `data/refresh-change-report.json`: `332` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-06-09T20:30:39.207454+00:00`
+- Previous generated: `2026-06-09T22:17:42.316376+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `+1029`
+- Total JSON bytes delta: `+34967`
 - cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/refresh-change-report.json`: `+1038` bytes (`329` -> `1367`)
+- `data/players-index.json`: `+1932` bytes (`662677` -> `664609`)
+- `data/refresh-change-report.json`: `-1035` bytes (`1367` -> `332`)
+- `data/players-search-index.json`: `-7` bytes (`39028` -> `39021`)
+- `data/data-size-report.json`: `+1` bytes (`2384` -> `2385`)
 
 ### Stats Section Deltas
 
