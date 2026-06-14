@@ -1,5 +1,12 @@
 # Agent Session Notes
 
+## 2026-06-14 - Added quick compare search to player profiles
+
+- Added an inline compare picker near the top of `frontend/src/pages/PlayerDetail.jsx` so a profile can search for another player and open the existing head-to-head comparison route.
+- Reused the leaderboard data already loaded for profile rank context, avoiding another lookup request and excluding the current player from suggestions.
+- Kept the picker mobile-first and accessible with a labeled search field, native suggestions, 44px controls, disabled-state validation, and route-change state reset.
+- Verified with the frontend production build and `git diff --check`; interactive browser verification was blocked by the in-app browser client with `ERR_BLOCKED_BY_CLIENT` for local URLs.
+
 ## 2026-05-27 - Expanded dashboard deep links and tournament archive entry points
 
 - Re-read `BACKLOG.md` and `docs/agents/session-notes.md`, then checked the live dashboard/archive code because the request was to improve navigation without inventing new backend scope.

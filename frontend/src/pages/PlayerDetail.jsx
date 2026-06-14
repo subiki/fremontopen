@@ -41,9 +41,11 @@ export default function PlayerDetail() {
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [history, setHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [compareName, setCompareName] = useState("");
 
   useEffect(() => {
     setFollowing(isFollowing(decoded));
+    setCompareName("");
     return onFollowingChange(() => setFollowing(isFollowing(decoded)));
   }, [decoded]);
 
@@ -156,6 +158,13 @@ export default function PlayerDetail() {
     [extras?.results, matches, canonicalName]
   );
   const rankSummary = useMemo(() => summarizePlayerRanks(leaderboard, canonicalName), [leaderboard, canonicalName]);
+  const compareTarget = useMemo(() => {
+    const needle = compareName.trim().toLocaleLowerCase();
+    if (!needle) return null;
+    return leaderboard.find(
+      (player) => player.name !== canonicalName && player.name.toLocaleLowerCase() === needle
+    ) || null;
+  }, [canonicalName, compareName, leaderboard]);
 
   useEffect(() => {
     if (p?.name && p.name !== decoded) {
@@ -185,6 +194,14 @@ export default function PlayerDetail() {
     } catch {
       window.prompt("Share link:", sharePath);
     }
+  };
+
+  const handleCompare = (event) => {
+    event.preventDefault();
+    if (!compareTarget) return;
+    navigate(
+      `/compare/${encodeURIComponent(canonicalName)}/${encodeURIComponent(compareTarget.name)}`
+    );
   };
 
   const navActions = (
@@ -244,6 +261,58 @@ export default function PlayerDetail() {
           <MissingPlayer name={decoded} />
         ) : (
           <>
+            <form
+              onSubmit={handleCompare}
+              className="mb-6 rounded-lg border border-[#273041] bg-[#141923] p-4 sm:p-5"
+              data-testid="player-compare-picker"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                <label className="min-w-0 flex-1">
+                  <span className="mb-2 flex items-center gap-2 text-sm font-medium text-[#F3F4F6]">
+                    <Scales size={18} className="text-[#10B981]" />
+                    Compare {canonicalName} with
+                  </span>
+                  <span className="relative block">
+                    <MagnifyingGlass
+                      size={16}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    />
+                    <input
+                      type="search"
+                      value={compareName}
+                      onChange={(event) => setCompareName(event.target.value)}
+                      list="player-profile-compare-options"
+                      placeholder="Search for another player"
+                      autoComplete="off"
+                      className="min-h-11 w-full rounded-md border border-[#273041] bg-[#0B0E14] py-2.5 pl-9 pr-3 text-sm text-[#F3F4F6] outline-none placeholder-[#6B7280] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]"
+                      data-testid="player-compare-search"
+                    />
+                  </span>
+                </label>
+                <datalist id="player-profile-compare-options">
+                  {leaderboard
+                    .filter((player) => player.name !== canonicalName)
+                    .map((player) => (
+                      <option key={player.name} value={player.name} />
+                    ))}
+                </datalist>
+                <button
+                  type="submit"
+                  disabled={!compareTarget}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#10B981] px-5 text-sm font-semibold text-[#0B0E14] transition-colors hover:bg-[#34D399] disabled:cursor-not-allowed disabled:bg-[#273041] disabled:text-[#6B7280]"
+                  data-testid="player-compare-submit"
+                >
+                  <Scales size={18} weight="duotone" />
+                  Compare
+                </button>
+              </div>
+              {compareName && !compareTarget ? (
+                <p className="mt-2 text-xs text-[#9CA3AF]" aria-live="polite">
+                  Select a player from the search suggestions to compare.
+                </p>
+              ) : null}
+            </form>
+
             {p.nickname ? (
               <div className="mb-5 inline-flex rounded-md border border-[#273041] bg-[#141923] px-4 py-2 text-sm text-[#F59E0B]">
                 {p.nickname}
