@@ -402,12 +402,12 @@
     },
     "Arthur Gleason": {
       "fargo": 400,
-      "fargo_confidence": "0.98",
+      "fargo_confidence": "0.99",
       "fargo_id": "B3C30B23-1483-424E-9735-B0E000F5D283",
       "fargo_robustness": "31",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-05-27T05:00:59.463240+00:00",
+      "fargo_updated_at": "2026-06-16T22:17:31.086673+00:00",
       "name": "Arthur Gleason"
     },
     "Aubrey Durand": {
@@ -921,13 +921,13 @@
       "name": "Daniel Doctor"
     },
     "Daniel Gutierrez": {
-      "fargo": 290,
-      "fargo_confidence": "0.96",
+      "fargo": 291,
+      "fargo_confidence": "0.99",
       "fargo_id": "FC126A9B-AACF-46A0-A3D1-B03E00F8FC24",
       "fargo_robustness": "11",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-05-27T05:01:21.851627+00:00",
+      "fargo_updated_at": "2026-06-16T22:17:34.458079+00:00",
       "name": "Daniel Gutierrez"
     },
     "Daniel Maldonado": {
@@ -3891,13 +3891,13 @@
       "name": "Wayne Fong"
     },
     "Wesley Van Vleck": {
-      "fargo": 196,
-      "fargo_confidence": "0.98",
+      "fargo": 197,
+      "fargo_confidence": "0.99",
       "fargo_id": "8C328A35-7B5F-41B4-A494-AFC100142FAA",
       "fargo_robustness": "6",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-05-27T05:00:55.635972+00:00",
+      "fargo_updated_at": "2026-06-16T22:17:28.351481+00:00",
       "name": "Wesley Van Vleck"
     },
     "Wil Fredo": {
