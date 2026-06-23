@@ -372,12 +372,12 @@
     },
     "Archit Manek": {
       "fargo": 442,
-      "fargo_confidence": "0.90",
+      "fargo_confidence": "0.99",
       "fargo_id": "4B8073A6-5E42-4303-A99B-4B38E36547B4",
       "fargo_robustness": "62",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:17:23.212881+00:00",
+      "fargo_updated_at": "2026-06-23T10:16:21.168646+00:00",
       "name": "Archit Manek"
     },
     "Arnie Yuan": {
@@ -942,12 +942,12 @@
     },
     "Daniel Watson": {
       "fargo": 292,
-      "fargo_confidence": "0.96",
+      "fargo_confidence": "0.99",
       "fargo_id": "E52FBFE6-7451-436E-9E42-ADF8017F5CA3",
       "fargo_robustness": "24",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:54.544886+00:00",
+      "fargo_updated_at": "2026-06-23T10:16:05.670133+00:00",
       "name": "Daniel Watson"
     },
     "Danielle Sampson": {
@@ -1001,13 +1001,13 @@
       "name": "Dave Koch"
     },
     "David Freeman": {
-      "fargo": 368,
-      "fargo_confidence": "0.96",
+      "fargo": 366,
+      "fargo_confidence": "0.99",
       "fargo_id": "E9A26CF0-3061-4A1D-800F-B133012519D4",
       "fargo_robustness": "76",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:05.613782+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:28.890935+00:00",
       "name": "David Freeman"
     },
     "David Hake": {
@@ -1022,12 +1022,12 @@
     },
     "David Miles": {
       "fargo": 313,
-      "fargo_confidence": "0.96",
+      "fargo_confidence": "0.99",
       "fargo_id": "6BC8DC59-A3CB-4489-9F22-B01B00F6BB20",
       "fargo_robustness": "73",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:09.950872+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:49.617648+00:00",
       "name": "David Miles"
     },
     "David Saltzman": {
@@ -1331,13 +1331,13 @@
       "name": "Gary Moore"
     },
     "Gary Peterson": {
-      "fargo": 334,
-      "fargo_confidence": "0.96",
+      "fargo": 335,
+      "fargo_confidence": "0.99",
       "fargo_id": "2BB5987F-874A-4E76-A29A-B0300108AD7A",
       "fargo_robustness": "40",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:22.606384+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:56.811113+00:00",
       "name": "Gary Peterson"
     },
     "Gary Uhl": {
@@ -1981,13 +1981,13 @@
       "name": "Jose Ramirez"
     },
     "Joseph LePeu": {
-      "fargo": 450,
+      "fargo": 449,
       "fargo_confidence": "0.99",
       "fargo_id": "DFC745BE-AB0C-42D7-BA7B-B38001377B0D",
       "fargo_robustness": "6",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-09T22:17:36.153033+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:11.089940+00:00",
       "name": "Joseph LePeu"
     },
     "Joseph Tracy": {
@@ -2642,12 +2642,12 @@
     },
     "Mike Campbell": {
       "fargo": 446,
-      "fargo_confidence": "0.96",
+      "fargo_confidence": "0.99",
       "fargo_id": "D57BE9B9-7449-472C-9446-B2BC013666D5",
       "fargo_robustness": "47",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:42.792955+00:00",
+      "fargo_updated_at": "2026-06-23T10:16:00.630470+00:00",
       "name": "Mike Campbell"
     },
     "Mike Irwin": {
@@ -3037,17 +3037,17 @@
       "fargo_robustness": "6",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-09T22:17:39.733112+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:14.464604+00:00",
       "name": "Ralph Harris"
     },
     "Randy Pettigrew": {
       "fargo": 446,
-      "fargo_confidence": "0.96",
+      "fargo_confidence": "0.99",
       "fargo_id": "894BFCB9-52C9-48B3-9940-AFE301359452",
       "fargo_robustness": "41",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-14T22:15:19.799598+00:00",
+      "fargo_updated_at": "2026-06-23T10:15:53.994255+00:00",
       "name": "Randy Pettigrew"
     },
     "Ray Erickson": {
