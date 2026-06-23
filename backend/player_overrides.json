@@ -1070,6 +1070,16 @@
       "fargo_updated_at": "2026-06-17T22:16:51.127031+00:00",
       "name": "Devin Waldrop"
     },
+    "Devon Ray": {
+      "fargo": 523,
+      "fargo_confidence": "0.98",
+      "fargo_id": "A76C936C-B158-476B-97EF-B46D01177A49",
+      "fargo_robustness": "24",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-06-23T22:15:20.638039+00:00",
+      "name": "Devon Ray"
+    },
     "Dickson Jinuna": {
       "fargo": 601,
       "fargo_confidence": "0.98",
