@@ -187,7 +187,7 @@
       "fargo_robustness": "110",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:18.265188+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:58.989131+00:00",
       "name": "Alex Singleterry"
     },
     "Alex Zapata": {
@@ -197,7 +197,7 @@
       "fargo_robustness": "85",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-18T10:15:08.204210+00:00",
+      "fargo_updated_at": "2026-06-25T10:17:35.532138+00:00",
       "name": "Alex Zapata"
     },
     "Alex Zuyok": {
@@ -367,7 +367,7 @@
       "fargo_robustness": "165",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:18.640716+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:14.024868+00:00",
       "name": "Aquaman Lai"
     },
     "Archit Manek": {
@@ -411,13 +411,13 @@
       "name": "Arthur Gleason"
     },
     "Aubrey Durand": {
-      "fargo": 456,
+      "fargo": 465,
       "fargo_confidence": "0.99",
       "fargo_id": "538F812D-2102-4D02-9DBB-ADEC017ED2BD",
-      "fargo_robustness": "166",
+      "fargo_robustness": "194",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:46.283748+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:22.997014+00:00",
       "name": "Aubrey Durand"
     },
     "Azor Cole": {
@@ -951,13 +951,13 @@
       "name": "Daniel Watson"
     },
     "Danielle Sampson": {
-      "fargo": 359,
+      "fargo": 360,
       "fargo_confidence": "0.99",
       "fargo_id": "D75ED101-68D5-460C-96A3-B339010E96AF",
       "fargo_robustness": "111",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:17:18.852992+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:59.358187+00:00",
       "name": "Danielle Sampson"
     },
     "Darrell Karpinski": {
@@ -1067,7 +1067,7 @@
       "fargo_robustness": "164",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:51.127031+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:36.275858+00:00",
       "name": "Devin Waldrop"
     },
     "Devon Ray": {
@@ -1241,13 +1241,13 @@
       "name": "Eric Townsend"
     },
     "Evan Bucy": {
-      "fargo": 342,
+      "fargo": 347,
       "fargo_confidence": "0.99",
       "fargo_id": "BAF5BBFD-9D36-4EF8-B5F5-AE6F016B06AC",
       "fargo_robustness": "76",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:17:25.788870+00:00",
+      "fargo_updated_at": "2026-06-25T10:17:07.365948+00:00",
       "name": "Evan Bucy"
     },
     "Everette Cummings": {
@@ -1817,7 +1817,7 @@
       "fargo_robustness": "181",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:22.127450+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:20.475920+00:00",
       "name": "Jesse Law"
     },
     "Jesse Ou": {
@@ -2021,13 +2021,13 @@
       "name": "Josh Biberstein"
     },
     "Josiah Hopkins": {
-      "fargo": 446,
+      "fargo": 447,
       "fargo_confidence": "0.99",
       "fargo_id": "D3DCF1AC-6072-40FB-869F-ADEA0146E6D3",
       "fargo_robustness": "120",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:56.906062+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:56.786811+00:00",
       "name": "Josiah Hopkins"
     },
     "Josue Lopez": {
@@ -2067,7 +2067,7 @@
       "fargo_robustness": "158",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:25.742491+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:24.632102+00:00",
       "name": "Kadir Gokcu"
     },
     "Kamal Sud": {
@@ -2201,13 +2201,13 @@
       "name": "Kurt Hinz"
     },
     "Kyle Griffith": {
-      "fargo": 336,
+      "fargo": 321,
       "fargo_confidence": "0.99",
       "fargo_id": "5C7054A4-359D-438F-8983-B1180145EEE6",
-      "fargo_robustness": "140",
+      "fargo_robustness": "156",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:14.158267+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:55.948982+00:00",
       "name": "Kyle Griffith"
     },
     "Kyle Petersson": {
@@ -2667,7 +2667,7 @@
       "fargo_robustness": "0",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:38.872913+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:20.709747+00:00",
       "name": "Mike Irwin"
     },
     "Mike Santos": {
@@ -2687,7 +2687,7 @@
       "fargo_robustness": "155",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:11.345803+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:53.465493+00:00",
       "name": "Mike Selby"
     },
     "Mikkel Nielsen": {
@@ -2917,17 +2917,17 @@
       "fargo_robustness": "86",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-18T10:15:05.627019+00:00",
+      "fargo_updated_at": "2026-06-25T10:17:30.988888+00:00",
       "name": "Parker Harris"
     },
     "Patrick Snedden": {
-      "fargo": 379,
+      "fargo": 380,
       "fargo_confidence": "0.99",
       "fargo_id": "14FA7BDF-207E-488D-866B-B1B101039F3A",
       "fargo_robustness": "36",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:22.455863+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:16.827357+00:00",
       "name": "Patrick Snedden"
     },
     "Patrick Wheeler": {
@@ -3027,7 +3027,7 @@
       "fargo_robustness": "70",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:54.411783+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:54.321435+00:00",
       "name": "RJ Bennett"
     },
     "Rad Carney": {
@@ -3091,13 +3091,13 @@
       "name": "Rich Zegil"
     },
     "Richard Carter": {
-      "fargo": 414,
+      "fargo": 415,
       "fargo_confidence": "0.99",
       "fargo_id": "705CC468-2E67-462D-8FF7-ADF8017F5CA3",
       "fargo_robustness": "160",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:45.798189+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:29.290838+00:00",
       "name": "Richard Carter"
     },
     "Richard Smith": {
@@ -3491,13 +3491,13 @@
       "name": "Sourabh Garg"
     },
     "Spen Lindsey": {
-      "fargo": 257,
+      "fargo": 263,
       "fargo_confidence": "0.99",
       "fargo_id": "69E5F672-6C5D-47E0-A7F1-B339010E96AF",
-      "fargo_robustness": "116",
+      "fargo_robustness": "124",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:54.461865+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:51.116430+00:00",
       "name": "Spen Lindsey"
     },
     "Spencer Herrera": {
@@ -3531,13 +3531,13 @@
       "name": "Steve Fosdal"
     },
     "Steve Harmeyer": {
-      "fargo": 420,
+      "fargo": 419,
       "fargo_confidence": "0.99",
       "fargo_id": "6A3B610E-45D0-4C12-9395-AE230173CE3D",
       "fargo_robustness": "99",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:17:29.719829+00:00",
+      "fargo_updated_at": "2026-06-25T10:17:27.627196+00:00",
       "name": "Steve Harmeyer"
     },
     "Steven Ackley": {
@@ -3757,7 +3757,7 @@
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:14.461267+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:09.122982+00:00",
       "name": "Tom Manning"
     },
     "Travis Brown": {
@@ -3821,13 +3821,13 @@
       "name": "Tyler Kelley"
     },
     "Tyrell James": {
-      "fargo": 287,
+      "fargo": 285,
       "fargo_confidence": "0.99",
       "fargo_id": "2169AD48-AE93-47AD-8013-B39B016905E1",
-      "fargo_robustness": "164",
+      "fargo_robustness": "173",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:15:51.600726+00:00",
+      "fargo_updated_at": "2026-06-25T10:15:47.271155+00:00",
       "name": "Tyrell James"
     },
     "Vijay Roy": {
@@ -3847,7 +3847,7 @@
       "fargo_robustness": "71",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:16:48.405273+00:00",
+      "fargo_updated_at": "2026-06-25T10:16:32.205945+00:00",
       "name": "Vince Frayne"
     },
     "Vlad Berka": {
@@ -4007,7 +4007,7 @@
       "fargo_robustness": "71",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-17T22:17:23.039438+00:00",
+      "fargo_updated_at": "2026-06-25T10:17:02.920692+00:00",
       "name": "Zolton Martinez"
     },
     "jared redfern": {
