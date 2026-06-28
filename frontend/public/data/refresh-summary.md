@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-06-27T22:17:48.978480+00:00`
+- Generated: `2026-06-28T10:17:56.486678+00:00`
 - Total JSON files: `2417`
-- Total JSON bytes: `34836429`
+- Total JSON bytes: `34836430`
 - cache.json bytes: `17199`
 
 ## Heaviest Stats Sections
@@ -47,14 +47,14 @@
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-06-27T10:17:39.677729+00:00`
+- Previous generated: `2026-06-27T22:17:48.978480+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `+33`
+- Total JSON bytes delta: `+1`
 - cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/refresh-change-report.json`: `-1` bytes (`328` -> `327`)
+- No top-level file size changes
 
 ### Stats Section Deltas
 
