@@ -37,7 +37,7 @@
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:12.030834+00:00",
+      "fargo_updated_at": "2026-06-29T10:17:19.845461+00:00",
       "name": "Aaron Kravetz"
     },
     "Aaron Sellman": {
@@ -1097,7 +1097,7 @@
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:14.816713+00:00",
+      "fargo_updated_at": "2026-06-29T10:17:37.623174+00:00",
       "name": "Dominic Espinoza"
     },
     "Dominic Harkness": {
@@ -1857,7 +1857,7 @@
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:18.959277+00:00",
+      "fargo_updated_at": "2026-06-29T10:17:42.826075+00:00",
       "name": "Joel Beeker"
     },
     "John Kim": {
@@ -2187,17 +2187,17 @@
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:22.686494+00:00",
+      "fargo_updated_at": "2026-06-29T10:17:47.179747+00:00",
       "name": "Kunal Sharma"
     },
     "Kurt Hinz": {
-      "fargo": 483,
+      "fargo": 484,
       "fargo_confidence": "0.99",
       "fargo_id": "9DB4BB95-1FCA-4C14-8923-B1180145EEE6",
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:42.963376+00:00",
+      "fargo_updated_at": "2026-06-29T10:17:50.509030+00:00",
       "name": "Kurt Hinz"
     },
     "Kyle Griffith": {
