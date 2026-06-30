@@ -2311,13 +2311,13 @@
       "name": "Lu Peng"
     },
     "Lucky Belonia": {
-      "fargo": 438,
+      "fargo": 437,
       "fargo_confidence": "0.99",
       "fargo_id": "E99EF235-434B-4F5C-96FE-B0CA00E8AB78",
       "fargo_robustness": "14",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:45.812876+00:00",
+      "fargo_updated_at": "2026-06-30T10:17:41.904907+00:00",
       "name": "Lucky Belonia"
     },
     "Lucky Pelonia": {
