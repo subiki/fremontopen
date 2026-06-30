@@ -560,6 +560,16 @@
       "fargo_updated_at": "2026-05-27T04:57:45.983167+00:00",
       "name": "Brandi Berg"
     },
+    "Brandon Smith": {
+      "fargo": 360,
+      "fargo_confidence": "0.96",
+      "fargo_id": "F3AC723A-4CB0-49DB-8A79-80636620F137",
+      "fargo_robustness": "158",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-06-30T22:15:12.238556+00:00",
+      "name": "Brandon Smith"
+    },
     "Brendan John": {
       "fargo": 281,
       "fargo_confidence": "0.99",
