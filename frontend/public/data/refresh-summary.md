@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-06-30T22:18:04.820979+00:00`
+- Generated: `2026-07-01T10:17:45.702659+00:00`
 - Total JSON files: `2430`
-- Total JSON bytes: `34990653`
+- Total JSON bytes: `34991511`
 - cache.json bytes: `17194`
 
 ## Heaviest Stats Sections
@@ -18,7 +18,7 @@
 
 ## Largest Files
 
-- `data/players-index.json`: `671350` bytes
+- `data/players-index.json`: `671900` bytes
 - `data/players/a5ac7684edbf/matches.json`: `660984` bytes
 - `data/players/1a328327820c/matches.json`: `600195` bytes
 - `data/players/a5ac7684edbf/history.json`: `476456` bytes
@@ -31,32 +31,33 @@
 
 ## Generated Analytics Files
 
-- `data/players-index.json`: `671350` bytes
+- `data/players-index.json`: `671900` bytes
 - `data/tournaments-index.json`: `273261` bytes
 - `data/season-standings.json`: `183055` bytes
-- `data/players-search-index.json`: `39459` bytes
+- `data/players-search-index.json`: `39457` bytes
 - `data/tournaments-search-index.json`: `26505` bytes
 - `data/h2h-heatmap.json`: `13850` bytes
 - `data/recent-matches.json`: `6913` bytes
 - `data/rivalry-index.json`: `4386` bytes
 - `data/tournament-duration-groups.json`: `3672` bytes
 - `data/single-tournament-overperformers.json`: `3276` bytes
-- `data/data-size-report.json`: `2384` bytes
-- `data/refresh-change-report.json`: `1387` bytes
+- `data/data-size-report.json`: `2385` bytes
+- `data/refresh-change-report.json`: `498` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-06-30T20:30:55.772814+00:00`
+- Previous generated: `2026-06-30T22:18:04.820979+00:00`
 - JSON file delta: `+0`
-- Total JSON bytes delta: `+2780`
+- Total JSON bytes delta: `+858`
 - cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/refresh-change-report.json`: `+1142` bytes (`245` -> `1387`)
-- `data/players-index.json`: `+277` bytes (`671073` -> `671350`)
-- `data/players-search-index.json`: `-1` bytes (`39460` -> `39459`)
+- `data/refresh-change-report.json`: `-889` bytes (`1387` -> `498`)
+- `data/players-index.json`: `+550` bytes (`671350` -> `671900`)
+- `data/players-search-index.json`: `-2` bytes (`39459` -> `39457`)
+- `data/data-size-report.json`: `+1` bytes (`2384` -> `2385`)
 
 ### Stats Section Deltas
 

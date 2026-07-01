@@ -1200,6 +1200,16 @@
       "fargo_updated_at": "2026-05-27T05:16:45.352253+00:00",
       "name": "Eric Amrine"
     },
+    "Eric Freda": {
+      "fargo": 125,
+      "fargo_confidence": "0.98",
+      "fargo_id": "17BB13ED-9F00-4806-99F6-B46D01177A49",
+      "fargo_robustness": "6",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-01T10:15:21.309040+00:00",
+      "name": "Eric Freda"
+    },
     "Eric Holm": {
       "fargo": 494,
       "fargo_confidence": "0.99",
@@ -1377,7 +1387,7 @@
       "fargo_robustness": "13",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-21T22:15:50.472503+00:00",
+      "fargo_updated_at": "2026-07-01T10:17:43.877887+00:00",
       "name": "Gavin Killick"
     },
     "Gavin Liu": {
@@ -3309,6 +3319,16 @@
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
       "fargo_updated_at": "2026-06-24T22:15:58.689185+00:00",
       "name": "Ryan Williams"
+    },
+    "Ryleigh Hartung": {
+      "fargo": 329,
+      "fargo_confidence": "0.98",
+      "fargo_id": "D086912E-8D80-4591-80B4-B46D01177A49",
+      "fargo_robustness": "8",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-01T10:15:16.551711+00:00",
+      "name": "Ryleigh Hartung"
     },
     "Sahil Naikwadi": {
       "fargo": 246,
