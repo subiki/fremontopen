@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-07-07T20:26:57.283127+00:00`
+- Generated: `2026-07-07T22:17:42.889562+00:00`
 - Total JSON files: `2443`
-- Total JSON bytes: `35134859`
+- Total JSON bytes: `35135822`
 - cache.json bytes: `17221`
 
 ## Heaviest Stats Sections
@@ -42,31 +42,20 @@
 - `data/tournament-duration-groups.json`: `3672` bytes
 - `data/single-tournament-overperformers.json`: `3277` bytes
 - `data/data-size-report.json`: `2384` bytes
-- `data/refresh-change-report.json`: `327` bytes
+- `data/refresh-change-report.json`: `1292` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-07-07T19:09:15.171186+00:00`
-- JSON file delta: `+13`
-- Total JSON bytes delta: `+143577`
-- cache.json bytes delta: `+27`
+- Previous generated: `2026-07-07T20:26:57.283127+00:00`
+- JSON file delta: `+0`
+- Total JSON bytes delta: `+963`
+- cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/players-index.json`: `+3104` bytes (`671900` -> `675004`)
-- `data/tournaments-index.json`: `+1142` bytes (`273261` -> `274403`)
-- `data/season-standings.json`: `+817` bytes (`183055` -> `183872`)
-- `data/players-search-index.json`: `+221` bytes (`39457` -> `39678`)
-- `data/tournaments-search-index.json`: `+106` bytes (`26505` -> `26611`)
-- `data/h2h-heatmap.json`: `+94` bytes (`13850` -> `13944`)
-- `data/recent-matches.json`: `+75` bytes (`6913` -> `6988`)
-- `data/single-tournament-overperformers.json`: `+1` bytes (`3276` -> `3277`)
+- `data/refresh-change-report.json`: `+965` bytes (`327` -> `1292`)
 
 ### Stats Section Deltas
 
-- `tournament_field_duration_trend`: `+11` bytes (`2837` -> `2848`)
-- `season_standings`: `+9` bytes (`3589` -> `3598`)
-- `upset_tracker`: `+9` bytes (`2731` -> `2740`)
-- `anniversary_matches`: `-1` bytes (`1920` -> `1919`)
-- `tournament_duration_trend`: `-1` bytes (`1230` -> `1229`)
+- No stats section size changes
