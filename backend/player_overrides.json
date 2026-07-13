@@ -157,7 +157,7 @@
       "fargo_robustness": "21",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-27T22:17:36.186033+00:00",
+      "fargo_updated_at": "2026-07-13T22:17:40.118785+00:00",
       "name": "Alex Jury"
     },
     "Alex Paredes": {
@@ -357,7 +357,7 @@
       "fargo_robustness": "55",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-27T22:17:05.573802+00:00",
+      "fargo_updated_at": "2026-07-13T22:17:29.032529+00:00",
       "name": "Aqeel Hussain"
     },
     "Aquaman Lai": {
@@ -777,7 +777,7 @@
       "fargo_robustness": "22",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-27T22:17:08.799707+00:00",
+      "fargo_updated_at": "2026-07-13T22:17:33.887541+00:00",
       "name": "Chris Lasswell"
     },
     "Chris McGuffey": {
@@ -1021,13 +1021,13 @@
       "name": "David Freeman"
     },
     "David Hake": {
-      "fargo": 377,
+      "fargo": 378,
       "fargo_confidence": "0.99",
       "fargo_id": "0A57B3AD-0162-4A5E-948F-B1F0011E29C6",
       "fargo_robustness": "27",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-27T22:17:12.052845+00:00",
+      "fargo_updated_at": "2026-07-13T22:17:36.775328+00:00",
       "name": "David Hake"
     },
     "David Miles": {
@@ -2351,13 +2351,13 @@
       "name": "Lucky Pelonia"
     },
     "Luis Arrieta": {
-      "fargo": 425,
+      "fargo": 424,
       "fargo_confidence": "0.99",
       "fargo_id": "7A8FFB55-B5AC-4371-9BD0-B31D01510FC0",
       "fargo_robustness": "31",
       "fargo_source": "fairmatch-indexsearch-local",
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
-      "fargo_updated_at": "2026-06-27T22:17:01.157934+00:00",
+      "fargo_updated_at": "2026-07-13T22:17:10.733253+00:00",
       "name": "Luis Arrieta"
     },
     "Luis Chavez": {
