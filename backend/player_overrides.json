@@ -220,6 +220,16 @@
       "fargo_updated_at": "2026-05-27T04:50:29.083339+00:00",
       "name": "Alexis Aguirre"
     },
+    "Alvaro Marin": {
+      "fargo": 561,
+      "fargo_confidence": "0.90",
+      "fargo_id": "A34DCE2B-29EA-48D4-B4F8-EB7B0A83D756",
+      "fargo_robustness": "1600",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-14T22:15:25.878863+00:00",
+      "name": "Alvaro Marin"
+    },
     "Aman Sunar": {
       "fargo": 628,
       "fargo_confidence": "0.98",
@@ -1669,6 +1679,16 @@
       "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
       "fargo_updated_at": "2026-07-07T22:17:00.955993+00:00",
       "name": "James Ross"
+    },
+    "Jamie Guerrero": {
+      "fargo": 336,
+      "fargo_confidence": "0.96",
+      "fargo_id": "6983A562-C22B-42FC-9747-B29A001CE476",
+      "fargo_robustness": "14",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-14T22:15:32.762198+00:00",
+      "name": "Jamie Guerrero"
     },
     "Janson Cons": {
       "fargo": 339,
