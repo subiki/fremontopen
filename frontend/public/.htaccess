@@ -1,6 +1,11 @@
 Options -MultiViews
 RewriteEngine On
 RewriteBase /
+<IfModule mod_headers.c>
+  <If "%{REQUEST_URI} =~ m#^/onda/?#">
+    Header set X-Robots-Tag "noindex, nofollow, noarchive"
+  </If>
+</IfModule>
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]

@@ -1,8 +1,28 @@
+import { useEffect } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 
 const FORM_URL = "https://forms.gle/tbyQyPmQgVE5y9Vr5";
 
 export default function Onda() {
+  useEffect(() => {
+    const previousTitle = document.title;
+    const robotsMeta = document.querySelector('meta[name="robots"]') || document.createElement("meta");
+    const previousRobots = robotsMeta.getAttribute("content");
+    robotsMeta.setAttribute("name", "robots");
+    robotsMeta.setAttribute("content", "noindex,nofollow,noarchive");
+    document.head.appendChild(robotsMeta);
+    document.title = "Onda";
+
+    return () => {
+      document.title = previousTitle;
+      if (previousRobots) {
+        robotsMeta.setAttribute("content", previousRobots);
+      } else {
+        robotsMeta.remove();
+      }
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#F7F8FA] px-5 py-10 text-[#111827]" data-testid="onda-page">
       <section className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-xl flex-col justify-center">
