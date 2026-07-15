@@ -16,6 +16,7 @@ const Compare = lazy(() => import("./pages/Compare"));
 const Seasons = lazy(() => import("./pages/Seasons"));
 const StatRankings = lazy(() => import("./pages/StatRankings"));
 const Info = lazy(() => import("./pages/Info"));
+const Onda = lazy(() => import("./pages/Onda"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
       <BrowserRouter>
         <KeyboardShortcuts />
         <Routes>
+          <Route path="/onda" element={<Onda />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tournaments" element={<Tournaments />} />

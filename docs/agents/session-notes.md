@@ -1,5 +1,11 @@
 # Agent Session Notes
 
+## 2026-07-15 - Added unlisted Onda form page
+
+- Added `frontend/src/pages/Onda.jsx` as a standalone unlisted page at `/onda`, outside the normal Fremont Open sidebar/topbar layout.
+- Linked the page to `https://forms.gle/tbyQyPmQgVE5y9Vr5` with `noopener noreferrer` and a mobile-friendly full-width button.
+- Verified the frontend production build succeeds before deployment.
+
 ## 2026-06-14 - Added quick compare search to player profiles
 
 - Added an inline compare picker near the top of `frontend/src/pages/PlayerDetail.jsx` so a profile can search for another player and open the existing head-to-head comparison route.
