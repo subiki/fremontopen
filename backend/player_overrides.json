@@ -880,6 +880,16 @@
       "fargo_updated_at": "2026-07-06T22:15:23.359272+00:00",
       "name": "Colin Rogers"
     },
+    "Craig Crandall": {
+      "fargo": 226,
+      "fargo_confidence": "0.98",
+      "fargo_id": "D0F7F958-A9D9-4B70-8A48-B47B011B2E50",
+      "fargo_robustness": "4",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-15T16:37:55.791755+00:00",
+      "name": "Craig Crandall"
+    },
     "Craig South": {
       "fargo": 251,
       "fargo_confidence": "0.99",
