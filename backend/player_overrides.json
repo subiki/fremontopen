@@ -3810,6 +3810,16 @@
       "fargo_updated_at": "2026-05-27T04:44:08.574555+00:00",
       "name": "Todd Bodenhamer"
     },
+    "Todd McAndrews": {
+      "fargo": 311,
+      "fargo_confidence": "0.98",
+      "fargo_id": "4122814A-FD6F-40E8-91B5-B12D0011F3BC",
+      "fargo_robustness": "11",
+      "fargo_source": "fairmatch-indexsearch-local",
+      "fargo_source_url": "https://dashboard.fargorate.com/api/indexsearch?q=<name>",
+      "fargo_updated_at": "2026-07-15T22:15:12.335496+00:00",
+      "name": "Todd McAndrews"
+    },
     "Tom Manning": {
       "fargo": 308,
       "fargo_confidence": "0.99",
