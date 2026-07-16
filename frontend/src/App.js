@@ -35,6 +35,7 @@ function App() {
         <KeyboardShortcuts />
         <Routes>
           <Route path="/onda" element={<Onda />} />
+          <Route path="/jfl" element={<Onda />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tournaments" element={<Tournaments />} />

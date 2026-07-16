@@ -2,8 +2,8 @@ Options -MultiViews
 RewriteEngine On
 RewriteBase /
 <IfModule mod_headers.c>
-  SetEnvIf Request_URI "^/onda(/|$)" noindex_onda
-  Header set X-Robots-Tag "noindex, nofollow, noarchive" env=noindex_onda
+  SetEnvIf Request_URI "^/(onda|jfl)(/|$)" noindex_unlisted_trip
+  Header set X-Robots-Tag "noindex, nofollow, noarchive" env=noindex_unlisted_trip
 </IfModule>
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

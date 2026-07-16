@@ -11,6 +11,7 @@
 - Shifted `/onda` copy toward a more personal JFL invite centered on experiencing Costa Rica with good people.
 - Rebalanced `/onda` copy to clarify the trip is open-ended: people can join group plans or do their own thing, while JFL negotiates hostel pricing and helps with coordination/options.
 - Added the Pura Vida at Onda Trip Guide GPT link and swapped the hero to the Cabo Star photo optimized as a webp asset.
+- Added `/jfl` as a second unlisted URL for the same trip page while keeping `/onda` live.
 
 ## 2026-06-14 - Added quick compare search to player profiles
 

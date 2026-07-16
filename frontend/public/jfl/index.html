@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <title>Onda Costa Rica Invite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f7f0e4;
+        --paper-bright: #fff9ec;
+        --ink: #1b312b;
+        --body: #445c54;
+        --muted: #6f6659;
+        --line: #dfd0b8;
+        --rust: #9a4d2c;
+        --sun: #f0b16d;
+        --green: #0f6f52;
+        --green-dark: #0a5e45;
+        --deep: #173a33;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--paper);
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      main {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .hero {
+        position: relative;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.6;
+        background-image: linear-gradient(120deg, rgba(141, 82, 47, 0.08) 0 1px, transparent 1px 100%);
+        background-size: 44px 44px;
+      }
+
+      .hero-inner {
+        position: relative;
+        display: grid;
+        max-width: 88rem;
+        gap: 2rem;
+        margin: 0 auto;
+        padding: 1.75rem 1.25rem 3.5rem;
+      }
+
+      .hero-copy {
+        max-width: 42rem;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--rust);
+        font-size: 0.875rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        color: var(--ink);
+        font-family: "Outfit", system-ui, sans-serif;
+      }
+
+      h1 {
+        margin-top: 1.5rem;
+        font-size: 2.5rem;
+        font-weight: 600;
+        line-height: 1.12;
+      }
+
+      h2 {
+        margin-top: 1rem;
+        font-size: 2.25rem;
+        font-weight: 600;
+        line-height: 1.15;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .lede {
+        margin-top: 1.75rem;
+      }
+
+      .lede p,
+      .intro-copy p,
+      .qa p,
+      .status-copy p,
+      .final p {
+        color: var(--body);
+        font-size: 1.125rem;
+        line-height: 1.75;
+      }
+
+      .lede p + p,
+      .intro-copy p + p {
+        margin-top: 1.25rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 2rem;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 3.5rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.375rem;
+        background: var(--green);
+        box-shadow: 0 18px 42px rgba(15, 111, 82, 0.22);
+        color: #ffffff;
+        padding: 1rem 1.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.18s ease;
+      }
+
+      .button.secondary {
+        border: 1px solid #b99977;
+        background: var(--paper-bright);
+        box-shadow: none;
+        color: var(--ink);
+      }
+
+      .button:hover {
+        background: var(--green-dark);
+      }
+
+      .button.secondary:hover {
+        background: #f1e4cf;
+      }
+
+      .button:focus {
+        outline: 2px solid var(--green);
+        outline-offset: 4px;
+      }
+
+      .form-note {
+        max-width: 24rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+        line-height: 1.55;
+      }
+
+      .hero-photo {
+        position: relative;
+        min-height: 25rem;
+        overflow: hidden;
+        border-radius: 0.375rem;
+        background: var(--deep);
+        box-shadow: 0 28px 80px rgba(54, 44, 32, 0.22);
+      }
+
+      .hero-photo img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 52% 42%;
+      }
+
+      .hero-photo figcaption {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(23, 58, 51, 0.88);
+        color: #f8f0df;
+        padding: 1rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.55;
+        backdrop-filter: blur(8px);
+      }
+
+      .trip-basics {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background: var(--paper-bright);
+      }
+
+      .trip-basics-inner {
+        display: grid;
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 1rem 1.25rem;
+      }
+
+      .trip-basics article {
+        padding: 1rem 0;
+      }
+
+      .trip-basics strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--rust);
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .trip-basics p {
+        color: #2c413a;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .split {
+        display: grid;
+        max-width: 72rem;
+        gap: 2.5rem;
+        margin: 0 auto;
+        padding: 4rem 1.25rem;
+      }
+
+      .open-days {
+        background: var(--deep);
+        color: #fff7e8;
+      }
+
+      .open-days h2,
+      .open-days h3 {
+        color: #fff7e8;
+      }
+
+      .open-days .eyebrow {
+        color: var(--sun);
+      }
+
+      .open-days ul {
+        display: grid;
+        gap: 1.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .open-days li {
+        display: grid;
+        grid-template-columns: 2rem 1fr;
+        gap: 1rem;
+        color: #f4e5cc;
+        font-size: 1.125rem;
+        line-height: 1.75;
+      }
+
+      .open-days li::before {
+        content: "";
+        width: 2rem;
+        height: 1px;
+        margin-top: 0.95rem;
+        background: var(--sun);
+      }
+
+      .qa-wrap {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 4rem 1.25rem;
+      }
+
+      .guide {
+        background: var(--deep);
+        color: #fff7e8;
+      }
+
+      .guide-inner {
+        display: grid;
+        max-width: 72rem;
+        gap: 2rem;
+        margin: 0 auto;
+        padding: 4rem 1.25rem;
+      }
+
+      .guide h2 {
+        color: #fff7e8;
+      }
+
+      .guide .eyebrow {
+        color: var(--sun);
+      }
+
+      .guide p {
+        max-width: 48rem;
+        margin-top: 1.25rem;
+        color: #f4e5cc;
+        font-size: 1.125rem;
+        line-height: 1.75;
+      }
+
+      .guide .button {
+        align-self: start;
+        background: var(--sun);
+        box-shadow: none;
+        color: var(--deep);
+      }
+
+      .guide .button:hover {
+        background: #f6c58e;
+      }
+
+      .guide .button:focus {
+        outline-color: var(--sun);
+      }
+
+      .qa-heading {
+        max-width: 48rem;
+      }
+
+      .qa-list {
+        margin-top: 3rem;
+        border-top: 1px solid #dccdb5;
+        border-bottom: 1px solid #dccdb5;
+      }
+
+      .qa {
+        display: grid;
+        gap: 1rem;
+        padding: 2rem 0;
+        border-top: 1px solid #dccdb5;
+      }
+
+      .qa:first-child {
+        border-top: 0;
+      }
+
+      .status {
+        background: var(--paper-bright);
+      }
+
+      .status-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem 2rem;
+        margin: 1.25rem 0 0;
+        padding: 0;
+        color: #2c413a;
+        font-size: 1rem;
+        line-height: 1.7;
+        list-style: none;
+      }
+
+      .status-list li {
+        border-left: 2px solid #d28c4f;
+        padding-left: 0.75rem;
+      }
+
+      .status-copy {
+        display: grid;
+        gap: 2rem;
+      }
+
+      .status-copy h3 {
+        margin-bottom: 0.75rem;
+      }
+
+      .final {
+        padding: 4rem 1.25rem;
+        text-align: center;
+      }
+
+      .final-inner {
+        max-width: 56rem;
+        margin: 0 auto;
+      }
+
+      .final p {
+        max-width: 42rem;
+        margin: 1.25rem auto 0;
+      }
+
+      .final .button {
+        margin-top: 2rem;
+      }
+
+      @media (min-width: 640px) {
+        .hero-inner {
+          padding-right: 2rem;
+          padding-left: 2rem;
+        }
+
+        h1 {
+          font-size: 3.75rem;
+        }
+
+        h2 {
+          font-size: 3rem;
+        }
+
+        .lede p,
+        .intro-copy p,
+        .qa p,
+        .status-copy p,
+        .final p,
+        .open-days li {
+          font-size: 1.25rem;
+        }
+
+        .hero-actions {
+          flex-direction: row;
+          align-items: center;
+        }
+
+        .hero-photo {
+          min-height: 34rem;
+        }
+
+        .hero-photo figcaption {
+          right: 1.25rem;
+          bottom: 1.25rem;
+          left: auto;
+          max-width: 20rem;
+          border-radius: 0.375rem;
+        }
+
+        .trip-basics-inner,
+        .split,
+        .qa-wrap,
+        .guide-inner,
+        .final {
+          padding-right: 2rem;
+          padding-left: 2rem;
+        }
+
+        .status-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 768px) {
+        .trip-basics-inner {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .trip-basics article {
+          border-left: 1px solid var(--line);
+          padding-right: 1.5rem;
+          padding-left: 1.5rem;
+        }
+
+        .trip-basics article:first-child {
+          border-left: 0;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .hero-inner {
+          min-height: 100vh;
+          grid-template-columns: minmax(0, 0.86fr) minmax(32rem, 1fr);
+          align-items: center;
+          gap: 3.5rem;
+          padding: 2.5rem;
+        }
+
+        .hero-copy {
+          padding-left: 0.75rem;
+        }
+
+        h1 {
+          font-size: 3.75rem;
+        }
+
+        .hero-photo {
+          height: calc(100vh - 5rem);
+        }
+
+        .split {
+          grid-template-columns: 0.78fr 1fr;
+          gap: 4rem;
+          padding-top: 6rem;
+          padding-bottom: 6rem;
+        }
+
+        .qa-wrap,
+        .guide-inner,
+        .final {
+          padding-top: 6rem;
+          padding-bottom: 6rem;
+        }
+
+        .qa {
+          grid-template-columns: 0.38fr 1fr;
+          gap: 3rem;
+        }
+
+        .guide-inner {
+          grid-template-columns: 1fr auto;
+          align-items: center;
+        }
+      }
+
+      @media (min-width: 1280px) {
+        h1 {
+          font-size: 4.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="hero-inner">
+          <section class="hero-copy" aria-labelledby="onda-hero-title">
+            <p class="eyebrow">Costa Rica / Onda in Playa Grande</p>
+            <h1 id="onda-hero-title">I loved Onda last year. I want to go back with friends.</h1>
+            <div class="lede">
+              <p>
+                I stayed there last year and left wanting another round: beach days, surf,
+                slow mornings, small adventures, and people I actually want to spend
+                unhurried time with.
+              </p>
+              <p>
+                The rough idea is about two weeks near my December 15 birthday. Come for
+                all of it, part of it, or the slice that fits your life. Right now I am
+                just seeing who might be into it.
+              </p>
+            </div>
+            <div class="hero-actions">
+              <a class="button" href="https://forms.gle/tbyQyPmQgVE5y9Vr5" target="_blank" rel="noopener noreferrer">
+                Add your name
+              </a>
+              <a
+                class="button secondary"
+                href="https://chatgpt.com/g/g-6a5933a1daa48191b6b923f2636713fb-pura-vida-at-onda-trip-guide"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ask the trip guide
+              </a>
+              <p class="form-note">Interest check only. No flight, room, or birthday-week obligation.</p>
+            </div>
+          </section>
+
+          <figure class="hero-photo">
+            <img src="/onda/onda-cabo-star.webp" alt="JFL and a friend outside the Cabo Star beach bar in Costa Rica" />
+            <figcaption>A real trip, real people, and plenty of room to make your own plan.</figcaption>
+          </figure>
+        </div>
+      </header>
+
+      <section class="trip-basics" aria-label="Trip basics">
+        <div class="trip-basics-inner">
+          <article>
+            <strong>Place</strong>
+            <p>Costa Rica, with Onda in Playa Grande as the home base.</p>
+          </article>
+          <article>
+            <strong>Window</strong>
+            <p>Late November into December 2026, roughly two weeks near my December 15 birthday.</p>
+          </article>
+          <article>
+            <strong>Commitment</strong>
+            <p>None yet. I am taking a temperature check before anything gets locked in.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="split">
+        <div>
+          <p class="eyebrow">The idea</p>
+          <h2>Enough structure to feel easy. Enough space to make it yours.</h2>
+        </div>
+        <div class="intro-copy">
+          <p>
+            I will help coordinate the parts that are annoying to solve alone: dates,
+            room options, airport transportation, rental cars, shared rides, and a few
+            possible activities.
+          </p>
+          <p>
+            You will book your own flights. You will also get to decide how much you want
+            to plug into everyone else. This should feel like friends sharing a beautiful
+            place, not a prebuilt itinerary with a clipboard.
+          </p>
+        </div>
+      </section>
+
+      <section class="open-days">
+        <div class="split">
+          <div>
+            <p class="eyebrow">What it could feel like</p>
+            <h2>A shared trip with plenty of exits.</h2>
+          </div>
+          <ul>
+            <li>Hang with the crew when that sounds fun.</li>
+            <li>Disappear to the beach, surf, read, nap, or do almost nothing.</li>
+            <li>Explore nearby towns, nature, food, and whatever catches your eye.</li>
+            <li>Join a few shared outings if they come together.</li>
+            <li>Make your own plans and meet back up when you want company.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="qa-wrap" aria-labelledby="onda-questions-title">
+        <div class="qa-heading">
+          <p class="eyebrow">Questions friends ask</p>
+          <h2 id="onda-questions-title">The useful details, without pretending everything is final.</h2>
+        </div>
+
+        <div class="qa-list">
+          <article class="qa">
+            <h3>What is this?</h3>
+            <p>
+              A loose Costa Rica trip with friends. I stayed at Onda last year, loved it,
+              and want to go back with people who would enjoy the place without turning
+              the whole thing into a schedule.
+            </p>
+          </article>
+          <article class="qa">
+            <h3>Why Onda?</h3>
+            <p>
+              It had the rare mix I wanted: easy to be social, easy to peel off, close
+              enough to beach days and small adventures, and casual enough that nobody
+              has to perform being on vacation.
+            </p>
+          </article>
+          <article class="qa">
+            <h3>Do I have to stay the whole time?</h3>
+            <p>
+              No. Come for the full stretch, a week, a few days, or whatever fits. My
+              birthday is December 15, but nobody needs to arrive by then, stay through
+              it, or build their trip around it.
+            </p>
+          </article>
+          <article class="qa">
+            <h3>Is everything a group activity?</h3>
+            <p>
+              Definitely not. Onda is the meeting point, not a leash. Some days might be
+              shared dinners, beach time, surf, or an outing. Other days might be you
+              doing your own thing entirely.
+            </p>
+          </article>
+          <article class="qa">
+            <h3>What does the form commit me to?</h3>
+            <p>
+              Nothing. It only tells me who might be interested, what timing could work,
+              and what kind of room or travel help would be useful before I talk with
+              Onda about options.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="guide" aria-labelledby="onda-guide-title">
+        <div class="guide-inner">
+          <div>
+            <p class="eyebrow">Quick questions</p>
+            <h2 id="onda-guide-title">Ask the trip guide before you fill out the form.</h2>
+            <p>
+              I made a quick ChatGPT guide for the trip. Use it for dates, travel flow,
+              room questions, Playa Grande basics, or whether this kind of trip fits how
+              you like to travel.
+            </p>
+          </div>
+          <a
+            class="button"
+            href="https://chatgpt.com/g/g-6a5933a1daa48191b6b923f2636713fb-pura-vida-at-onda-trip-guide"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open the trip guide
+          </a>
+        </div>
+      </section>
+
+      <section class="status">
+        <div class="split">
+          <div>
+            <p class="eyebrow">Where things stand</p>
+            <h2>The shape is real. The specifics are still being worked out.</h2>
+          </div>
+          <div class="status-copy">
+            <div>
+              <h3>Already decided</h3>
+              <p>
+                Costa Rica, Onda in Playa Grande, a loose two-week window near my birthday,
+                and a trip where people can move between shared time and independent time.
+              </p>
+            </div>
+            <div>
+              <h3>Still open</h3>
+              <p>
+                I am collecting names before I lock down details or talk with Onda about
+                whether a group arrangement makes sense.
+              </p>
+              <ul class="status-list">
+                <li>date window</li>
+                <li>room options at Onda</li>
+                <li>airport transportation</li>
+                <li>rental cars and shared rides</li>
+                <li>possible activities</li>
+                <li>any group arrangement that actually makes sense</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final" aria-labelledby="onda-final-title">
+        <div class="final-inner">
+          <p class="eyebrow">Interest check</p>
+          <h2 id="onda-final-title">Think you might be into it? Add your name.</h2>
+          <p>
+            The form only helps me understand timing, rooms, transportation needs, and
+            general interest. It does not commit you to buying a flight, reserving a room,
+            or building your trip around my birthday.
+          </p>
+          <a class="button" href="https://forms.gle/tbyQyPmQgVE5y9Vr5" target="_blank" rel="noopener noreferrer">
+            Add your name
+          </a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
