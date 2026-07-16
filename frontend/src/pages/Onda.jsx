@@ -6,7 +6,7 @@ const FORM_URL = "https://forms.gle/tbyQyPmQgVE5y9Vr5";
 const quickFacts = [
   { icon: CalendarBlank, label: "When", value: "Late Nov / early Dec 2026" },
   { icon: MapPin, label: "Where", value: "Hostel Onda, Playa Grande" },
-  { icon: UsersThree, label: "Vibe", value: "Flexible group trip, no birthday obligation" },
+  { icon: UsersThree, label: "Vibe", value: "Good people, easy pace, no birthday obligation" },
   { icon: TreePalm, label: "Plan", value: "Beach, surf, sunsets, wildlife, and downtime" },
 ];
 
@@ -48,14 +48,15 @@ export default function Onda() {
           />
           <div className="bg-[#123a35] p-6 text-white sm:p-8 lg:self-end">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#96f0c8]">
-              Pura Vida at Onda 2026
+              JFL's Onda invite
             </p>
             <h1 className="mt-3 font-[Outfit] text-4xl font-semibold leading-tight sm:text-5xl">
-              Costa Rica, friends, and a little birthday gravity.
+              Come experience Costa Rica with good people.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-[#e6fff4]">
-              A relaxed group trip to Hostel Onda in Playa Grande, planned around December 15.
-              Come for the full window, one week, or just the part that fits.
+              JFL is pulling together a relaxed crew trip to Hostel Onda in Playa Grande,
+              loosely centered around December 15. Come for the full window, one week,
+              or just the part that fits.
             </p>
           </div>
         </div>
@@ -67,12 +68,12 @@ export default function Onda() {
                 Interest form
               </p>
               <h2 className="mt-3 font-[Outfit] text-3xl font-semibold text-[#15362f]">
-                Help me get a headcount.
+                Come if this feels like your kind of trip.
               </h2>
               <p className="mt-3 text-base leading-7 text-[#51645d]">
-                This is the early planning stage, not a reservation or financial commitment.
-                The form helps estimate group size, dates, rooms, flights, and who wants into the
-                tentative WhatsApp planning group.
+                This is an invite to share a Costa Rica trip with people who are there for
+                the beach days, slow mornings, good conversations, and whatever plans come
+                together naturally. The form is just to see who is interested.
               </p>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -108,7 +109,7 @@ export default function Onda() {
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#047857] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#065F46] focus:outline-none focus:ring-2 focus:ring-[#047857] focus:ring-offset-2"
                 data-testid="onda-form-link"
               >
-                Open the interest form
+                Tell JFL you're interested
                 <ArrowSquareOut size={18} weight="duotone" aria-hidden="true" />
               </a>
               <p className="mt-3 text-center text-xs leading-5 text-[#7b8b84]">
