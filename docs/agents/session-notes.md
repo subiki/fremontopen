@@ -9,6 +9,7 @@
 - Restyled `/onda` with sourced trip copy from the Google Docs overview/form build sheet and a lightweight Onda ocean hero image rendered from the shared buyout PDF.
 - Swapped the `/onda` hero to the Onda pool-table/bar photo and moved headline copy out of the image area so mobile text no longer overlaps source-image lettering.
 - Shifted `/onda` copy toward a more personal JFL invite centered on experiencing Costa Rica with good people.
+- Rebalanced `/onda` copy to clarify the trip is open-ended: people can join group plans or do their own thing, while JFL negotiates hostel pricing and helps with coordination/options.
 
 ## 2026-06-14 - Added quick compare search to player profiles
 

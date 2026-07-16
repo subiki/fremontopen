@@ -6,15 +6,15 @@ const FORM_URL = "https://forms.gle/tbyQyPmQgVE5y9Vr5";
 const quickFacts = [
   { icon: CalendarBlank, label: "When", value: "Late Nov / early Dec 2026" },
   { icon: MapPin, label: "Where", value: "Hostel Onda, Playa Grande" },
-  { icon: UsersThree, label: "Vibe", value: "Good people, easy pace, no birthday obligation" },
-  { icon: TreePalm, label: "Plan", value: "Beach, surf, sunsets, wildlife, and downtime" },
+  { icon: UsersThree, label: "Vibe", value: "Group energy when you want it, freedom when you don't" },
+  { icon: TreePalm, label: "Plan", value: "Beach, surf, sunsets, wildlife, and open-ended days" },
 ];
 
 const propertyNotes = [
-  "About a five-minute walk to the beach",
-  "Pool, guest kitchen, coworking spaces, yoga deck, music stage, and beer garden",
-  "Room mix includes King, Micro, Quad, and Bunkroom options",
-  "Rough planning range: $1,600-$3,000 per person",
+  "JFL will work with Onda on a group room rate",
+  "Everyone books their own flights when the timing makes sense",
+  "Join group outings, plan your own days, or mix both",
+  "Coordination help and travel options will be shared as plans firm up",
 ];
 
 export default function Onda() {
@@ -51,12 +51,12 @@ export default function Onda() {
               JFL's Onda invite
             </p>
             <h1 className="mt-3 font-[Outfit] text-4xl font-semibold leading-tight sm:text-5xl">
-              Come experience Costa Rica with good people.
+              Costa Rica, good people, and room to make it your own.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-[#e6fff4]">
-              JFL is pulling together a relaxed crew trip to Hostel Onda in Playa Grande,
-              loosely centered around December 15. Come for the full window, one week,
-              or just the part that fits.
+              JFL is organizing a flexible trip to Hostel Onda in Playa Grande, loosely
+              centered around December 15. Join the group for shared plans, use Onda as a
+              home base for your own adventure, or do a little of both.
             </p>
           </div>
         </div>
@@ -68,12 +68,13 @@ export default function Onda() {
                 Interest form
               </p>
               <h2 className="mt-3 font-[Outfit] text-3xl font-semibold text-[#15362f]">
-                Come if this feels like your kind of trip.
+                Low-pressure interest now. Real plans later.
               </h2>
               <p className="mt-3 text-base leading-7 text-[#51645d]">
-                This is an invite to share a Costa Rica trip with people who are there for
-                the beach days, slow mornings, good conversations, and whatever plans come
-                together naturally. The form is just to see who is interested.
+                If there is enough interest, JFL will negotiate pricing with the hostel.
+                You'll book your own flight, and JFL will help coordinate timing, room
+                options, airport transfers, activities, and whatever group plans people
+                actually want.
               </p>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -109,11 +110,11 @@ export default function Onda() {
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#047857] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#065F46] focus:outline-none focus:ring-2 focus:ring-[#047857] focus:ring-offset-2"
                 data-testid="onda-form-link"
               >
-                Tell JFL you're interested
+                Share your interest
                 <ArrowSquareOut size={18} weight="duotone" aria-hidden="true" />
               </a>
               <p className="mt-3 text-center text-xs leading-5 text-[#7b8b84]">
-                Pura vida. Exact dates, room options, and booking details will come later.
+                No commitment yet. This just helps shape dates, pricing, rooms, and coordination.
               </p>
             </div>
           </div>
