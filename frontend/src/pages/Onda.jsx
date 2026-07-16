@@ -40,15 +40,14 @@ export default function Onda() {
   return (
     <main className="min-h-screen bg-[#f4f0e7] text-[#15362f]" data-testid="onda-page">
       <section className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-0 px-4 py-5 sm:px-6 lg:grid-cols-[1.03fr_0.97fr] lg:py-8">
-        <div className="relative min-h-[58vh] overflow-hidden rounded-t-lg bg-[#123a35] lg:min-h-[calc(100vh-4rem)] lg:rounded-l-lg lg:rounded-tr-none">
+        <div className="grid overflow-hidden rounded-t-lg bg-[#123a35] lg:min-h-[calc(100vh-4rem)] lg:rounded-l-lg lg:rounded-tr-none">
           <img
-            src="/onda/onda-preview.webp"
-            alt="Onda Playa Grande ocean view"
-            className="absolute inset-0 h-full w-full object-cover"
+            src="/onda/onda-pool-table.webp"
+            alt="Friends around the Onda pool table and bar"
+            className="h-[42vh] min-h-80 w-full object-cover sm:h-[52vh] lg:h-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#072b27]/10 via-[#072b27]/20 to-[#072b27]/72" />
-          <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#b6f2d4]">
+          <div className="bg-[#123a35] p-6 text-white sm:p-8 lg:self-end">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#96f0c8]">
               Pura Vida at Onda 2026
             </p>
             <h1 className="mt-3 font-[Outfit] text-4xl font-semibold leading-tight sm:text-5xl">

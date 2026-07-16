@@ -7,6 +7,7 @@
 - Verified the frontend production build succeeds before deployment.
 - Added crawler-discouragement controls for `/onda`: `robots.txt` disallow rules, a static `frontend/public/onda/index.html` with `noindex,nofollow,noarchive`, `X-Robots-Tag` via `.htaccess`, and a runtime robots meta tag.
 - Restyled `/onda` with sourced trip copy from the Google Docs overview/form build sheet and a lightweight Onda ocean hero image rendered from the shared buyout PDF.
+- Swapped the `/onda` hero to the Onda pool-table/bar photo and moved headline copy out of the image area so mobile text no longer overlaps source-image lettering.
 
 ## 2026-06-14 - Added quick compare search to player profiles
 
