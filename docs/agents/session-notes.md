@@ -10,6 +10,7 @@
 - Swapped the `/onda` hero to the Onda pool-table/bar photo and moved headline copy out of the image area so mobile text no longer overlaps source-image lettering.
 - Shifted `/onda` copy toward a more personal JFL invite centered on experiencing Costa Rica with good people.
 - Rebalanced `/onda` copy to clarify the trip is open-ended: people can join group plans or do their own thing, while JFL negotiates hostel pricing and helps with coordination/options.
+- Added the Pura Vida at Onda Trip Guide GPT link and swapped the hero to the Cabo Star photo optimized as a webp asset.
 
 ## 2026-06-14 - Added quick compare search to player profiles
 
