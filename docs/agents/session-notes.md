@@ -6,6 +6,7 @@
 - Linked the page to `https://forms.gle/tbyQyPmQgVE5y9Vr5` with `noopener noreferrer` and a mobile-friendly full-width button.
 - Verified the frontend production build succeeds before deployment.
 - Added crawler-discouragement controls for `/onda`: `robots.txt` disallow rules, a static `frontend/public/onda/index.html` with `noindex,nofollow,noarchive`, `X-Robots-Tag` via `.htaccess`, and a runtime robots meta tag.
+- Restyled `/onda` with sourced trip copy from the Google Docs overview/form build sheet and a lightweight Onda ocean hero image rendered from the shared buyout PDF.
 
 ## 2026-06-14 - Added quick compare search to player profiles
 
