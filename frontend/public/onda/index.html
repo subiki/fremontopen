@@ -49,6 +49,34 @@
         color: inherit;
       }
 
+      .inline-link {
+        border-radius: 0.125rem;
+        color: var(--green);
+        font-weight: 700;
+        text-decoration: underline;
+        text-decoration-color: rgba(15, 111, 82, 0.45);
+        text-underline-offset: 0.25rem;
+        transition: color 0.18s ease;
+      }
+
+      .inline-link:hover {
+        color: var(--green-dark);
+      }
+
+      .inline-link:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 0.25rem;
+      }
+
+      .inline-link.on-dark {
+        color: var(--sun);
+        text-decoration-color: rgba(240, 177, 109, 0.55);
+      }
+
+      .inline-link.on-dark:hover {
+        color: #f6c58e;
+      }
+
       main {
         min-height: 100vh;
         overflow: hidden;
@@ -180,6 +208,14 @@
         line-height: 1.55;
       }
 
+      .hero-place-link {
+        max-width: 30rem;
+        margin-top: 1rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+        line-height: 1.55;
+      }
+
       .hero-photo {
         position: relative;
         min-height: 25rem;
@@ -242,6 +278,12 @@
         color: #2c413a;
         font-size: 1rem;
         line-height: 1.7;
+      }
+
+      .trip-basics .inline-link {
+        display: inline-flex;
+        margin-top: 0.75rem;
+        font-size: 0.875rem;
       }
 
       .split {
@@ -508,6 +550,18 @@
               </a>
               <p class="form-note">Interest check only. No flight, room, or birthday-week obligation.</p>
             </div>
+            <p class="hero-place-link">
+              Want to see the place first?
+              <a
+                class="inline-link"
+                href="https://www.stayonda.com/our-locations/playa-grande/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Onda's Playa Grande page
+              </a>
+              has the photos and room basics.
+            </p>
           </section>
 
           <figure class="hero-photo">
@@ -522,6 +576,14 @@
           <article>
             <strong>Place</strong>
             <p>Costa Rica, with Onda in Playa Grande as the home base.</p>
+            <a
+              class="inline-link"
+              href="https://www.stayonda.com/our-locations/playa-grande/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              See Onda's Playa Grande page
+            </a>
           </article>
           <article>
             <strong>Window</strong>

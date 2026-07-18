@@ -2,11 +2,14 @@ import { useEffect } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 
 const FORM_URL = "https://forms.gle/tbyQyPmQgVE5y9Vr5";
+const ONDA_PLAYA_GRANDE_URL = "https://www.stayonda.com/our-locations/playa-grande/";
 
 const tripNotes = [
   {
     label: "Place",
     text: "Costa Rica, with Onda in Playa Grande as the home base.",
+    href: ONDA_PLAYA_GRANDE_URL,
+    linkText: "See Onda's Playa Grande page",
   },
   {
     label: "Window",
@@ -142,6 +145,18 @@ export default function Onda() {
                 Interest check only. No flight, room, or birthday-week obligation.
               </p>
             </div>
+            <p className="mt-4 text-sm leading-6 text-[#6f6659]">
+              Want to see the place first?{" "}
+              <a
+                href={ONDA_PLAYA_GRANDE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#0f6f52] underline decoration-[#0f6f52]/45 underline-offset-4 transition-colors hover:text-[#0a5e45] focus:outline-none focus:ring-2 focus:ring-[#0f6f52] focus:ring-offset-4 focus:ring-offset-[#f7f0e4]"
+              >
+                Onda's Playa Grande page
+              </a>{" "}
+              has the photos and room basics.
+            </p>
           </section>
 
           <figure className="relative min-h-[25rem] overflow-hidden rounded-md bg-[#173a33] shadow-[0_28px_80px_rgba(54,44,32,0.22)] sm:min-h-[34rem] lg:h-[calc(100vh-5rem)]">
@@ -163,6 +178,16 @@ export default function Onda() {
             <div key={note.label} className="py-4 md:border-l md:border-[#dfd0b8] md:px-6 first:md:border-l-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a4d2c]">{note.label}</p>
               <p className="mt-2 text-base leading-7 text-[#2c413a]">{note.text}</p>
+              {note.href ? (
+                <a
+                  href={note.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex text-sm font-semibold text-[#0f6f52] underline decoration-[#0f6f52]/45 underline-offset-4 transition-colors hover:text-[#0a5e45] focus:outline-none focus:ring-2 focus:ring-[#0f6f52] focus:ring-offset-4 focus:ring-offset-[#fff9ec]"
+                >
+                  {note.linkText}
+                </a>
+              ) : null}
             </div>
           ))}
         </div>
