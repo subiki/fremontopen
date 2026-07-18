@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 
 const FORM_URL = "https://forms.gle/tbyQyPmQgVE5y9Vr5";
-const GUIDE_URL = "https://chatgpt.com/g/g-6a5933a1daa48191b6b923f2636713fb-pura-vida-at-onda-trip-guide";
 
 const tripNotes = [
   {
@@ -139,15 +138,6 @@ export default function Onda() {
                 Add your name
                 <ArrowSquareOut size={20} weight="duotone" aria-hidden="true" />
               </a>
-              <a
-                href={GUIDE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-md border border-[#b99977] bg-[#fff9ec] px-7 py-4 text-base font-semibold text-[#1b312b] transition-colors hover:bg-[#f1e4cf] focus:outline-none focus:ring-2 focus:ring-[#0f6f52] focus:ring-offset-4 focus:ring-offset-[#f7f0e4]"
-              >
-                Ask the trip guide
-                <ArrowSquareOut size={20} weight="duotone" aria-hidden="true" />
-              </a>
               <p className="max-w-sm text-sm leading-6 text-[#6f6659]">
                 Interest check only. No flight, room, or birthday-week obligation.
               </p>
@@ -156,12 +146,12 @@ export default function Onda() {
 
           <figure className="relative min-h-[25rem] overflow-hidden rounded-md bg-[#173a33] shadow-[0_28px_80px_rgba(54,44,32,0.22)] sm:min-h-[34rem] lg:h-[calc(100vh-5rem)]">
             <img
-              src="/onda/onda-cabo-star.webp"
-              alt="JFL and a friend outside the Cabo Star beach bar in Costa Rica"
-              className="absolute inset-0 h-full w-full object-cover object-[52%_42%]"
+              src="/onda/onda-pool-table.webp"
+              alt="Onda's open-air pool table and bar area in Playa Grande"
+              className="absolute inset-0 h-full w-full object-cover object-[54%_45%]"
             />
             <figcaption className="absolute bottom-0 left-0 right-0 bg-[#173a33]/88 px-5 py-4 text-sm font-medium leading-6 text-[#f8f0df] backdrop-blur-sm sm:left-auto sm:right-5 sm:bottom-5 sm:max-w-xs sm:rounded-md">
-              A real trip, real people, and plenty of room to make your own plan.
+              Onda is the home base, not the whole itinerary.
             </figcaption>
           </figure>
         </div>
@@ -235,33 +225,6 @@ export default function Onda() {
               <p className="text-lg leading-8 text-[#445c54]">{item.answer}</p>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="bg-[#173a33] px-5 py-16 text-[#fff7e8] sm:px-8 lg:py-20" aria-labelledby="onda-guide-title">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#f0b16d]">
-              Quick questions
-            </p>
-            <h2 id="onda-guide-title" className="mt-4 font-[Outfit] text-4xl font-semibold leading-tight sm:text-5xl">
-              Ask the trip guide before you fill out the form.
-            </h2>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-[#f4e5cc]">
-              I made a quick ChatGPT guide for the trip. Use it for dates, travel flow,
-              room questions, Playa Grande basics, or whether this kind of trip fits how
-              you like to travel.
-            </p>
-          </div>
-          <a
-            href={GUIDE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-14 items-center justify-center gap-2 rounded-md bg-[#f0b16d] px-8 py-4 text-base font-semibold text-[#173a33] transition-colors hover:bg-[#f6c58e] focus:outline-none focus:ring-2 focus:ring-[#f0b16d] focus:ring-offset-4 focus:ring-offset-[#173a33]"
-          >
-            Open the trip guide
-            <ArrowSquareOut size={20} weight="duotone" aria-hidden="true" />
-          </a>
         </div>
       </section>
 

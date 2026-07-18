@@ -164,19 +164,8 @@
         transition: background-color 0.18s ease;
       }
 
-      .button.secondary {
-        border: 1px solid #b99977;
-        background: var(--paper-bright);
-        box-shadow: none;
-        color: var(--ink);
-      }
-
       .button:hover {
         background: var(--green-dark);
-      }
-
-      .button.secondary:hover {
-        background: #f1e4cf;
       }
 
       .button:focus {
@@ -206,7 +195,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: 52% 42%;
+        object-position: 54% 45%;
       }
 
       .hero-photo figcaption {
@@ -306,50 +295,6 @@
         max-width: 72rem;
         margin: 0 auto;
         padding: 4rem 1.25rem;
-      }
-
-      .guide {
-        background: var(--deep);
-        color: #fff7e8;
-      }
-
-      .guide-inner {
-        display: grid;
-        max-width: 72rem;
-        gap: 2rem;
-        margin: 0 auto;
-        padding: 4rem 1.25rem;
-      }
-
-      .guide h2 {
-        color: #fff7e8;
-      }
-
-      .guide .eyebrow {
-        color: var(--sun);
-      }
-
-      .guide p {
-        max-width: 48rem;
-        margin-top: 1.25rem;
-        color: #f4e5cc;
-        font-size: 1.125rem;
-        line-height: 1.75;
-      }
-
-      .guide .button {
-        align-self: start;
-        background: var(--sun);
-        box-shadow: none;
-        color: var(--deep);
-      }
-
-      .guide .button:hover {
-        background: #f6c58e;
-      }
-
-      .guide .button:focus {
-        outline-color: var(--sun);
       }
 
       .qa-heading {
@@ -465,7 +410,6 @@
         .trip-basics-inner,
         .split,
         .qa-wrap,
-        .guide-inner,
         .final {
           padding-right: 2rem;
           padding-left: 2rem;
@@ -521,7 +465,6 @@
         }
 
         .qa-wrap,
-        .guide-inner,
         .final {
           padding-top: 6rem;
           padding-bottom: 6rem;
@@ -530,11 +473,6 @@
         .qa {
           grid-template-columns: 0.38fr 1fr;
           gap: 3rem;
-        }
-
-        .guide-inner {
-          grid-template-columns: 1fr auto;
-          align-items: center;
         }
       }
 
@@ -568,21 +506,13 @@
               <a class="button" href="https://forms.gle/tbyQyPmQgVE5y9Vr5" target="_blank" rel="noopener noreferrer">
                 Add your name
               </a>
-              <a
-                class="button secondary"
-                href="https://chatgpt.com/g/g-6a5933a1daa48191b6b923f2636713fb-pura-vida-at-onda-trip-guide"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ask the trip guide
-              </a>
               <p class="form-note">Interest check only. No flight, room, or birthday-week obligation.</p>
             </div>
           </section>
 
           <figure class="hero-photo">
-            <img src="/onda/onda-cabo-star.webp" alt="JFL and a friend outside the Cabo Star beach bar in Costa Rica" />
-            <figcaption>A real trip, real people, and plenty of room to make your own plan.</figcaption>
+            <img src="/onda/onda-pool-table.webp" alt="Onda's open-air pool table and bar area in Playa Grande" />
+            <figcaption>Onda is the home base, not the whole itinerary.</figcaption>
           </figure>
         </div>
       </header>
@@ -686,28 +616,6 @@
               Onda about options.
             </p>
           </article>
-        </div>
-      </section>
-
-      <section class="guide" aria-labelledby="onda-guide-title">
-        <div class="guide-inner">
-          <div>
-            <p class="eyebrow">Quick questions</p>
-            <h2 id="onda-guide-title">Ask the trip guide before you fill out the form.</h2>
-            <p>
-              I made a quick ChatGPT guide for the trip. Use it for dates, travel flow,
-              room questions, Playa Grande basics, or whether this kind of trip fits how
-              you like to travel.
-            </p>
-          </div>
-          <a
-            class="button"
-            href="https://chatgpt.com/g/g-6a5933a1daa48191b6b923f2636713fb-pura-vida-at-onda-trip-guide"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open the trip guide
-          </a>
         </div>
       </section>
 
