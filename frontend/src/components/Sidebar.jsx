@@ -20,7 +20,7 @@ const baseLinks = [
   { to: "/leaderboard", label: "Leaderboard", icon: Ranking, testid: "nav-leaderboard" },
   { to: "/seasons", label: "Seasons", icon: CalendarBlank, testid: "nav-seasons" },
   { to: "/compare", label: "Compare", icon: Scales, testid: "nav-compare" },
-  { to: "/info", label: "Info", icon: Info, testid: "nav-info" },
+  { to: "/join", label: "Join", icon: Info, testid: "nav-join" },
 ];
 
 export const Sidebar = () => {
