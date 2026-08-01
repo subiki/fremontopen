@@ -47,6 +47,7 @@ function App() {
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
+            <Route path="/join" element={<Info />} />
             <Route path="/info" element={<Info />} />
             <Route path="*" element={<NotFound />} />
           </Route>
