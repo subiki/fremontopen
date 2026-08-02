@@ -12,6 +12,7 @@ const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
 const Players = lazy(() => import("./pages/Players"));
 const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Streaks = lazy(() => import("./pages/Streaks"));
 const Compare = lazy(() => import("./pages/Compare"));
 const Seasons = lazy(() => import("./pages/Seasons"));
 const StatRankings = lazy(() => import("./pages/StatRankings"));
@@ -43,6 +44,7 @@ function App() {
             <Route path="/players" element={<Players />} />
             <Route path="/players/:name" element={<PlayerDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/streaks" element={<Streaks />} />
             <Route path="/seasons" element={<Seasons />} />
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
