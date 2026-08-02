@@ -20,6 +20,12 @@ jobs:
       - name: Check public repo boundary
         run: python scripts/check_public_boundary.py --tracked-only
 
+      - name: Test tournament streak analytics
+        run: python -m unittest tests/test_build_tournament_streaks.py
+
+      - name: Build tournament streak rankings
+        run: python scripts/build_tournament_streaks.py
+
       - name: Preflight deploy secrets
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -73,6 +79,7 @@ jobs:
           {
             echo "- Static React build: passed"
             echo "- Cache artifact: frontend/build/data/cache.json"
+            echo "- Streak rankings: frontend/build/data/streak-leaders.json"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Configure SSH
