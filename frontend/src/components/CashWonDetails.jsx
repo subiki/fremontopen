@@ -51,12 +51,13 @@ export const CashWonDetails = ({ playerName, onClose }) => {
     };
   }, [playerName]);
 
+  const cashByTournament = cash?.by_tournament;
   const winnings = useMemo(() => {
     const tournamentById = new Map(
       tournaments.map((tournament) => [String(tournament.id), tournament])
     );
 
-    return [...(cash?.by_tournament || [])]
+    return [...(cashByTournament || [])]
       .map((row) => {
         const tournament = tournamentById.get(String(row.tournament_id));
         return {
@@ -73,7 +74,7 @@ export const CashWonDetails = ({ playerName, onClose }) => {
         if (dateCompare !== 0) return dateCompare;
         return Number(right.amount || 0) - Number(left.amount || 0);
       });
-  }, [cash?.by_tournament, tournaments]);
+  }, [cashByTournament, tournaments]);
 
   return (
     <div
