@@ -2,8 +2,9 @@ name: Build one-time streak snapshot
 
 on:
   push:
-    branches:
-      - agent/calculate-streak-top10
+    branches: [main]
+    paths:
+      - .github/workflows/build-streak-snapshot.yml
 
 permissions:
   contents: write
