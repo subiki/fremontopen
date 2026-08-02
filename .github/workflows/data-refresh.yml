@@ -81,6 +81,7 @@ jobs:
             python import_side_matches.py --source manual_side_matches.csv
           fi
           python export_static.py
+          python ../scripts/build_tournament_streaks.py
           python ../scripts/check_static_data_budget.py
 
       - name: Monthly Fargo refresh
@@ -104,6 +105,7 @@ jobs:
             --source-label "$label" \
             --delay "$delay"
           python export_static.py
+          python ../scripts/build_tournament_streaks.py
           echo "- Fargo refresh: completed from authorized source" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Append refresh summary
@@ -143,6 +145,7 @@ jobs:
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \
             frontend/public/data/single-tournament-overperformers.json \
+            frontend/public/data/streak-leaders.json \
             frontend/public/data/tournament-duration-groups.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
@@ -175,6 +178,7 @@ jobs:
             frontend/public/data/recent-matches.json \
             frontend/public/data/rivalry-index.json \
             frontend/public/data/single-tournament-overperformers.json \
+            frontend/public/data/streak-leaders.json \
             frontend/public/data/tournament-duration-groups.json \
             frontend/public/data/players \
             frontend/public/data/season-standings.json \
@@ -186,7 +190,7 @@ jobs:
 
           Completed:
           - Synced Challonge into the local SQLite cache.
-          - Rebuilt the exported static cache.
+          - Rebuilt the exported static cache and tournament streak rankings.
           - Verified the static frontend build before deploy.
 
           Remaining:
@@ -200,7 +204,7 @@ jobs:
 
           Agent: GitHub Actions
           Intent: Scheduled static data and optional monthly Fargo refresh without a manual code push.
-          Context: #67 #68
+          Context: #67 #68 #297
           EOF
           git commit -F /tmp/refresh-commit-message.txt
           git push

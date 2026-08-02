@@ -9,6 +9,7 @@ import {
   Target,
   Scales,
   Info,
+  Fire,
   List,
   X,
 } from "@phosphor-icons/react";
@@ -18,6 +19,7 @@ const baseLinks = [
   { to: "/tournaments", label: "Tournaments", icon: Trophy, testid: "nav-tournaments" },
   { to: "/players", label: "Players", icon: Users, testid: "nav-players" },
   { to: "/leaderboard", label: "Leaderboard", icon: Ranking, testid: "nav-leaderboard" },
+  { to: "/streaks", label: "Streaks", icon: Fire, testid: "nav-streaks" },
   { to: "/seasons", label: "Seasons", icon: CalendarBlank, testid: "nav-seasons" },
   { to: "/compare", label: "Compare", icon: Scales, testid: "nav-compare" },
   { to: "/join", label: "Join", icon: Info, testid: "nav-join" },
