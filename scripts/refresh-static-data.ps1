@@ -53,7 +53,8 @@ if (Test-Path $SideMatchCsv) {
 }
 
 Invoke-BackendPython @("export_static.py")
-Invoke-BackendPython @("..\\scripts\\check_static_data_budget.py")
+Invoke-BackendPython @("..\scripts\build_tournament_streaks.py")
+Invoke-BackendPython @("..\scripts\check_static_data_budget.py")
 
 if (-not $SkipBuild) {
     Push-Location $Frontend
