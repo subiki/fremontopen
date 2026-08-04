@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-02T04:02:14.120233+00:00",
+  "generated_at": "2026-08-04T20:10:03.863369+00:00",
   "definitions": {
     "consecutive_titles": "Consecutive tournament appearances ending in 1st place. Skipped tournaments neither extend nor break a player's run.",
     "consecutive_in_the_money": "Consecutive tournament appearances with a recorded payout or paid placement. An appearance outside the money breaks the run."
