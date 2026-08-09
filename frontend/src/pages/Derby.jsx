@@ -9,43 +9,56 @@ import { Topbar } from "../components/Topbar";
 
 const snapshot = [
   { label: "Where", value: "4B's Tavern — all in house, no travel", icon: MapPin },
-  { label: "Teams", value: "Working model: 8 teams, 4 players each", icon: Users },
-  { label: "League night", value: "One night each week on four tables — day TBD", icon: CalendarDots },
-  { label: "Games", value: "8-ball + 9-ball in the same match", icon: ShieldCheck },
-  { label: "Handicap", value: "Fargo-based races, not APA skill levels", icon: ShieldCheck },
-  { label: "Season", value: "About 12 regular weeks + playoffs", icon: CalendarDots },
+  { label: "Field", value: "Up to 8 teams, 4 roster spots each", icon: Users },
+  { label: "League night", value: "One fixed night each week — announced before signup", icon: CalendarDots },
+  { label: "Games", value: "8-ball + 9-ball inside the same match", icon: ShieldCheck },
+  { label: "Handicap", value: "Fargo-based races with weekly rating locks", icon: ShieldCheck },
+  { label: "Season", value: "12 regular weeks + Final Four + Championship", icon: CalendarDots },
 ];
 
 const matchFlow = [
   {
-    title: "Lag for the choice",
-    body: "The lag winner chooses either the opening discipline or the first break. The opponent gets the remaining choice.",
+    title: "Four individual races",
+    body: "Each team matchup has four roster slots. Every completed individual race is worth one team point and also counts toward that player's individual standings.",
   },
   {
-    title: "Play the opening block",
-    body: "Working idea: play three racks of the chosen discipline during the regular season. The score carries forward.",
+    title: "Choose your opening game",
+    body: "Lag winner chooses either 8-ball or 9-ball first, or takes the first break. Play a three-rack opening block, carry the score forward, then switch disciplines.",
   },
   {
-    title: "Switch games and finish the race",
-    body: "Move from 8-ball to 9-ball, or vice versa, and continue until one player reaches their handicapped race target.",
+    title: "Short Fargo-based race",
+    body: "The rating difference sets the race. The target is competitive matches that fit a normal league night without APA-style innings or paperwork.",
   },
+];
+
+const teamPayouts = [
+  ["Playoff champions", "$1,600"],
+  ["Runner-up", "$800"],
+  ["Regular-season champions", "$800"],
+];
+
+const individualPayouts = [
+  ["1st", "$1,000"],
+  ["2nd", "$700"],
+  ["3rd", "$500"],
+  ["4th", "$350"],
+  ["5th", "$250"],
+  ["6th", "$175"],
+  ["7th", "$125"],
+  ["8th", "$100"],
 ];
 
 const finale = [
-  "Top four teams advance to the championship bracket.",
-  "Semifinals get extra table space so playoff night feels different from a normal league night.",
-  "The championship uses all four rostered players, with four head-to-head matches available across the four tables.",
-  "If the championship finishes 2–2, each captain names an anchor player for one deciding handicapped match while the room watches.",
+  "Top four teams advance to the Final Four; the regular-season title also pays cash.",
+  "Semifinals get more table space and longer races so playoff night feels different from the regular season.",
+  "The championship uses all four roster spots and all four tables when possible.",
+  "If the championship finishes 2–2, each captain names an anchor player for one deciding handicapped race while the room watches.",
 ];
 
-const workshopQuestions = [
-  "Which night of the week works best for the league?",
-  "Does an 8-team / 4-player roster format feel right?",
-  "Should three players compete each normal league night, or should all four play?",
-  "Do you like the 8-ball / 9-ball block format and the choice between discipline or first break?",
-  "How long should an individual race feel on a normal league night?",
-  "What is the right season fee and how top-heavy should the prize payout be?",
-  "What would make championship night something you would stay to watch even after your team is eliminated?",
+const openItems = [
+  "The fixed league night, based on 4B's table availability and player turnout.",
+  "The final Fargo-to-race chart after a live playtest confirms match length.",
+  "Small payout adjustments if the field lands above or below 32 players.",
 ];
 
 export default function Derby() {
@@ -53,48 +66,45 @@ export default function Derby() {
     <>
       <Topbar
         title="Fremont Derby"
-        subtitle="A working proposal for a new in-house league at 4B's"
+        subtitle="Team pool with individual money on the line"
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="derby-page">
         <section className="grid grid-cols-1 xl:grid-cols-[1.45fr_0.75fr] gap-6">
           <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#10B981] mb-3">
-              Working proposal — feedback wanted
+              Proposed Season 1 format
             </p>
             <h1 className="font-[Outfit] text-3xl sm:text-4xl font-bold text-[#F3F4F6] leading-tight mb-4">
-              A better in-house pool league, built at 4B's
+              Play for your team. Get paid for your own game.
             </h1>
             <p className="text-[#CBD5E1] leading-7 max-w-3xl">
-              Fremont Derby is a proposed seasonal league built around the things we like about team pool without the travel, paperwork, or rigid league structure. The goal is simple: competitive handicapped matches, useful stats, transparent prize money, and final weeks that feel like an event.
+              Fremont Derby is a seasonal 4B's house league built around four tables, no travel, Fargo-based handicaps, and real prize money. Every player competes in two races at the same time: the team championship and the individual standings. A bad team season does not erase a great individual season.
             </p>
             <div className="mt-6 rounded-lg border border-[#10B981]/30 bg-[#10B981]/10 p-5">
-              <p className="text-[#D1FAE5] font-semibold">The design target</p>
+              <p className="text-[#D1FAE5] font-semibold">The important part: your match still matters.</p>
               <p className="mt-1 text-sm leading-6 text-[#CBD5E1]">
-                Easy league nights. Serious standings. Awesome playoffs. Nothing on this page is final yet — this is the version to workshop with the players who would actually play it.
+                If your team is short, the missing roster slots are team forfeits. The players who show up still play their races, keep their individual results, and stay eligible for individual prize money. In the extreme, one player could show up, forfeit the other three team slots, win their own race, and keep building toward an individual cash finish.
               </p>
             </div>
           </div>
 
           <div className="bg-[#10151F] border border-[#273041] rounded-lg p-6">
-            <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6] mb-4">
-              Current working model
-            </h2>
-            <div className="space-y-3 text-sm leading-6 text-[#CBD5E1]">
-              <p><strong className="text-[#F3F4F6]">32 players</strong> across eight four-person teams.</p>
-              <p><strong className="text-[#F3F4F6]">Four tables</strong> at 4B's, with no away matches.</p>
-              <p><strong className="text-[#F3F4F6]">Three players</strong> from each team play on a normal league night.</p>
-              <p><strong className="text-[#F3F4F6]">Team standings + individual standings</strong> run at the same time.</p>
-              <p><strong className="text-[#F3F4F6]">Website scoring</strong> tracks every rack and updates standings automatically.</p>
+            <div className="text-xs uppercase tracking-[0.16em] text-[#6B7280] mb-2">32-player example</div>
+            <div className="text-4xl font-bold text-[#F3F4F6]">$8,000</div>
+            <div className="text-sm text-[#9CA3AF] mt-1">total season entry</div>
+            <div className="mt-6 space-y-4 text-sm leading-6 text-[#CBD5E1]">
+              <p><strong className="text-[#F3F4F6]">$6,400 prize purse</strong> — $200 from every entry goes back to players.</p>
+              <p><strong className="text-[#F3F4F6]">$3,200 team money</strong> — championship, runner-up, and regular-season title.</p>
+              <p><strong className="text-[#F3F4F6]">$3,200 individual money</strong> — top eight individual finishes cash.</p>
+              <p><strong className="text-[#F3F4F6]">$1,600 administration</strong> — $50 per player to run scheduling, ratings, scoring, disputes, and finals.</p>
             </div>
           </div>
         </section>
 
         <section aria-labelledby="derby-snapshot-title">
-          <div className="mb-4">
-            <h2 id="derby-snapshot-title" className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6]">
-              League at a glance
-            </h2>
-          </div>
+          <h2 id="derby-snapshot-title" className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-4">
+            The league
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {snapshot.map((item) => (
               <div key={item.label} className="bg-[#141923] border border-[#273041] rounded-lg p-5">
@@ -107,12 +117,12 @@ export default function Derby() {
         </section>
 
         <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#10B981] mb-3">The match format</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#10B981] mb-3">How a league night works</p>
           <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">
-            Both games matter — and the opening choice matters too
+            Four races decide the team score. Every race also builds your own season.
           </h2>
           <p className="text-sm leading-6 text-[#CBD5E1] max-w-4xl mb-6">
-            Rather than running separate 8-ball and 9-ball leagues, each individual match contains both games. Players use one Fargo-based rating, which converts to a handicapped race. The opening decision adds strategy without adding much bookkeeping.
+            Teams have four roster spots. Players are matched head-to-head, and every completed match is recorded rack by rack on the Fremont Derby website. A win earns one team point and one individual match win. A 2–2 regular-season team result is a draw; postseason ties go to the anchor race.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {matchFlow.map((step, index) => (
@@ -129,41 +139,61 @@ export default function Derby() {
 
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
-            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Handicap and scoring</h2>
-            <div className="space-y-3 text-sm leading-6 text-[#CBD5E1]">
-              <p><strong className="text-[#F3F4F6]">Fargo is the rating backbone.</strong> We use the rating difference to set each race instead of maintaining APA-style skill levels.</p>
-              <p><strong className="text-[#F3F4F6]">Every rack is recorded.</strong> The website knows the discipline, the race, the players, and the current score; scorekeeping should be roughly one tap per rack.</p>
-              <p><strong className="text-[#F3F4F6]">Ratings lock for league night.</strong> Results can affect future weeks, but nobody's race changes in the middle of the night.</p>
-              <p><strong className="text-[#F3F4F6]">Playoffs can use longer races.</strong> The same rating system stays in place while postseason matches get a larger format.</p>
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Team money — $3,200</h2>
+            <p className="text-sm leading-6 text-[#CBD5E1] mb-5">
+              Team play matters, but it is only half the purse. Regular-season performance pays, and the playoffs finish with a real championship night.
+            </p>
+            <div className="space-y-2">
+              {teamPayouts.map(([label, amount]) => (
+                <div key={label} className="flex items-center justify-between gap-4 border border-[#273041] rounded-lg px-4 py-3 bg-[#0B0E14]">
+                  <span className="text-sm text-[#CBD5E1]">{label}</span>
+                  <strong className="text-[#D1FAE5]">{amount}</strong>
+                </div>
+              ))}
             </div>
           </div>
 
           <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
-            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Season money</h2>
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Individual money — $3,200</h2>
             <p className="text-sm leading-6 text-[#CBD5E1] mb-5">
-              The money should be simple and visible. A current working example is a <strong className="text-[#F3F4F6]">$250 season fee per player</strong> with a published split before registration opens.
+              The top eight individual seasons cash. You can be on the last-place team and still win the $1,000 individual title.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="border border-[#273041] rounded-lg p-5 bg-[#0B0E14]">
-                <Money size={22} weight="duotone" className="text-[#10B981] mb-3" />
-                <div className="text-2xl font-bold text-[#F3F4F6]">$200</div>
-                <div className="text-sm text-[#9CA3AF] mt-1">per player to the prize purse</div>
-              </div>
-              <div className="border border-[#273041] rounded-lg p-5 bg-[#0B0E14]">
-                <Money size={22} weight="duotone" className="text-[#10B981] mb-3" />
-                <div className="text-2xl font-bold text-[#F3F4F6]">$50</div>
-                <div className="text-sm text-[#9CA3AF] mt-1">per player for league administration</div>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              {individualPayouts.map(([place, amount]) => (
+                <div key={place} className="flex items-center justify-between gap-3 border border-[#273041] rounded-lg px-4 py-3 bg-[#0B0E14]">
+                  <span className="text-sm text-[#9CA3AF]">{place}</span>
+                  <strong className="text-[#D1FAE5]">{amount}</strong>
+                </div>
+              ))}
             </div>
-            <p className="mt-4 text-sm leading-6 text-[#9CA3AF]">
-              At 32 players, that example creates a $6,400 player-funded prize purse. The exact fee, payout structure, and any 4B's sponsorship are still open for discussion.
-            </p>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Sign up with a team — or sign up alone</h2>
+            <div className="space-y-3 text-sm leading-6 text-[#CBD5E1]">
+              <p><strong className="text-[#F3F4F6]">Full teams:</strong> bring up to four players and compete for both halves of the purse.</p>
+              <p><strong className="text-[#F3F4F6]">Single players:</strong> register as a free agent and we will place you into an open roster where possible.</p>
+              <p><strong className="text-[#F3F4F6]">Short-handed teams:</strong> unfilled slots are team forfeits, but every race actually played still counts in full for the individual standings and payouts.</p>
+              <p><strong className="text-[#F3F4F6]">No dead season:</strong> being eliminated from the team race does not eliminate you from the individual money race.</p>
+            </div>
+          </div>
+
+          <div className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-3">Scoring without paperwork</h2>
+            <div className="space-y-3 text-sm leading-6 text-[#CBD5E1]">
+              <p><strong className="text-[#F3F4F6]">Fargo is the rating backbone.</strong> Rating difference sets the race instead of APA-style skill levels.</p>
+              <p><strong className="text-[#F3F4F6]">Ratings lock before league night.</strong> Nobody's handicap changes in the middle of play.</p>
+              <p><strong className="text-[#F3F4F6]">Every rack is recorded.</strong> The score page knows the players, discipline, race, and current score; scorekeeping is designed to be one tap per rack.</p>
+              <p><strong className="text-[#F3F4F6]">Standings update automatically.</strong> Team score, individual record, 8-ball record, 9-ball record, streaks, and head-to-head history all come from the same scorecard.</p>
+            </div>
           </div>
         </section>
 
         <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#10B981] mb-3">Build toward the ending</p>
-          <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-4">The final weeks should be the best part of the season</h2>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#10B981] mb-3">The payoff</p>
+          <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-4">The final weeks should feel like an event</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {finale.map((item, index) => (
               <div key={item} className="flex gap-4 border border-[#273041] rounded-lg p-5 bg-[#0B0E14]">
@@ -177,19 +207,19 @@ export default function Derby() {
         </section>
 
         <section className="bg-[#10151F] border border-[#10B981]/30 rounded-lg p-6 sm:p-8">
-          <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-2">What should we change?</h2>
+          <h2 className="font-[Outfit] text-2xl font-semibold text-[#F3F4F6] mb-2">This is the plan. Help us tune it.</h2>
           <p className="text-sm leading-6 text-[#CBD5E1] max-w-4xl mb-5">
-            Fremont Derby is still a proposal. The point of publishing this now is to pressure-test it with the players before we lock rules, collect money, or build the full league system.
+            We are not starting from a blank sheet. The team-plus-individual structure, 8/9 block format, Fargo handicap, four-player rosters, transparent entry split, and postseason concept are the starting rules for Season 1. Before registration opens, we only need to pressure-test a few details.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {workshopQuestions.map((question) => (
-              <div key={question} className="border border-[#273041] rounded-lg p-4 bg-[#0B0E14] text-sm leading-6 text-[#D1FAE5]">
-                {question}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {openItems.map((item) => (
+              <div key={item} className="border border-[#273041] rounded-lg p-4 bg-[#0B0E14] text-sm leading-6 text-[#D1FAE5]">
+                {item}
               </div>
             ))}
           </div>
           <p className="mt-6 text-sm text-[#9CA3AF]">
-            Bring feedback to 4B's or share it with the Fremont Open group. If the format survives the workshop, the next step is a playtest night before Season 1 registration opens.
+            Next step: one live playtest night at 4B's, then lock the race chart, publish the fixed league night, and open Season 1 registration.
           </p>
         </section>
       </main>
