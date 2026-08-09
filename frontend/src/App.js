@@ -50,7 +50,6 @@ function App() {
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
-            <Route path="/derby" element={<Derby />} />
             <Route path="/Derby" element={<Derby />} />
             <Route path="/join" element={<Info />} />
             <Route path="/info" element={<Info />} />
