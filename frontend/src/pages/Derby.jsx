@@ -10,7 +10,7 @@ import { Topbar } from "../components/Topbar";
 const snapshot = [
   { label: "Where", value: "4B's Tavern — all in house, no travel", icon: MapPin },
   { label: "Teams", value: "Working model: 8 teams, 4 players each", icon: Users },
-  { label: "League night", value: "Monday nights on four tables", icon: CalendarDots },
+  { label: "League night", value: "One night each week on four tables — day TBD", icon: CalendarDots },
   { label: "Games", value: "8-ball + 9-ball in the same match", icon: ShieldCheck },
   { label: "Handicap", value: "Fargo-based races, not APA skill levels", icon: ShieldCheck },
   { label: "Season", value: "About 12 regular weeks + playoffs", icon: CalendarDots },
@@ -39,10 +39,11 @@ const finale = [
 ];
 
 const workshopQuestions = [
+  "Which night of the week works best for the league?",
   "Does an 8-team / 4-player roster format feel right?",
-  "Should three players compete each normal Monday, or should all four play?",
+  "Should three players compete each normal league night, or should all four play?",
   "Do you like the 8-ball / 9-ball block format and the choice between discipline or first break?",
-  "How long should an individual race feel on a normal Monday?",
+  "How long should an individual race feel on a normal league night?",
   "What is the right season fee and how top-heavy should the prize payout be?",
   "What would make championship night something you would stay to watch even after your team is eliminated?",
 ];
@@ -52,7 +53,7 @@ export default function Derby() {
     <>
       <Topbar
         title="Fremont Derby"
-        subtitle="A working proposal for a new Monday night league at 4B's"
+        subtitle="A working proposal for a new in-house league at 4B's"
       />
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8 space-y-8" data-testid="derby-page">
         <section className="grid grid-cols-1 xl:grid-cols-[1.45fr_0.75fr] gap-6">
@@ -61,7 +62,7 @@ export default function Derby() {
               Working proposal — feedback wanted
             </p>
             <h1 className="font-[Outfit] text-3xl sm:text-4xl font-bold text-[#F3F4F6] leading-tight mb-4">
-              A better Monday night pool league, built at 4B's
+              A better in-house pool league, built at 4B's
             </h1>
             <p className="text-[#CBD5E1] leading-7 max-w-3xl">
               Fremont Derby is a proposed seasonal league built around the things we like about team pool without the travel, paperwork, or rigid league structure. The goal is simple: competitive handicapped matches, useful stats, transparent prize money, and final weeks that feel like an event.
@@ -69,7 +70,7 @@ export default function Derby() {
             <div className="mt-6 rounded-lg border border-[#10B981]/30 bg-[#10B981]/10 p-5">
               <p className="text-[#D1FAE5] font-semibold">The design target</p>
               <p className="mt-1 text-sm leading-6 text-[#CBD5E1]">
-                Easy Monday nights. Serious standings. Awesome playoffs. Nothing on this page is final yet — this is the version to workshop with the players who would actually play it.
+                Easy league nights. Serious standings. Awesome playoffs. Nothing on this page is final yet — this is the version to workshop with the players who would actually play it.
               </p>
             </div>
           </div>
@@ -132,7 +133,7 @@ export default function Derby() {
             <div className="space-y-3 text-sm leading-6 text-[#CBD5E1]">
               <p><strong className="text-[#F3F4F6]">Fargo is the rating backbone.</strong> We use the rating difference to set each race instead of maintaining APA-style skill levels.</p>
               <p><strong className="text-[#F3F4F6]">Every rack is recorded.</strong> The website knows the discipline, the race, the players, and the current score; scorekeeping should be roughly one tap per rack.</p>
-              <p><strong className="text-[#F3F4F6]">Ratings lock for league night.</strong> Results can affect future weeks, but nobody's race changes in the middle of Monday.</p>
+              <p><strong className="text-[#F3F4F6]">Ratings lock for league night.</strong> Results can affect future weeks, but nobody's race changes in the middle of the night.</p>
               <p><strong className="text-[#F3F4F6]">Playoffs can use longer races.</strong> The same rating system stays in place while postseason matches get a larger format.</p>
             </div>
           </div>
@@ -188,7 +189,7 @@ export default function Derby() {
             ))}
           </div>
           <p className="mt-6 text-sm text-[#9CA3AF]">
-            Bring feedback to Monday night or share it with the Fremont Open group. If the format survives the workshop, the next step is a playtest night before Season 1 registration opens.
+            Bring feedback to 4B's or share it with the Fremont Open group. If the format survives the workshop, the next step is a playtest night before Season 1 registration opens.
           </p>
         </section>
       </main>
