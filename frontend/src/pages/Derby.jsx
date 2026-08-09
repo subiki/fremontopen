@@ -2,8 +2,8 @@ import { Topbar } from "../components/Topbar";
 
 const details = [
   ["Location", "4B's Tavern. All matches are in-house; no travel."],
-  ["Teams", "Up to 8 teams with up to 4 players each."],
-  ["Schedule", "One fixed league night each week. Day still to be selected."],
+  ["Teams", "8 teams with up to 4 players each."],
+  ["Schedule", "One fixed league night each week. The day will be set before registration opens."],
   ["Season", "About 12 regular-season weeks, followed by playoffs."],
 ];
 
@@ -12,17 +12,17 @@ export default function Derby() {
     <>
       <Topbar
         title="Fremont Derby"
-        subtitle="Working concept for an in-house seasonal league at 4B's"
+        subtitle="An in-house seasonal league at 4B's"
       />
 
       <main className="flex-1 px-6 sm:px-8 py-6 sm:py-8" data-testid="derby-page">
         <div className="max-w-4xl space-y-6">
           <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
             <h1 className="font-[Outfit] text-2xl sm:text-3xl font-semibold text-[#F3F4F6]">
-              Proposed league format
+              Season 1 format
             </h1>
             <p className="mt-4 text-sm sm:text-base leading-7 text-[#CBD5E1]">
-              Fremont Derby would be a seasonal pool league based entirely at 4B's. The current idea is a small team league with Fargo-based handicaps, both 8-ball and 9-ball in each individual match, team standings, and individual standings.
+              Fremont Derby is a seasonal pool league based entirely at 4B's. Season 1 will use small teams, Fargo-based handicaps, both 8-ball and 9-ball in each individual match, team standings, and individual standings.
             </p>
           </section>
 
@@ -57,16 +57,16 @@ export default function Derby() {
               <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Team and individual standings</h2>
               <div className="mt-4 space-y-3 text-sm leading-6 text-[#CBD5E1]">
                 <p>Each individual result contributes to the team result and to that player's own season record.</p>
-                <p>Individual prize money would be separate from team prize money, so a player can still have a successful season even if their team does not.</p>
-                <p>Players could sign up with a team or individually and be placed into an available roster spot.</p>
+                <p>Individual prize money is separate from team prize money, so a player can still have a successful season even if their team does not.</p>
+                <p>Players can sign up with a team or individually and be placed into an available roster spot.</p>
               </div>
             </div>
           </section>
 
           <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
-            <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Example season money</h2>
+            <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Season money</h2>
             <p className="mt-3 text-sm leading-6 text-[#CBD5E1]">
-              One working example is a $250 season fee per player. $200 would go to the prize pool and $50 to league administration. With 32 players, that would create a $6,400 prize pool split between team and individual payouts.
+              The Season 1 plan is a $250 season fee per player. $200 goes to the prize pool and $50 to league administration. At 32 players, that creates a $6,400 prize pool split between team and individual payouts.
             </p>
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Stat label="Season fee" value="$250" />
@@ -78,14 +78,14 @@ export default function Derby() {
           <section className="bg-[#141923] border border-[#273041] rounded-lg p-6 sm:p-8">
             <h2 className="font-[Outfit] text-xl font-semibold text-[#F3F4F6]">Postseason</h2>
             <p className="mt-3 text-sm leading-6 text-[#CBD5E1]">
-              The current plan is for the top teams to advance to a short playoff, with longer races and a championship night. A tied championship could be decided by one final anchor match selected by the teams.
+              The top four teams advance to the playoffs. Postseason matches use longer races and lead into a championship night. A tied championship can be decided by one final anchor match selected by the teams.
             </p>
           </section>
 
           <section className="px-1 pb-4">
-            <h2 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Still to finalize</h2>
+            <h2 className="font-[Outfit] text-lg font-semibold text-[#F3F4F6]">Feedback before launch</h2>
             <p className="mt-2 text-sm leading-6 text-[#9CA3AF]">
-              The league night, exact Fargo race chart, and final split between team and individual prize money. The rest is the current working structure.
+              This is the Season 1 structure. We are still open to feedback on the league night, the exact Fargo race chart, and how the prize pool is divided between team and individual finishes before registration opens.
             </p>
           </section>
         </div>
