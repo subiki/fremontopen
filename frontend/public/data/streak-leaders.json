@@ -1,16 +1,63 @@
 {
-  "schema_version": 2,
-  "generated_at": "2026-08-10T21:12:47.226484+00:00",
+  "schema_version": 3,
+  "generated_at": "2026-08-10T21:19:13.277409+00:00",
   "definitions": {
-    "consecutive_titles": "Consecutive ISO calendar weeks with at least one 1st-place finish. A missing calendar week breaks the streak; multiple wins in one week count once.",
-    "consecutive_in_the_money": "Consecutive ISO calendar weeks with at least one recorded payout or paid placement. A missing calendar week breaks the streak; multiple paid finishes in one week count once."
+    "consecutive_titles": "Consecutive Saturday-Friday tournament weeks with at least one 1st-place finish. A missing tournament week breaks the streak; multiple wins in one week count once.",
+    "consecutive_in_the_money": "Consecutive Saturday-Friday tournament weeks with at least one recorded payout or paid placement. A missing tournament week breaks the streak; multiple paid finishes in one week count once."
   },
   "source": {
     "tournament_files": 258,
-    "players_with_appearances": 557
+    "players_with_appearances": 557,
+    "manual_title_overrides": 1
   },
   "rankings": {
     "consecutive_titles": [
+      {
+        "player": "Sean Keenan",
+        "streak": 4,
+        "current": true,
+        "start_date": "2026-07-18T22:24:53.959+02:00",
+        "end_date": "2026-08-08T22:28:30.938+02:00",
+        "events": [
+          {
+            "tournament_id": 18240069,
+            "tournament_name": "4Bs 9 ball 7/18/26",
+            "date": "2026-07-18T22:24:53.959+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/hbjp3hmx",
+            "place": 1,
+            "amount": 110
+          },
+          {
+            "tournament_id": 18272615,
+            "tournament_name": "4Bs 8 ball 7/25/26",
+            "date": "2026-07-25T22:27:46.068+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/lio41qjk",
+            "place": 1,
+            "amount": 110
+          },
+          {
+            "tournament_id": 18303773,
+            "tournament_name": "4Bs 9 ball 8/1/26",
+            "date": "2026-08-01T22:30:52.250+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/yo6nvtwt",
+            "place": 1,
+            "amount": null
+          },
+          {
+            "tournament_id": 18336290,
+            "tournament_name": "4Bs 8 ball 8/8/26",
+            "date": "2026-08-08T22:28:30.938+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/ahxdck7z",
+            "place": 1,
+            "amount": 90
+          }
+        ],
+        "rank": 1
+      },
       {
         "player": "Chad Galera",
         "streak": 4,
@@ -55,7 +102,7 @@
             "amount": 105
           }
         ],
-        "rank": 1
+        "rank": 2
       },
       {
         "player": "Glenn Tamura",
@@ -90,34 +137,6 @@
             "url": "https://fremontopen.challonge.com/9s96koa4",
             "place": 1,
             "amount": 100
-          }
-        ],
-        "rank": 2
-      },
-      {
-        "player": "Sean Keenan",
-        "streak": 2,
-        "current": false,
-        "start_date": "2026-07-18T22:24:53.959+02:00",
-        "end_date": "2026-07-25T22:27:46.068+02:00",
-        "events": [
-          {
-            "tournament_id": 18240069,
-            "tournament_name": "4Bs 9 ball 7/18/26",
-            "date": "2026-07-18T22:24:53.959+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/hbjp3hmx",
-            "place": 1,
-            "amount": 110
-          },
-          {
-            "tournament_id": 18272615,
-            "tournament_name": "4Bs 8 ball 7/25/26",
-            "date": "2026-07-25T22:27:46.068+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/lio41qjk",
-            "place": 1,
-            "amount": 110
           }
         ],
         "rank": 3
@@ -207,60 +226,32 @@
         "rank": 6
       },
       {
-        "player": "Michal Rybak",
+        "player": "Michael Mendenhall",
         "streak": 2,
         "current": false,
-        "start_date": "2022-09-04T01:04:08.354+02:00",
-        "end_date": "2022-09-08T06:06:12.338+02:00",
+        "start_date": "2022-09-08T05:51:01.607+02:00",
+        "end_date": "2022-09-10T22:26:51.291+02:00",
         "events": [
           {
-            "tournament_id": 11723184,
-            "tournament_name": "Talarico's 9 ball 9/3/22",
-            "date": "2022-09-04T01:04:08.354+02:00",
+            "tournament_id": 11744700,
+            "tournament_name": "Talarico's 9 ball 8/20/22",
+            "date": "2022-09-08T05:51:01.607+02:00",
             "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/t5lo2r4w",
+            "url": "https://fremontopen.challonge.com/h9yyjt2x",
             "place": 1,
-            "amount": 75
+            "amount": 40
           },
           {
-            "tournament_id": 11744715,
-            "tournament_name": "Talarico's 9 ball 9/3/22",
-            "date": "2022-09-08T06:06:12.338+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/j0d5493g",
+            "tournament_id": 11757240,
+            "tournament_name": "Talarico's 8 ball 9/10/22",
+            "date": "2022-09-10T22:26:51.291+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/m2xvbhdj",
             "place": 1,
-            "amount": 60
+            "amount": 65
           }
         ],
         "rank": 7
-      },
-      {
-        "player": "Brad Pugh",
-        "streak": 2,
-        "current": false,
-        "start_date": "2022-08-06T23:40:29.615+02:00",
-        "end_date": "2022-08-09T01:33:58.869+02:00",
-        "events": [
-          {
-            "tournament_id": 11551705,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-06T23:40:29.615+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/36nt5msq",
-            "place": 1,
-            "amount": 65
-          },
-          {
-            "tournament_id": 11558383,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-09T01:33:58.869+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/m2tp7zs6",
-            "place": 1,
-            "amount": 50
-          }
-        ],
-        "rank": 8
       },
       {
         "player": "Tim Burbage",
@@ -288,7 +279,7 @@
             "amount": 90
           }
         ],
-        "rank": 9
+        "rank": 8
       },
       {
         "player": "Jeff Hudson",
@@ -314,6 +305,25 @@
             "url": "https://fremontopen.challonge.com/usotn9tv",
             "place": 1,
             "amount": 50
+          }
+        ],
+        "rank": 9
+      },
+      {
+        "player": "Malcom Rogers",
+        "streak": 1,
+        "current": false,
+        "start_date": "2026-07-11T22:25:06.603+02:00",
+        "end_date": "2026-07-11T22:25:06.603+02:00",
+        "events": [
+          {
+            "tournament_id": 18207711,
+            "tournament_name": "4Bs 8 ball 7/11/25",
+            "date": "2026-07-11T22:25:06.603+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/11f4lk1v",
+            "place": 1,
+            "amount": 90
           }
         ],
         "rank": 10
@@ -394,70 +404,6 @@
         "rank": 1
       },
       {
-        "player": "Eddie Robinson",
-        "streak": 6,
-        "current": false,
-        "start_date": "2022-07-17T00:05:41.822+02:00",
-        "end_date": "2022-08-21T00:59:38.081+02:00",
-        "events": [
-          {
-            "tournament_id": 11438211,
-            "tournament_name": "Talarico's 8 ball 7/16/22",
-            "date": "2022-07-17T00:05:41.822+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/2j1u94yp",
-            "place": 3,
-            "amount": 5
-          },
-          {
-            "tournament_id": 11480766,
-            "tournament_name": "Talarico's 9 ball 7/23",
-            "date": "2022-07-24T00:29:18.973+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/qbs1m4pw",
-            "place": 3,
-            "amount": 25
-          },
-          {
-            "tournament_id": 11492028,
-            "tournament_name": "Talarico's 9 ball 7/23/22",
-            "date": "2022-07-25T22:59:50.993+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/6uwrkzu",
-            "place": 3,
-            "amount": 20
-          },
-          {
-            "tournament_id": 11551705,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-06T23:40:29.615+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/36nt5msq",
-            "place": 3,
-            "amount": 20
-          },
-          {
-            "tournament_id": 11558383,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-09T01:33:58.869+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/m2tp7zs6",
-            "place": 3,
-            "amount": 15
-          },
-          {
-            "tournament_id": 11616048,
-            "tournament_name": "Talarico's 9 ball 8/20/22",
-            "date": "2022-08-21T00:59:38.081+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/pnixlh37",
-            "place": 3,
-            "amount": 20
-          }
-        ],
-        "rank": 2
-      },
-      {
         "player": "Jackson Monsalve",
         "streak": 5,
         "current": false,
@@ -510,117 +456,7 @@
             "amount": 10
           }
         ],
-        "rank": 3
-      },
-      {
-        "player": "Aman Sunar",
-        "streak": 5,
-        "current": false,
-        "start_date": "2022-07-18T02:05:45.805+02:00",
-        "end_date": "2022-08-21T00:59:38.081+02:00",
-        "events": [
-          {
-            "tournament_id": 11449809,
-            "tournament_name": "Talarico's 8 ball 7-16-22",
-            "date": "2022-07-18T02:05:45.805+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/flaie1u0",
-            "place": 2,
-            "amount": 25
-          },
-          {
-            "tournament_id": 11496064,
-            "tournament_name": "Talarico's 8 ball 7/30/22",
-            "date": "2022-07-30T23:39:22.508+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/v3bmh0xp",
-            "place": 2,
-            "amount": 45
-          },
-          {
-            "tournament_id": 11551705,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-06T23:40:29.615+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/36nt5msq",
-            "place": 4,
-            "amount": 5
-          },
-          {
-            "tournament_id": 11558383,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-09T01:33:58.869+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/m2tp7zs6",
-            "place": 4,
-            "amount": 5
-          },
-          {
-            "tournament_id": 11616048,
-            "tournament_name": "Talarico's 9 ball 8/20/22",
-            "date": "2022-08-21T00:59:38.081+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/pnixlh37",
-            "place": 4,
-            "amount": 5
-          }
-        ],
-        "rank": 4
-      },
-      {
-        "player": "Paul Alexander",
-        "streak": 5,
-        "current": false,
-        "start_date": "2022-07-17T00:05:41.822+02:00",
-        "end_date": "2022-08-09T01:33:58.869+02:00",
-        "events": [
-          {
-            "tournament_id": 11438211,
-            "tournament_name": "Talarico's 8 ball 7/16/22",
-            "date": "2022-07-17T00:05:41.822+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/2j1u94yp",
-            "place": 3,
-            "amount": 5
-          },
-          {
-            "tournament_id": 11480766,
-            "tournament_name": "Talarico's 9 ball 7/23",
-            "date": "2022-07-24T00:29:18.973+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/qbs1m4pw",
-            "place": 2,
-            "amount": 55
-          },
-          {
-            "tournament_id": 11496064,
-            "tournament_name": "Talarico's 8 ball 7/30/22",
-            "date": "2022-07-30T23:39:22.508+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/v3bmh0xp",
-            "place": 3,
-            "amount": 25
-          },
-          {
-            "tournament_id": 11551705,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-06T23:40:29.615+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/36nt5msq",
-            "place": 2,
-            "amount": 40
-          },
-          {
-            "tournament_id": 11558383,
-            "tournament_name": "Talarico's 9 ball 8/6/22",
-            "date": "2022-08-09T01:33:58.869+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/m2tp7zs6",
-            "place": 2,
-            "amount": 30
-          }
-        ],
-        "rank": 5
+        "rank": 2
       },
       {
         "player": "Glenn Tamura",
@@ -675,7 +511,7 @@
             "amount": 10
           }
         ],
-        "rank": 6
+        "rank": 3
       },
       {
         "player": "Jason Lambert",
@@ -730,7 +566,7 @@
             "amount": 35
           }
         ],
-        "rank": 7
+        "rank": 4
       },
       {
         "player": "Jeff Hudson",
@@ -785,7 +621,53 @@
             "amount": 50
           }
         ],
-        "rank": 8
+        "rank": 5
+      },
+      {
+        "player": "Sean Keenan",
+        "streak": 4,
+        "current": true,
+        "start_date": "2026-07-18T22:24:53.959+02:00",
+        "end_date": "2026-08-08T22:28:30.938+02:00",
+        "events": [
+          {
+            "tournament_id": 18240069,
+            "tournament_name": "4Bs 9 ball 7/18/26",
+            "date": "2026-07-18T22:24:53.959+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/hbjp3hmx",
+            "place": 1,
+            "amount": 110
+          },
+          {
+            "tournament_id": 18272615,
+            "tournament_name": "4Bs 8 ball 7/25/26",
+            "date": "2026-07-25T22:27:46.068+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/lio41qjk",
+            "place": 1,
+            "amount": 110
+          },
+          {
+            "tournament_id": 18303773,
+            "tournament_name": "4Bs 9 ball 8/1/26",
+            "date": "2026-08-01T22:30:52.250+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/yo6nvtwt",
+            "place": 1,
+            "amount": null
+          },
+          {
+            "tournament_id": 18336290,
+            "tournament_name": "4Bs 8 ball 8/8/26",
+            "date": "2026-08-08T22:28:30.938+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/ahxdck7z",
+            "place": 1,
+            "amount": 90
+          }
+        ],
+        "rank": 6
       },
       {
         "player": "Chad Galera",
@@ -831,41 +713,142 @@
             "amount": 105
           }
         ],
+        "rank": 7
+      },
+      {
+        "player": "Michael Mendenhall",
+        "streak": 4,
+        "current": false,
+        "start_date": "2022-08-28T00:50:30.109+02:00",
+        "end_date": "2022-09-18T23:25:06.073+02:00",
+        "events": [
+          {
+            "tournament_id": 11657575,
+            "tournament_name": "Talarico's 8 ball 8/27/22",
+            "date": "2022-08-28T00:50:30.109+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/xlannpou",
+            "place": 3,
+            "amount": 35
+          },
+          {
+            "tournament_id": 11744700,
+            "tournament_name": "Talarico's 9 ball 8/20/22",
+            "date": "2022-09-08T05:51:01.607+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/h9yyjt2x",
+            "place": 1,
+            "amount": 40
+          },
+          {
+            "tournament_id": 11757240,
+            "tournament_name": "Talarico's 8 ball 9/10/22",
+            "date": "2022-09-10T22:26:51.291+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/m2xvbhdj",
+            "place": 1,
+            "amount": 65
+          },
+          {
+            "tournament_id": 11795365,
+            "tournament_name": "Talarico's 9 ball 9/17/22",
+            "date": "2022-09-18T23:25:06.073+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/943yowkl",
+            "place": 3,
+            "amount": 20
+          }
+        ],
+        "rank": 8
+      },
+      {
+        "player": "Paul Alexander",
+        "streak": 4,
+        "current": false,
+        "start_date": "2022-07-17T00:05:41.822+02:00",
+        "end_date": "2022-08-09T01:33:58.869+02:00",
+        "events": [
+          {
+            "tournament_id": 11438211,
+            "tournament_name": "Talarico's 8 ball 7/16/22",
+            "date": "2022-07-17T00:05:41.822+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/2j1u94yp",
+            "place": 3,
+            "amount": 5
+          },
+          {
+            "tournament_id": 11492028,
+            "tournament_name": "Talarico's 9 ball 7/23/22",
+            "date": "2022-07-25T22:59:50.993+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/6uwrkzu",
+            "place": 2,
+            "amount": 35
+          },
+          {
+            "tournament_id": 11527437,
+            "tournament_name": "Talarico's 8 ball 7/30/22",
+            "date": "2022-08-01T17:53:47.865+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/y1sit0g1",
+            "place": 3,
+            "amount": 25
+          },
+          {
+            "tournament_id": 11558383,
+            "tournament_name": "Talarico's 9 ball 8/6/22",
+            "date": "2022-08-09T01:33:58.869+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/m2tp7zs6",
+            "place": 2,
+            "amount": 30
+          }
+        ],
         "rank": 9
       },
       {
-        "player": "Sean Keenan",
-        "streak": 3,
+        "player": "Aman Sunar",
+        "streak": 4,
         "current": false,
-        "start_date": "2026-05-23T22:27:25.633+02:00",
-        "end_date": "2026-06-06T22:29:10.240+02:00",
+        "start_date": "2022-05-21T22:25:04.692+02:00",
+        "end_date": "2022-06-11T22:13:29.653+02:00",
         "events": [
           {
-            "tournament_id": 17982109,
-            "tournament_name": "4Bs 9 ball 5/23/26",
-            "date": "2026-05-23T22:27:25.633+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/cbxoksfm",
+            "tournament_id": 11162937,
+            "tournament_name": "Talarico's 5/21/22 8 Ball",
+            "date": "2022-05-21T22:25:04.692+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/cr61549t",
             "place": 3,
             "amount": 30
           },
           {
-            "tournament_id": 18016729,
-            "tournament_name": "4Bs 8 ball 5/30/26",
-            "date": "2026-05-30T22:26:23.551+02:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/zszhvw3q",
-            "place": 1,
-            "amount": 110
+            "tournament_id": 11208984,
+            "tournament_name": "Talarico's 9 ball 5/28/2022",
+            "date": "2022-05-28T22:23:51.416+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/ne7gb98w",
+            "place": 4,
+            "amount": 10
           },
           {
-            "tournament_id": 18050451,
-            "tournament_name": "4Bs 9 ball 6/6/26",
-            "date": "2026-06-06T22:29:10.240+02:00",
-            "game": "9-ball",
-            "url": "https://fremontopen.challonge.com/4rnf9u8s",
+            "tournament_id": 11231079,
+            "tournament_name": "Talarico's 8 ball 6/4/2022",
+            "date": "2022-06-04T22:08:42.664+02:00",
+            "game": "8-ball",
+            "url": "https://fremontopen.challonge.com/rtlk23s5",
             "place": 3,
-            "amount": 20
+            "amount": 25
+          },
+          {
+            "tournament_id": 11263699,
+            "tournament_name": "Talarico's 9 ball 6/11/22",
+            "date": "2022-06-11T22:13:29.653+02:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/cnbu9aod",
+            "place": 4,
+            "amount": 10
           }
         ],
         "rank": 10
