@@ -1,11 +1,11 @@
-"""Build consecutive title and in-the-money streak rankings from static tournament exports."""
+"""Build consecutive-week title and in-the-money streak rankings from static tournament exports."""
 
 from __future__ import annotations
 
 import argparse
 import json
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -14,13 +14,26 @@ DEFAULT_TOURNAMENT_DIR = PROJECT_ROOT / "frontend" / "public" / "data" / "tourna
 DEFAULT_OUTPUT = PROJECT_ROOT / "frontend" / "public" / "data" / "streak-leaders.json"
 
 
-def _iso_sort_value(value: Any) -> float:
+def _parse_datetime(value: Any) -> datetime | None:
     if not value:
-        return 0.0
+        return None
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except (TypeError, ValueError):
-        return 0.0
+        return None
+
+
+def _iso_sort_value(value: Any) -> float:
+    parsed = _parse_datetime(value)
+    return parsed.timestamp() if parsed else 0.0
+
+
+def _week_index(value: Any) -> int | None:
+    parsed = _parse_datetime(value)
+    if not parsed:
+        return None
+    iso_year, iso_week, _ = parsed.date().isocalendar()
+    return date.fromisocalendar(iso_year, iso_week, 1).toordinal() // 7
 
 
 def _is_singles_entry(name: Any, entry_type: Any = None) -> bool:
@@ -45,8 +58,6 @@ def _money_map(analytics: dict[str, Any]) -> dict[str, dict[str, Any]]:
             if player:
                 payouts[str(player)] = {"place": place, "amount": per_player}
 
-    # Older exports may only contain placements. Keep those events eligible while
-    # leaving the payout amount unknown.
     if not payouts:
         for placement in analytics.get("placements") or []:
             player = placement.get("player")
@@ -112,32 +123,60 @@ def tournament_appearances(payloads: Iterable[dict[str, Any]]) -> dict[str, list
     return dict(appearances)
 
 
-def _best_run(
+def _qualifying_week_events(
     events: list[dict[str, Any]],
     qualifies: Callable[[dict[str, Any]], bool],
-) -> list[dict[str, Any]]:
-    best: list[dict[str, Any]] = []
-    current: list[dict[str, Any]] = []
+) -> list[tuple[int, dict[str, Any]]]:
+    """Return one representative qualifying event per ISO calendar week."""
+    by_week: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for event in events:
+        week = _week_index(event.get("date"))
+        if week is not None:
+            by_week[week].append(event)
 
-    def consider(run: list[dict[str, Any]]) -> None:
+    qualifying: list[tuple[int, dict[str, Any]]] = []
+    for week in sorted(by_week):
+        matches = [event for event in by_week[week] if qualifies(event)]
+        if not matches:
+            continue
+        representative = max(
+            matches,
+            key=lambda event: (
+                _iso_sort_value(event.get("date")),
+                int(event.get("tournament_id") or 0),
+            ),
+        )
+        qualifying.append((week, representative))
+    return qualifying
+
+
+def _best_week_run(
+    events: list[dict[str, Any]],
+    qualifies: Callable[[dict[str, Any]], bool],
+) -> list[tuple[int, dict[str, Any]]]:
+    best: list[tuple[int, dict[str, Any]]] = []
+    current: list[tuple[int, dict[str, Any]]] = []
+
+    def consider(run: list[tuple[int, dict[str, Any]]]) -> None:
         nonlocal best
         if not run:
             return
-        run_key = (len(run), _iso_sort_value(run[-1].get("date")), int(run[-1].get("tournament_id") or 0))
+        run_event = run[-1][1]
+        best_event = best[-1][1] if best else {}
+        run_key = (len(run), _iso_sort_value(run_event.get("date")), int(run_event.get("tournament_id") or 0))
         best_key = (
             len(best),
-            _iso_sort_value(best[-1].get("date")) if best else 0.0,
-            int(best[-1].get("tournament_id") or 0) if best else 0,
+            _iso_sort_value(best_event.get("date")) if best else 0.0,
+            int(best_event.get("tournament_id") or 0) if best else 0,
         )
         if run_key > best_key:
             best = list(run)
 
-    for event in events:
-        if qualifies(event):
-            current.append(event)
-        else:
+    for week, event in _qualifying_week_events(events, qualifies):
+        if current and week != current[-1][0] + 1:
             consider(current)
             current = []
+        current.append((week, event))
     consider(current)
     return best
 
@@ -146,23 +185,24 @@ def _ranking(
     appearances: dict[str, list[dict[str, Any]]],
     qualifies: Callable[[dict[str, Any]], bool],
     limit: int,
+    latest_week: int | None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for player, events in appearances.items():
         if not events:
             continue
-        run = _best_run(events, qualifies)
+        run = _best_week_run(events, qualifies)
         if not run:
             continue
-        current = run[-1] is events[-1] and qualifies(events[-1])
+        run_events = [event for _, event in run]
         rows.append(
             {
                 "player": player,
                 "streak": len(run),
-                "current": current,
-                "start_date": run[0].get("date"),
-                "end_date": run[-1].get("date"),
-                "events": run,
+                "current": latest_week is not None and run[-1][0] == latest_week,
+                "start_date": run_events[0].get("date"),
+                "end_date": run_events[-1].get("date"),
+                "events": run_events,
             }
         )
 
@@ -181,17 +221,26 @@ def _ranking(
 def build_rankings(payloads: Iterable[dict[str, Any]], limit: int = 10) -> dict[str, Any]:
     payload_list = list(payloads)
     appearances = tournament_appearances(payload_list)
+    latest_week = max(
+        (
+            week
+            for events in appearances.values()
+            for event in events
+            if (week := _week_index(event.get("date"))) is not None
+        ),
+        default=None,
+    )
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "definitions": {
             "consecutive_titles": (
-                "Consecutive tournament appearances ending in 1st place. "
-                "Skipped tournaments neither extend nor break a player's run."
+                "Consecutive ISO calendar weeks with at least one 1st-place finish. "
+                "A missing calendar week breaks the streak; multiple wins in one week count once."
             ),
             "consecutive_in_the_money": (
-                "Consecutive tournament appearances with a recorded payout or paid placement. "
-                "An appearance outside the money breaks the run."
+                "Consecutive ISO calendar weeks with at least one recorded payout or paid placement. "
+                "A missing calendar week breaks the streak; multiple paid finishes in one week count once."
             ),
         },
         "source": {
@@ -203,11 +252,13 @@ def build_rankings(payloads: Iterable[dict[str, Any]], limit: int = 10) -> dict[
                 appearances,
                 lambda event: int(event.get("place") or 0) == 1,
                 limit,
+                latest_week,
             ),
             "consecutive_in_the_money": _ranking(
                 appearances,
                 lambda event: event.get("place") is not None,
                 limit,
+                latest_week,
             ),
         },
     }
