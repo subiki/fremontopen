@@ -7,11 +7,13 @@ import json
 from collections import defaultdict
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TOURNAMENT_DIR = PROJECT_ROOT / "frontend" / "public" / "data" / "tournaments"
 DEFAULT_OUTPUT = PROJECT_ROOT / "frontend" / "public" / "data" / "streak-leaders.json"
+DEFAULT_OVERRIDE_FILE = PROJECT_ROOT / "scripts" / "tournament_streak_overrides.json"
+TOURNAMENT_WEEK_ANCHOR = date(1970, 1, 3)  # Saturday
 
 
 def _parse_datetime(value: Any) -> datetime | None:
@@ -29,11 +31,11 @@ def _iso_sort_value(value: Any) -> float:
 
 
 def _week_index(value: Any) -> int | None:
+    """Bucket timestamps into Saturday-Friday Fremont tournament weeks."""
     parsed = _parse_datetime(value)
     if not parsed:
         return None
-    iso_year, iso_week, _ = parsed.date().isocalendar()
-    return date.fromisocalendar(iso_year, iso_week, 1).toordinal() // 7
+    return (parsed.date().toordinal() - TOURNAMENT_WEEK_ANCHOR.toordinal()) // 7
 
 
 def _is_singles_entry(name: Any, entry_type: Any = None) -> bool:
@@ -80,8 +82,12 @@ def _participants(matches: Iterable[dict[str, Any]]) -> set[str]:
     return names
 
 
-def tournament_appearances(payloads: Iterable[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+def tournament_appearances(
+    payloads: Iterable[dict[str, Any]],
+    title_overrides: Mapping[int, str] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     appearances: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    overrides = dict(title_overrides or {})
     ordered_payloads = sorted(
         payloads,
         key=lambda payload: (
@@ -97,9 +103,19 @@ def tournament_appearances(payloads: Iterable[dict[str, Any]]) -> dict[str, list
         tournament_id = tournament.get("id")
         if tournament_id is None:
             continue
+        tournament_id = int(tournament_id)
 
         analytics = payload.get("analytics") or {}
         money = _money_map(analytics)
+        override_winner = overrides.get(tournament_id)
+        if override_winner:
+            money = {
+                player: info
+                for player, info in money.items()
+                if int(info.get("place") or 0) != 1
+            }
+            money[override_winner] = {"place": 1, "amount": None}
+
         participants = _participants(payload.get("matches") or [])
         participants.update(player for player in money if _is_singles_entry(player))
 
@@ -127,7 +143,7 @@ def _qualifying_week_events(
     events: list[dict[str, Any]],
     qualifies: Callable[[dict[str, Any]], bool],
 ) -> list[tuple[int, dict[str, Any]]]:
-    """Return one representative qualifying event per ISO calendar week."""
+    """Return one representative qualifying event per Saturday-Friday tournament week."""
     by_week: dict[int, list[dict[str, Any]]] = defaultdict(list)
     for event in events:
         week = _week_index(event.get("date"))
@@ -218,9 +234,13 @@ def _ranking(
     return rows[:limit]
 
 
-def build_rankings(payloads: Iterable[dict[str, Any]], limit: int = 10) -> dict[str, Any]:
+def build_rankings(
+    payloads: Iterable[dict[str, Any]],
+    limit: int = 10,
+    title_overrides: Mapping[int, str] | None = None,
+) -> dict[str, Any]:
     payload_list = list(payloads)
-    appearances = tournament_appearances(payload_list)
+    appearances = tournament_appearances(payload_list, title_overrides=title_overrides)
     latest_week = max(
         (
             week
@@ -231,21 +251,22 @@ def build_rankings(payloads: Iterable[dict[str, Any]], limit: int = 10) -> dict[
         default=None,
     )
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "definitions": {
             "consecutive_titles": (
-                "Consecutive ISO calendar weeks with at least one 1st-place finish. "
-                "A missing calendar week breaks the streak; multiple wins in one week count once."
+                "Consecutive Saturday-Friday tournament weeks with at least one 1st-place finish. "
+                "A missing tournament week breaks the streak; multiple wins in one week count once."
             ),
             "consecutive_in_the_money": (
-                "Consecutive ISO calendar weeks with at least one recorded payout or paid placement. "
-                "A missing calendar week breaks the streak; multiple paid finishes in one week count once."
+                "Consecutive Saturday-Friday tournament weeks with at least one recorded payout or paid placement. "
+                "A missing tournament week breaks the streak; multiple paid finishes in one week count once."
             ),
         },
         "source": {
             "tournament_files": len(payload_list),
             "players_with_appearances": len(appearances),
+            "manual_title_overrides": len(title_overrides or {}),
         },
         "rankings": {
             "consecutive_titles": _ranking(
@@ -276,18 +297,41 @@ def load_tournament_payloads(tournament_dir: Path) -> list[dict[str, Any]]:
     return payloads
 
 
+def load_title_overrides(path: Path) -> dict[int, str]:
+    if not path.exists():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Unable to read title override file {path}: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise RuntimeError(f"Title override file must contain a JSON object: {path}")
+    overrides: dict[int, str] = {}
+    for tournament_id, winner in raw.items():
+        text = str(winner or "").strip()
+        if text:
+            overrides[int(tournament_id)] = text
+    return overrides
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tournament-dir", type=Path, default=DEFAULT_TOURNAMENT_DIR)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--override-file", type=Path, default=DEFAULT_OVERRIDE_FILE)
     parser.add_argument("--limit", type=int, default=10)
     args = parser.parse_args()
 
     payloads = load_tournament_payloads(args.tournament_dir)
     if not payloads:
         raise SystemExit(f"No tournament detail exports found in {args.tournament_dir}")
+    title_overrides = load_title_overrides(args.override_file)
 
-    result = build_rankings(payloads, limit=max(1, args.limit))
+    result = build_rankings(
+        payloads,
+        limit=max(1, args.limit),
+        title_overrides=title_overrides,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n",
