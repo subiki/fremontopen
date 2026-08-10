@@ -39,7 +39,7 @@ def event(tournament_id, date, placements, participants):
 
 
 class StreakRankingsTests(unittest.TestCase):
-    def test_missing_calendar_week_breaks_title_run(self):
+    def test_missing_tournament_week_breaks_title_run(self):
         payloads = [
             event(1, "2026-01-01T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
             event(2, "2026-01-08T12:00:00+00:00", {"A": 1}, ["A", "B"]),
@@ -56,7 +56,7 @@ class StreakRankingsTests(unittest.TestCase):
         self.assertTrue(sean["current"])
         self.assertEqual([row["tournament_id"] for row in sean["events"]], [3, 4])
 
-    def test_multiple_wins_in_same_week_count_once(self):
+    def test_multiple_wins_in_same_saturday_friday_week_count_once(self):
         payloads = [
             event(1, "2026-01-03T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
             event(2, "2026-01-04T12:00:00+00:00", {"Sean": 1}, ["Sean", "B"]),
@@ -108,6 +108,16 @@ class StreakRankingsTests(unittest.TestCase):
         rankings = module.build_rankings(payloads)
         sean = rankings["rankings"]["consecutive_titles"][0]
         self.assertEqual(sean["streak"], 2)
+
+    def test_manual_title_override_repairs_missing_bracket_results(self):
+        payloads = [
+            event(1, "2026-01-03T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
+            event(2, "2026-01-10T12:00:00+00:00", {}, ["A", "B"]),
+        ]
+        rankings = module.build_rankings(payloads, title_overrides={2: "Sean"})
+        sean = rankings["rankings"]["consecutive_titles"][0]
+        self.assertEqual(sean["streak"], 2)
+        self.assertEqual([row["tournament_id"] for row in sean["events"]], [1, 2])
 
     def test_one_best_record_per_player_and_limit(self):
         payloads = []
