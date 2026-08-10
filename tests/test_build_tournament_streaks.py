@@ -39,7 +39,7 @@ def event(tournament_id, date, placements, participants):
 
 
 class StreakRankingsTests(unittest.TestCase):
-    def test_skipped_tournaments_do_not_break_player_run(self):
+    def test_missing_calendar_week_breaks_title_run(self):
         payloads = [
             event(1, "2026-01-01T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
             event(2, "2026-01-08T12:00:00+00:00", {"A": 1}, ["A", "B"]),
@@ -47,13 +47,27 @@ class StreakRankingsTests(unittest.TestCase):
             event(4, "2026-01-22T12:00:00+00:00", {"Sean": 1}, ["Sean", "D"]),
         ]
         rankings = module.build_rankings(payloads)
-        sean = rankings["rankings"]["consecutive_titles"][0]
-        self.assertEqual(sean["player"], "Sean")
-        self.assertEqual(sean["streak"], 3)
+        sean = next(
+            row
+            for row in rankings["rankings"]["consecutive_titles"]
+            if row["player"] == "Sean"
+        )
+        self.assertEqual(sean["streak"], 2)
         self.assertTrue(sean["current"])
-        self.assertEqual([row["tournament_id"] for row in sean["events"]], [1, 3, 4])
+        self.assertEqual([row["tournament_id"] for row in sean["events"]], [3, 4])
 
-    def test_non_qualifying_appearance_breaks_money_run(self):
+    def test_multiple_wins_in_same_week_count_once(self):
+        payloads = [
+            event(1, "2026-01-03T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
+            event(2, "2026-01-04T12:00:00+00:00", {"Sean": 1}, ["Sean", "B"]),
+            event(3, "2026-01-10T12:00:00+00:00", {"Sean": 1}, ["Sean", "C"]),
+        ]
+        rankings = module.build_rankings(payloads)
+        sean = rankings["rankings"]["consecutive_titles"][0]
+        self.assertEqual(sean["streak"], 2)
+        self.assertEqual([row["tournament_id"] for row in sean["events"]], [2, 3])
+
+    def test_non_qualifying_week_breaks_money_run(self):
         payloads = [
             event(1, "2026-01-01T12:00:00+00:00", {"Sean": 2}, ["Sean", "A"]),
             event(2, "2026-01-08T12:00:00+00:00", {"A": 1}, ["Sean", "A"]),
@@ -85,6 +99,15 @@ class StreakRankingsTests(unittest.TestCase):
         )
         self.assertEqual([row["tournament_id"] for row in sean["events"]], [4, 5])
         self.assertTrue(sean["current"])
+
+    def test_consecutive_weeks_across_year_boundary(self):
+        payloads = [
+            event(1, "2025-12-27T12:00:00+00:00", {"Sean": 1}, ["Sean", "A"]),
+            event(2, "2026-01-03T12:00:00+00:00", {"Sean": 1}, ["Sean", "B"]),
+        ]
+        rankings = module.build_rankings(payloads)
+        sean = rankings["rankings"]["consecutive_titles"][0]
+        self.assertEqual(sean["streak"], 2)
 
     def test_one_best_record_per_player_and_limit(self):
         payloads = []
