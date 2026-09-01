@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-09-01T21:14:51.645139+00:00`
+- Generated: `2026-09-01T21:56:00.347619+00:00`
 - Total JSON files: `2532`
-- Total JSON bytes: `36228107`
+- Total JSON bytes: `36228313`
 - cache.json bytes: `17200`
 
 ## Heaviest Stats Sections
@@ -35,7 +35,7 @@
 - `data/tournaments-index.json`: `283287` bytes
 - `data/season-standings.json`: `187962` bytes
 - `data/players-search-index.json`: `41157` bytes
-- `data/streak-leaders.json`: `28708` bytes
+- `data/streak-leaders.json`: `28701` bytes
 - `data/tournaments-search-index.json`: `27421` bytes
 - `data/h2h-heatmap.json`: `13924` bytes
 - `data/recent-matches.json`: `6933` bytes
@@ -43,33 +43,21 @@
 - `data/tournament-duration-groups.json`: `3683` bytes
 - `data/single-tournament-overperformers.json`: `3274` bytes
 - `data/data-size-report.json`: `2435` bytes
-- `data/refresh-change-report.json`: `1231` bytes
+- `data/refresh-change-report.json`: `1444` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-08-25T19:09:47.681742+00:00`
-- JSON file delta: `+13`
-- Total JSON bytes delta: `+123648`
-- cache.json bytes delta: `-9`
+- Previous generated: `2026-09-01T21:14:51.645139+00:00`
+- JSON file delta: `+0`
+- Total JSON bytes delta: `+206`
+- cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/players-index.json`: `+3088` bytes (`693692` -> `696780`)
-- `data/tournaments-index.json`: `+1060` bytes (`282227` -> `283287`)
-- `data/season-standings.json`: `+605` bytes (`187357` -> `187962`)
-- `data/refresh-change-report.json`: `-303` bytes (`1534` -> `1231`)
-- `data/players-search-index.json`: `+223` bytes (`40934` -> `41157`)
-- `data/tournaments-search-index.json`: `+99` bytes (`27322` -> `27421`)
-- `data/recent-matches.json`: `+10` bytes (`6923` -> `6933`)
-- `data/streak-leaders.json`: `+2` bytes (`28706` -> `28708`)
-- `data/data-size-report.json`: `+1` bytes (`2434` -> `2435`)
+- `data/refresh-change-report.json`: `+213` bytes (`1231` -> `1444`)
+- `data/streak-leaders.json`: `-7` bytes (`28708` -> `28701`)
 
 ### Stats Section Deltas
 
-- `tournament_field_duration_trend`: `-22` bytes (`2829` -> `2807`)
-- `anniversary_matches`: `+21` bytes (`1931` -> `1952`)
-- `tournament_duration_trend`: `-7` bytes (`1227` -> `1220`)
-- `tournament_player_count_trend`: `-7` bytes (`942` -> `935`)
-- `top_elo_players`: `+5` bytes (`656` -> `661`)
-- `season_standings`: `+1` bytes (`3611` -> `3612`)
+- No stats section size changes
