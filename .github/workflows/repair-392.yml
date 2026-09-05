@@ -1,0 +1,150 @@
+name: Repair attendance data for issue 392
+
+on:
+  push:
+    branches:
+      - fix/392-attendance-streaks
+    paths:
+      - .github/workflows/repair-392.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: fix/392-attendance-streaks
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt
+
+      - name: Harden attendance streak calculation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('backend/export_static.py')
+          text = path.read_text()
+          start = text.index('def _attendance_stats(')
+          end = text.index('\ndef ', start + 1)
+          block = text[start:end]
+
+          marker = '''    all_players = sorted({
+              name
+              for participants in participants_by_tournament.values()
+              for name in participants
+          }, key=str.casefold)
+          '''
+          replacement = marker + '''    # A completed tournament with zero imported matches provides no attendance
+              # evidence. Treating it as a universal absence corrupts every active streak.
+              attendance_tournaments = [
+                  tournament
+                  for tournament in ordered_tournaments
+                  if participants_by_tournament.get(tournament.get("id"))
+              ]
+          '''
+          if marker not in block:
+              raise SystemExit('attendance insertion marker not found')
+          block = block.replace(marker, replacement, 1)
+          block = block.replace('for tournament in ordered_tournaments:', 'for tournament in attendance_tournaments:', 1)
+          block = block.replace('for tournament in reversed(ordered_tournaments):', 'for tournament in reversed(attendance_tournaments):', 1)
+          text = text[:start] + block + text[end:]
+          path.write_text(text)
+          PY
+
+      - name: Add regression coverage
+        run: |
+          cat >> backend/tests/test_export_analytics.py <<'PY'
+
+          def test_attendance_stats_ignores_tournament_without_attendance_evidence():
+              tournaments = [
+                  {"id": 1, "name": "Before", "started_at": "2026-07-25T12:00:00-07:00"},
+                  {"id": 2, "name": "Broken import", "started_at": "2026-08-01T12:00:00-07:00"},
+                  {"id": 3, "name": "After", "started_at": "2026-08-08T12:00:00-07:00"},
+              ]
+              matches = [
+                  {"tournament_id": 1, "winner_name": "Jason Lambert", "loser_name": "A"},
+                  {"tournament_id": 3, "winner_name": "Jason Lambert", "loser_name": "B"},
+              ]
+
+              stats = _attendance_stats(tournaments, matches)
+
+              assert stats["Jason Lambert"]["current_streak"] == 2
+              assert stats["Jason Lambert"]["best_streak"] == 2
+              assert stats["Jason Lambert"]["tournaments_played"] == 2
+          PY
+
+      - name: Run attendance regression tests
+        working-directory: backend
+        run: python -m pytest tests/test_export_analytics.py -q
+
+      - name: Refetch missing 8/1 tournament and regenerate static data
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///./cuestats_dev.db
+          CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
+          CHALLONGE_SUBDOMAIN: fremontopen
+        run: |
+          python sync_job.py --tournament 18303773
+          python sync_job.py --dedupe-only
+          python validation_report.py
+          if [ -f manual_side_matches.csv ]; then
+            python import_side_matches.py --source manual_side_matches.csv
+          fi
+          python export_static.py
+          python ../scripts/build_tournament_streaks.py
+          python ../scripts/check_static_data_budget.py
+
+      - name: Verify repaired tournament and Jason streak
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          tournament_files = list(Path('frontend/public/data/tournaments').glob('*.json'))
+          repaired = None
+          for path in tournament_files:
+              payload = json.loads(path.read_text())
+              if (payload.get('tournament') or {}).get('id') == 18303773:
+                  repaired = payload
+                  break
+          if repaired is None:
+              raise SystemExit('tournament 18303773 export not found')
+          matches = repaired.get('matches') or []
+          if not matches:
+              raise SystemExit('tournament 18303773 still has zero matches after targeted refetch')
+
+          player_detail = None
+          for path in Path('frontend/public/data/players').glob('*/detail.json'):
+              payload = json.loads(path.read_text())
+              if (payload.get('player') or {}).get('name') == 'Jason Lambert':
+                  player_detail = payload['player']
+                  break
+          if player_detail is None:
+              raise SystemExit('Jason Lambert detail export not found')
+          streak = player_detail.get('attendance_streak')
+          print(f'Jason Lambert repaired attendance streak: {streak}')
+          if not isinstance(streak, int) or streak <= 4:
+              raise SystemExit(f'Jason Lambert streak did not recover: {streak}')
+          print(f'Restored tournament matches: {len(matches)}')
+          PY
+
+      - name: Remove one-time repair workflow
+        run: rm .github/workflows/repair-392.yml
+
+      - name: Commit repair to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: repair attendance streaks and restore tournament 18303773 (#392)"
+          git push origin HEAD:fix/392-attendance-streaks
