@@ -326,7 +326,7 @@ async def run_sync(
             cached_updated = seen.get(str(t_id))
             is_frozen = (t_doc["state"] in FROZEN_STATES)
 
-            if not force:
+            if not force and not only_tournament:
                 if is_frozen and cached_updated:
                     skipped_frozen += 1
                     continue

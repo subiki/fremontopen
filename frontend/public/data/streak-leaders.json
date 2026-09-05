@@ -1,13 +1,13 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-09-01T21:56:01.641425+00:00",
+  "generated_at": "2026-09-05T22:55:12.738952+00:00",
   "definitions": {
     "consecutive_titles": "Consecutive Saturday-Friday tournament weeks with at least one 1st-place finish. A missing tournament week breaks the streak; multiple wins in one week count once.",
     "consecutive_in_the_money": "Consecutive Saturday-Friday tournament weeks with at least one recorded payout or paid placement. A missing tournament week breaks the streak; multiple paid finishes in one week count once."
   },
   "source": {
     "tournament_files": 261,
-    "players_with_appearances": 566,
+    "players_with_appearances": 568,
     "manual_title_overrides": 1
   },
   "rankings": {
@@ -40,7 +40,7 @@
           {
             "tournament_id": 18303773,
             "tournament_name": "4Bs 9 ball 8/1/26",
-            "date": "2026-08-01T15:30:52.250-05:00",
+            "date": "2026-08-01T17:30:52.250-03:00",
             "game": "9-ball",
             "url": "https://fremontopen.challonge.com/yo6nvtwt",
             "place": 1,
@@ -431,7 +431,7 @@
           {
             "tournament_id": 18303773,
             "tournament_name": "4Bs 9 ball 8/1/26",
-            "date": "2026-08-01T15:30:52.250-05:00",
+            "date": "2026-08-01T17:30:52.250-03:00",
             "game": "9-ball",
             "url": "https://fremontopen.challonge.com/yo6nvtwt",
             "place": 1,

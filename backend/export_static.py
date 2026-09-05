@@ -1681,13 +1681,20 @@ def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str,
         for participants in participants_by_tournament.values()
         for name in participants
     }, key=str.casefold)
+    # A completed tournament with zero imported matches provides no attendance
+    # evidence. Treating it as a universal absence corrupts every active streak.
+    attendance_tournaments = [
+        tournament
+        for tournament in ordered_tournaments
+        if participants_by_tournament.get(tournament.get("id"))
+    ]
     stats: Dict[str, Dict[str, Any]] = {}
     for player_name in all_players:
         played = []
         current = 0
         best = 0
         running = 0
-        for tournament in ordered_tournaments:
+        for tournament in attendance_tournaments:
             participated = player_name in participants_by_tournament.get(tournament.get("id"), set())
             if participated:
                 running += 1
@@ -1699,7 +1706,7 @@ def _attendance_stats(tournaments: List[Dict[str, Any]], matches: List[Dict[str,
                 })
             else:
                 running = 0
-        for tournament in reversed(ordered_tournaments):
+        for tournament in reversed(attendance_tournaments):
             if player_name in participants_by_tournament.get(tournament.get("id"), set()):
                 current += 1
             else:
