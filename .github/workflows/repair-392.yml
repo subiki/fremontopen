@@ -27,17 +27,16 @@ jobs:
       - name: Install backend dependencies
         run: python -m pip install -r backend/requirements.txt
 
-      - name: Harden attendance streak calculation
+      - name: Patch attendance and targeted refresh logic
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('backend/export_static.py')
-          text = path.read_text()
+          export_path = Path('backend/export_static.py')
+          text = export_path.read_text()
           start = text.index('def _attendance_stats(')
           end = text.index('\ndef ', start + 1)
           block = text[start:end]
-
           anchor = '    stats: Dict[str, Dict[str, Any]] = {}\n'
           insertion = '''    # A completed tournament with zero imported matches provides no attendance
               # evidence. Treating it as a universal absence corrupts every active streak.
@@ -56,8 +55,19 @@ jobs:
               raise SystemExit('reverse attendance loop not found')
           block = block.replace('for tournament in ordered_tournaments:', 'for tournament in attendance_tournaments:', 1)
           block = block.replace('for tournament in reversed(ordered_tournaments):', 'for tournament in reversed(attendance_tournaments):', 1)
-          text = text[:start] + block + text[end:]
-          path.write_text(text)
+          export_path.write_text(text[:start] + block + text[end:])
+
+          sync_path = Path('backend/sync_job.py')
+          sync_text = sync_path.read_text()
+          start = sync_text.index('async def run_sync(')
+          end = sync_text.index('\n\nasync def run_backfill_tournaments', start)
+          sync_block = sync_text[start:end]
+          old = '            if not force:\n'
+          new = '            if not force and not only_tournament:\n'
+          if old not in sync_block:
+              raise SystemExit('targeted refresh guard not found')
+          sync_block = sync_block.replace(old, new, 1)
+          sync_path.write_text(sync_text[:start] + sync_block + sync_text[end:])
           PY
 
       - name: Add regression coverage
