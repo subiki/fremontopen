@@ -38,13 +38,8 @@ jobs:
           end = text.index('\ndef ', start + 1)
           block = text[start:end]
 
-          marker = '''    all_players = sorted({
-              name
-              for participants in participants_by_tournament.values()
-              for name in participants
-          }, key=str.casefold)
-          '''
-          replacement = marker + '''    # A completed tournament with zero imported matches provides no attendance
+          anchor = '    stats: Dict[str, Dict[str, Any]] = {}\n'
+          insertion = '''    # A completed tournament with zero imported matches provides no attendance
               # evidence. Treating it as a universal absence corrupts every active streak.
               attendance_tournaments = [
                   tournament
@@ -52,9 +47,13 @@ jobs:
                   if participants_by_tournament.get(tournament.get("id"))
               ]
           '''
-          if marker not in block:
-              raise SystemExit('attendance insertion marker not found')
-          block = block.replace(marker, replacement, 1)
+          if anchor not in block:
+              raise SystemExit('attendance stats anchor not found')
+          block = block.replace(anchor, insertion + anchor, 1)
+          if 'for tournament in ordered_tournaments:' not in block:
+              raise SystemExit('forward attendance loop not found')
+          if 'for tournament in reversed(ordered_tournaments):' not in block:
+              raise SystemExit('reverse attendance loop not found')
           block = block.replace('for tournament in ordered_tournaments:', 'for tournament in attendance_tournaments:', 1)
           block = block.replace('for tournament in reversed(ordered_tournaments):', 'for tournament in reversed(attendance_tournaments):', 1)
           text = text[:start] + block + text[end:]
@@ -110,9 +109,8 @@ jobs:
           import json
           from pathlib import Path
 
-          tournament_files = list(Path('frontend/public/data/tournaments').glob('*.json'))
           repaired = None
-          for path in tournament_files:
+          for path in Path('frontend/public/data/tournaments').glob('*.json'):
               payload = json.loads(path.read_text())
               if (payload.get('tournament') or {}).get('id') == 18303773:
                   repaired = payload
