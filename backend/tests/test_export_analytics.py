@@ -1016,3 +1016,20 @@ def test_load_side_match_rows_defaults_manual_bucket(tmp_path):
     assert rows[0]["tournament_name"] == "Manual side matches"
     assert rows[0]["winner_name"] == "A"
     assert rows[0]["loser_name"] == "B"
+
+def test_attendance_stats_ignores_tournament_without_attendance_evidence():
+    tournaments = [
+        {"id": 1, "name": "Before", "started_at": "2026-07-25T12:00:00-07:00"},
+        {"id": 2, "name": "Broken import", "started_at": "2026-08-01T12:00:00-07:00"},
+        {"id": 3, "name": "After", "started_at": "2026-08-08T12:00:00-07:00"},
+    ]
+    matches = [
+        {"tournament_id": 1, "winner_name": "Jason Lambert", "loser_name": "A"},
+        {"tournament_id": 3, "winner_name": "Jason Lambert", "loser_name": "B"},
+    ]
+
+    stats = _attendance_stats(tournaments, matches)
+
+    assert stats["Jason Lambert"]["current_streak"] == 2
+    assert stats["Jason Lambert"]["best_streak"] == 2
+    assert stats["Jason Lambert"]["tournaments_played"] == 2
