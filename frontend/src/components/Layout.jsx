@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { JoinBanner } from "./JoinBanner";
 import { getTheme, onThemeChange } from "../lib/theme";
 
 export const Layout = () => {
   const [theme, setTheme] = useState(getTheme());
+  const location = useLocation();
 
   useEffect(() => onThemeChange(setTheme), []);
 
@@ -26,6 +28,7 @@ export const Layout = () => {
         tabIndex={-1}
         className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0 focus:outline-none"
       >
+        {location.pathname === "/" ? <JoinBanner /> : null}
         <Outlet />
       </div>
     </div>

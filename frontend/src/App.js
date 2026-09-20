@@ -12,11 +12,13 @@ const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
 const Players = lazy(() => import("./pages/Players"));
 const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Streaks = lazy(() => import("./pages/Streaks"));
 const Compare = lazy(() => import("./pages/Compare"));
 const Seasons = lazy(() => import("./pages/Seasons"));
 const StatRankings = lazy(() => import("./pages/StatRankings"));
 const Info = lazy(() => import("./pages/Info"));
 const Onda = lazy(() => import("./pages/Onda"));
+const Derby = lazy(() => import("./pages/Derby"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
@@ -43,10 +45,13 @@ function App() {
             <Route path="/players" element={<Players />} />
             <Route path="/players/:name" element={<PlayerDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/streaks" element={<Streaks />} />
             <Route path="/seasons" element={<Seasons />} />
             <Route path="/rankings/:stat" element={<StatRankings />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:a/:b" element={<Compare />} />
+            <Route path="/Derby" element={<Derby />} />
+            <Route path="/join" element={<Info />} />
             <Route path="/info" element={<Info />} />
             <Route path="*" element={<NotFound />} />
           </Route>
