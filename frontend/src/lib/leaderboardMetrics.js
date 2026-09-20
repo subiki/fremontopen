@@ -17,6 +17,7 @@ export const leaderboardMetrics = {
   elo_rating: { label: "ELO", value: (p) => p.elo_rating || 0, format: number, desc: true },
   elo_peak: { label: "ELO Peak", value: (p) => p.elo_peak || 0, format: number, desc: true },
   elo_matches: { label: "ELO Matches", value: (p) => p.elo_matches || 0, format: number, desc: true },
+  fargo: { label: "Fargo", value: (p) => p.fargo, format: number, desc: true },
   best_elo_upset_rating_gap: { label: "Best ELO Upset", value: (p) => p.best_elo_upset_rating_gap || 0, format: eloGap, desc: true },
   best_elo_upset_probability: { label: "Lowest Win Odds Upset", value: (p) => positiveOrNull(p.best_elo_upset_probability), format: percent, desc: false },
   worst_elo_loss_rating_gap: { label: "Worst ELO Loss", value: (p) => p.worst_elo_loss_rating_gap || 0, format: eloGap, desc: true },
@@ -49,7 +50,7 @@ export const leaderboardMetricGroups = [
   },
   {
     label: "ELO",
-    metrics: ["elo_rating", "elo_peak", "elo_matches", "best_elo_upset_rating_gap", "best_elo_upset_probability", "worst_elo_loss_rating_gap", "worst_elo_loss_probability"],
+    metrics: ["fargo", "elo_rating", "elo_peak", "elo_matches", "best_elo_upset_rating_gap", "best_elo_upset_probability", "worst_elo_loss_rating_gap", "worst_elo_loss_probability"],
   },
   {
     label: "Tournament Finishes",
