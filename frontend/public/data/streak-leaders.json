@@ -1,12 +1,12 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-10-06T22:45:02.989955+00:00",
+  "generated_at": "2026-10-13T23:02:28.324015+00:00",
   "definitions": {
     "consecutive_titles": "Consecutive Saturday-Friday tournament weeks with at least one 1st-place finish. A missing tournament week breaks the streak; multiple wins in one week count once.",
     "consecutive_in_the_money": "Consecutive Saturday-Friday tournament weeks with at least one recorded payout or paid placement. A missing tournament week breaks the streak; multiple paid finishes in one week count once."
   },
   "source": {
-    "tournament_files": 266,
+    "tournament_files": 267,
     "players_with_appearances": 584,
     "manual_title_overrides": 1
   },
@@ -144,7 +144,7 @@
       {
         "player": "Eddie Robinson",
         "streak": 2,
-        "current": true,
+        "current": false,
         "start_date": "2026-09-26T16:30:30.140-04:00",
         "end_date": "2026-10-03T16:30:44.724-04:00",
         "events": [
@@ -312,18 +312,18 @@
       {
         "player": "Dani Casper",
         "streak": 1,
-        "current": false,
-        "start_date": "2026-09-19T16:31:51.497-04:00",
-        "end_date": "2026-09-19T16:31:51.497-04:00",
+        "current": true,
+        "start_date": "2026-10-10T16:32:45.986-04:00",
+        "end_date": "2026-10-10T16:32:45.986-04:00",
         "events": [
           {
-            "tournament_id": 18511995,
-            "tournament_name": "4Bs 8 ball 9/19/26",
-            "date": "2026-09-19T16:31:51.497-04:00",
-            "game": "8-ball",
-            "url": "https://fremontopen.challonge.com/4r9z11bt",
+            "tournament_id": 18605915,
+            "tournament_name": "4Bs 9 ball 10/10/26",
+            "date": "2026-10-10T16:32:45.986-04:00",
+            "game": "9-ball",
+            "url": "https://fremontopen.challonge.com/65678say",
             "place": 1,
-            "amount": 95
+            "amount": 90
           }
         ],
         "rank": 10
