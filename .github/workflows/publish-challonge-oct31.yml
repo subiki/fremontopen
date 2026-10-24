@@ -1,0 +1,40 @@
+name: Create 4Bs 8-ball for 2026-10-31
+
+# This is a one-time production publication attempt, not a recurring schedule.
+# The path filter fires when this workflow is first merged into main.
+# Safe to retry manually; script checks the live community first.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-challonge-oct31.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: challonge-publish-2026-10-31
+  cancel-in-progress: false
+
+jobs:
+  create-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal dependency
+        run: python -m pip install "requests>=2.31,<3"
+
+      - name: Check script syntax
+        run: python -m py_compile scripts/publish_challonge_oct31.py
+
+      - name: Publish and verify next Saturday's 8-ball event
+        env:
+          CHALLONGE_API_KEY: ${{ secrets.CHALLONGE_API_KEY }}
+        run: python scripts/publish_challonge_oct31.py
