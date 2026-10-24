@@ -103,7 +103,6 @@ class Client:
             "group_stage_enabled": False,
             "double_elimination_options": {
                 "split_participants": False,
-                "grand_finals_modifier": "",
             },
             "station_options": {
                 "auto_assign": False,
