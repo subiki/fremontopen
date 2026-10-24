@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/publish-challonge-oct31.yml"
+      - "scripts/publish_challonge_oct31.py"
   workflow_dispatch: {}
 
 permissions:
