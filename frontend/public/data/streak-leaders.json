@@ -1,13 +1,13 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-10-20T21:48:33.801044+00:00",
+  "generated_at": "2026-11-01T22:58:37.683770+00:00",
   "definitions": {
     "consecutive_titles": "Consecutive Saturday-Friday tournament weeks with at least one 1st-place finish. A missing tournament week breaks the streak; multiple wins in one week count once.",
     "consecutive_in_the_money": "Consecutive Saturday-Friday tournament weeks with at least one recorded payout or paid placement. A missing tournament week breaks the streak; multiple paid finishes in one week count once."
   },
   "source": {
-    "tournament_files": 268,
-    "players_with_appearances": 584,
+    "tournament_files": 270,
+    "players_with_appearances": 585,
     "manual_title_overrides": 1
   },
   "rankings": {
