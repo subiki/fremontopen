@@ -1,8 +1,8 @@
 # Static Refresh Summary
 
-- Generated: `2026-11-01T22:58:36.344691+00:00`
+- Generated: `2026-11-03T23:35:28.451862+00:00`
 - Total JSON files: `2617`
-- Total JSON bytes: `37703274`
+- Total JSON bytes: `37703210`
 - cache.json bytes: `17237`
 
 ## Heaviest Stats Sections
@@ -43,34 +43,20 @@
 - `data/tournament-duration-groups.json`: `3680` bytes
 - `data/single-tournament-overperformers.json`: `3293` bytes
 - `data/data-size-report.json`: `2435` bytes
-- `data/refresh-change-report.json`: `1590` bytes
+- `data/refresh-change-report.json`: `1526` bytes
 - `data/version.json`: `82` bytes
 
 ## Since Previous Refresh
 
-- Previous generated: `2026-10-20T21:48:32.275577+00:00`
-- JSON file delta: `+6`
-- Total JSON bytes delta: `+271700`
-- cache.json bytes delta: `+40`
+- Previous generated: `2026-11-01T22:58:36.344691+00:00`
+- JSON file delta: `+0`
+- Total JSON bytes delta: `-64`
+- cache.json bytes delta: `+0`
 
 ### Top-Level File Deltas
 
-- `data/tournaments-index.json`: `+2197` bytes (`290718` -> `292915`)
-- `data/players-index.json`: `+1057` bytes (`721272` -> `722329`)
-- `data/season-standings.json`: `+723` bytes (`195707` -> `196430`)
-- `data/tournaments-search-index.json`: `+209` bytes (`28153` -> `28362`)
-- `data/refresh-change-report.json`: `+163` bytes (`1427` -> `1590`)
-- `data/players-search-index.json`: `+77` bytes (`42477` -> `42554`)
-- `data/recent-matches.json`: `+23` bytes (`6983` -> `7006`)
-- `data/h2h-heatmap.json`: `-9` bytes (`13958` -> `13949`)
-- `data/tournament-duration-groups.json`: `-8` bytes (`3688` -> `3680`)
-- `data/rivalry-index.json`: `+2` bytes (`4382` -> `4384`)
+- `data/refresh-change-report.json`: `-64` bytes (`1590` -> `1526`)
 
 ### Stats Section Deltas
 
-- `tournament_player_count_trend`: `+11` bytes (`938` -> `949`)
-- `anniversary_matches`: `+10` bytes (`1938` -> `1948`)
-- `tournament_duration_trend`: `+10` bytes (`1225` -> `1235`)
-- `tournament_field_duration_trend`: `+10` bytes (`2807` -> `2817`)
-- `upset_tracker`: `-4` bytes (`2737` -> `2733`)
-- `season_standings`: `+3` bytes (`3595` -> `3598`)
+- No stats section size changes
