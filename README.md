@@ -35,6 +35,14 @@ The deployed site never calls Challonge directly.
 - Player streaks, titles, and wins-over-time chart
 - Side-by-side player comparison
 
+## Saturday Tournament Bracket Operations
+
+To create or repair the weekly 4B's Challonge bracket, follow the
+[Challonge bracket runbook](docs/CHALLONGE_BRACKET_RUNBOOK.md).
+The runbook includes the weekly settings, public sign-up **visibility** checkbox,
+server-side workflow, duplicate protection, and required guest-browser verification.
+A green API workflow alone does **not** verify a visible public registration link.
+
 ## Local Data Refresh
 
 Use normal incremental refreshes most of the time. This keeps Challonge API
