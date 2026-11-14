@@ -13,6 +13,7 @@ def event(name=publisher.NAME, tid="99", start="2026-11-14T13:00:00-08:00",
         "name": name, "url": slug, "starts_at": start,
         "tournament_type": "double elimination", "game_name": "8-ball",
         "private": False, "state": "pending",
+        "registration_options": {"open_signup": False},
         "station_options": {
             "auto_assign": True, "only_start_matches_with_assigned_stations": True,
         },
@@ -40,7 +41,7 @@ class FakeClient:
         self.stations.append(name)
 
     def enable_station_options(self, tid):
-        pass
+        self.current["attributes"]["registration_options"]["open_signup"] = True
 
     def get_tournament(self, tid):
         return self.current
@@ -52,12 +53,23 @@ class PublisherTests(unittest.TestCase):
         publisher.publish(client)
         self.assertEqual(client.created, 1)
         self.assertEqual(client.stations, list(publisher.TABLES))
+        self.assertTrue(client.current["attributes"]["registration_options"]["open_signup"])
 
     def test_existing_event_is_repaired_not_duplicated(self):
         client = FakeClient(event(), ("Table 1", "Table 3"))
         publisher.publish(client)
         self.assertEqual(client.created, 0)
         self.assertCountEqual(client.stations, publisher.TABLES)
+        self.assertTrue(client.current["attributes"]["registration_options"]["open_signup"])
+
+    def test_fails_closed_if_online_signup_not_applied(self):
+        class NoSignupClient(FakeClient):
+            def enable_station_options(self, tid):
+                pass
+
+        client = NoSignupClient(event(), publisher.TABLES)
+        with self.assertRaisesRegex(publisher.ChallongeError, "registration"):
+            publisher.publish(client)
 
     def test_different_event_same_day_blocks_creation(self):
         with self.assertRaises(publisher.ChallongeError):
