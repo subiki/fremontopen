@@ -2,6 +2,16 @@
 
 Operational rules for Codex and other coding agents working on this repo. These are not product backlog items.
 
+## Challonge Bracket Publishing
+
+Before creating or repairing a weekly bracket, follow
+[the bracket runbook](../CHALLONGE_BRACKET_RUNBOOK.md). In particular,
+`private=false` and `registration_options.open_signup=true` do **not** prove the
+**Make your sign-up page publicly visible** setting is enabled. This separate
+Challonge UI setting and a logged-out visitor check are mandatory release gates.
+Never report "public registration verified" solely from the API and never start
+the bracket without the organizer's direction.
+
 ## Windows Prompt Suppression
 
 Goal: keep local agent runs non-interactive on Windows so autonomous work is not blocked by avoidable prompts.
