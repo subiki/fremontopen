@@ -99,7 +99,7 @@ class Client:
             "private": False,
             "starts_at": START,
             "description": DESCRIPTION,
-            "registration_options": {"open_signup": False},
+            "registration_options": {"open_signup": True},
             "group_stage_enabled": False,
             "double_elimination_options": {
                 "split_participants": False,
@@ -130,6 +130,7 @@ class Client:
                     "auto_assign": True,
                     "only_start_matches_with_assigned_stations": True,
                 },
+                "registration_options": {"open_signup": True},
             }}},
             params={"community_id": COMMUNITY},
         )
@@ -203,10 +204,12 @@ def publish(client):
         raise ChallongeError("Date failed verification")
     if attrs.get("private") is not False:
         raise ChallongeError("Tournament is not public")
+    if attrs.get("registration_options", {}).get("open_signup") is not True:
+        raise ChallongeError("Public online registration failed verification")
     if attrs.get("state") not in ("pending", "awaiting_review", None):
         raise ChallongeError(f"Unexpected bracket state: {attrs.get('state')}")
     url = f"https://{COMMUNITY}.challonge.com/{attrs.get('url') or SLUG}"
-    print(f"VERIFIED: {NAME}; four stations; two enabled flags; bracket unstarted")
+    print(f"VERIFIED: {NAME}; four stations; online signup enabled; bracket unstarted")
     print(f"LINK: {url}")
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
@@ -214,7 +217,7 @@ def publish(client):
             out.write(
                 f"## Challonge bracket verified\n\n- [{NAME}]({url})\n"
                 f"- Stations: {', '.join(TABLES)}\n"
-                "- Both automatic station options: enabled\n- Bracket: not started\n"
+                "- Both automatic station options: enabled; public online signup: enabled\n- Bracket: not started\n"
             )
     return url
 
